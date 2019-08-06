@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:title="@string/OrderByTime">
+        <menu>
+            <group
+                android:id="@+id/menu_main_group_time"
+                android:checkableBehavior="single"
+                android:menuCategory="container">
+                <item
+                    android:id="@+id/menu_main_group_asc"
+                    android:title="升序" />
+                <item
+                    android:id="@+id/menu_main_group_desc"
+                    android:title="降序" />
+
+            </group>
+        </menu>
+
+    </item>
+
+    <item android:title="@string/SelectLocation">
+        <menu>
+            <item
+                android:id="@+id/menu_main_group_location_select_all"
+                android:title="@string/SelectAll" />
+            <group
+                android:id="@+id/menu_main_group_location"
+                android:checkableBehavior="all">
+                <item
+                    android:id="@+id/menu_main_group_location_1"
+                    android:title="杏园" />
+
+                <item
+                    android:id="@+id/menu_main_group_location_2"
+                    android:title="桃园" />
+                <item
+                    android:id="@+id/menu_main_group_location_3"
+                    android:title="桔园" />
+
+                <item
+                    android:id="@+id/menu_main_group_location_4"
+                    android:title="桂园" />
+                <item
+                    android:id="@+id/menu_main_group_location_5"
+                    android:title="梅园" />
+
+                <item
+                    android:id="@+id/menu_main_group_location_6"
+                    android:title="榴园" />
+                <item
+                    android:id="@+id/menu_main_group_location_7"
+                    android:title="李园" />
+                <item
+                    android:id="@+id/menu_main_group_location_8"
+                    android:title="竹园" />
+
+                <item
+                    android:id="@+id/menu_main_group_location_9"
+                    android:title="澈苑" />
+                <item
+                    android:id="@+id/menu_main_group_location_10"
+                    android:title="溪苑" />
+
+                <item
+                    android:id="@+id/menu_main_group_location_11"
+                    android:title="清苑" />
+                <item
+                    android:id="@+id/menu_main_group_location_12"
+                    android:title="涓苑" />
+
+                <item
+                    android:id="@+id/menu_main_group_location_13"
+                    android:title="润苑" />
+                <item
+                    android:id="@+id/menu_main_group_location_14"
+                    android:title="浩苑" />
+
+                <item
+                    android:id="@+id/menu_main_group_location_15"
+                    android:title="瀚苑" />
+                <item
+                    android:id="@+id/menu_main_group_location_16"
+                    android:title="鸿苑" />
+            </group>
+        </menu>
+    </item>
+
+    <item android:title="@string/SelectCollege">
+        <menu>
+            <item
+                android:id="@+id/menu_main_group_college_select_all"
+                android:title="@string/SelectAll" />
+            <group
+                android:id="@+id/menu_main_group_college"
+                android:checkableBehavior="all">
+                <item
+                    android:id="@+id/menu_main_group_college_1"
+                    android:title="物联网工程学院" />
+
+                <item
+                    android:id="@+id/menu_main_group_college_2"
+                    android:title="设计学院" />
+                <item
+                    android:id="@+id/menu_main_group_college_3"
+                    android:title="商学院" />
+
+                <item
+                    android:id="@+id/menu_main_group_college_4"
+                    android:title="机械学院" />
+                <item
+                    android:id="@+id/menu_main_group_college_5"
+                    android:title="环境与土木学院" />
+
+                <item
+                    android:id="@+id/menu_main_group_college_6"
+                    android:title="食品学院" />
+                <item
+                    android:id="@+id/menu_main_group_college_7"
+                    android:title="纺织服装学院" />
+
+                <item
+                    android:id="@+id/menu_main_group_college_8"
+                    android:title="药学院" />
+                <item
+                    android:id="@+id/menu_main_group_college_9"
+                    android:title="外国语学院" />
+
+                <item
+                    android:id="@+id/menu_main_group_college_10"
+                    android:title="数字媒体学院" />
+                <item
+                    android:id="@+id/menu_main_group_college_11"
+                    android:title="生物工程学院" />
+
+                <item
+                    android:id="@+id/menu_main_group_college_12"
+                    android:title="化学与材料工程学院" />
+                <item
+                    android:id="@+id/menu_main_group_college_13"
+                    android:title="理学院" />
+
+                <item
+                    android:id="@+id/menu_main_group_college_14"
+                    android:title="医学院" />
+                <item
+                    android:id="@+id/menu_main_group_college_15"
+                    android:title="人文学院" />
+                <item
+                    android:id="@+id/menu_main_group_college_16"
+                    android:title="法学院" />
+                <item
+                    android:id="@+id/menu_main_group_college_17"
+                    android:title="马克思主义学院" />
+                <item
+                    android:id="@+id/menu_main_group_college_18"
+                    android:title="北美学院" />
+            </group>
+        </menu>
+    </item>
+</menu>

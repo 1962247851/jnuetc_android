@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingStart="20dp"
+    android:paddingTop="100dp"
+    android:paddingEnd="20dp">
+
+
+    <ImageView
+        android:id="@+id/imageView_login_logo"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_centerHorizontal="true"
+        android:src="@drawable/logo" />
+
+    <com.rengwuxian.materialedittext.MaterialEditText
+        android:id="@+id/materialEditText_login_number"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/imageView_login_logo"
+        android:layout_marginTop="50dp"
+        android:hint="@string/Sno"
+        android:inputType="number"
+        app:met_clearButton="true"
+        app:met_floatingLabel="highlight"
+        app:met_maxCharacters="10" />
+
+    <com.rengwuxian.materialedittext.MaterialEditText
+        android:id="@+id/materialEditText_login_password"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/materialEditText_login_number"
+        android:hint="@string/Password"
+        android:inputType="textPassword"
+        app:met_clearButton="true"
+        app:met_floatingLabel="highlight"
+        app:met_helperTextColor="@android:color/holo_red_light"
+        app:met_iconPadding="0dp"
+        app:met_maxCharacters="18"
+        app:met_minCharacters="7" />
+
+    <Button
+        android:id="@+id/button_login_forget"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/materialEditText_login_password"
+        android:text="@string/ForgetPassword" />
+
+    <Button
+        android:id="@+id/button_login_login"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/materialEditText_login_password"
+        android:layout_alignParentEnd="true"
+        android:text="@string/Login" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:gravity="center">
+
+
+        <CheckBox
+            android:id="@+id/checkBox_login_remember_password"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:checked="true"
+            android:text="记住密码" />
+
+        <CheckBox
+            android:checked="true"
+            android:id="@+id/checkBox_login_auto_login"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="自动登录" />
+
+    </LinearLayout>
+
+
+</RelativeLayout>

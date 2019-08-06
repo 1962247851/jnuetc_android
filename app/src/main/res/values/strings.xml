@@ -1,0 +1,47 @@
+<resources>
+    <string name="app_name">JNUETC</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="Location">宿舍园区</string>
+    <string name="Id">报修序号</string>
+    <string name="Date">报修日期</string>
+    <string name="State">状态</string>
+    <string name="Name">报修人</string>
+    <string name="Tel">电话</string>
+    <string name="qq">QQ</string>
+    <string name="Model">设备型号</string>
+    <string name="Message">故障详情</string>
+    <string name="College">学院</string>
+    <string name="Gradle">年级</string>
+    <string name="Repairer">维修人</string>
+    <string name="RepairDate">维修日期</string>
+    <string name="Mark">对用户电脑水平评估</string>
+    <string name="Service">服务内容</string>
+    <string name="RepairMessage">故障描述及解决过程</string>
+    <string name="Confirm">接单</string>
+    <string name="DateAndName">时间-姓名</string>
+    <string name="LocationAndId">地点-1</string>
+    <string name="LoginOut">退出登录</string>
+    <string name="OrderByTime">按时间排序</string>
+    <string name="TimeAsc">升序</string>
+    <string name="TimeDesc">降序</string>
+    <string name="SelectAll">选择全部</string>
+    <string name="Select">筛选</string>
+    <string name="SelectLocation">选择园区</string>
+    <string name="SelectCollege">选择学院</string>
+    <string name="navigation_drawer_open">打开筛选器</string>
+    <string name="navigation_drawer_close">关闭筛选器</string>
+    <string name="nav_header_title">JNUETC</string>
+    <string name="nav_header_subtitle">线上交流群459121889（点击进群）</string>
+    <string name="nav_header_desc">Navigation header</string>
+    <string name="Sno">学号</string>
+    <string name="Password">密码</string>
+    <string name="Login">登录</string>
+    <string name="ForgetPassword">忘记密码</string>
+    <string name="RepairData">维修时间</string>
+    <string name="ModifyPassword">修改密码</string>
+    <string name="NoData">暂无数据</string>
+    <string name="CheckForUpdate">检查更新</string>
+
+</resources>
