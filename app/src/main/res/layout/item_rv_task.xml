@@ -32,6 +32,10 @@
                 android:layout_alignParentEnd="true"
                 android:layout_marginTop="5dp"
                 android:gravity="end"
+                android:paddingStart="10dp"
+                android:paddingTop="5dp"
+                android:paddingEnd="10dp"
+                android:paddingBottom="5dp"
                 android:text="@string/State" />
 
             <TextView
@@ -73,7 +77,7 @@
                 android:layout_below="@id/tv_item_model"
                 android:paddingTop="5dp"
                 android:paddingBottom="5dp"
-                android:text="故障故障故障故障故障故障故障故障故障故障故障故障故障故障故障故障故障障故障故障故障故障故障障故障故障故障故障故障障故障故障故障故障故障障故障故障故障故障故障障故障故障故障故障故障障故障故障故障故障故障障故障故障故障故障故障障故障故障故障故障故障障故障故障故障故障故障障故障故障故障故障故障障故障故障故障故障故障障故障故障故障故障故障障故障故障故障故障故障障故障故障故障故障故障障故障故障故障故障故障障故障故障故障故障故障障故障故障故障故障故障障故障故障故障故障故障障故障故障故障故障故障障故障故障故障故障故障障故障故障故障故障故障障故障故障故障故障故障障故障故障故障故障故障障故障故障故障故障故障障故障故障故障故障故障障故障故障故障故障故障故障故障故障故障故障故障故障故障故障故障故障故障故障故障故障故障故障故障故障故障故障故障故障故障故障故障故障故障故障故障故障故障故障故障故障故障故障故障故障故障故障故障故障故障"
+                android:text="@string/Message"
                 app:animAlphaStart="1"
                 app:arrowAlign="bottom"
                 app:arrowPadding="8dp"
@@ -88,6 +92,7 @@
                 android:layout_below="@id/etv_item_message"
                 android:layout_alignParentEnd="true"
                 android:background="?selectableItemBackground"
+                android:enabled="false"
                 android:paddingStart="10dp"
                 android:paddingTop="5dp"
                 android:paddingEnd="10dp"

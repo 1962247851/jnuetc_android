@@ -53,21 +53,21 @@ public class Time {
     }
 
     private void addSecond() {
-        if (++second == MAX_SECOND) {
+        if (++second >= MAX_SECOND) {
             second = 0;
             addMinute();
         }
     }
 
     private void addMinute() {
-        if (++minute == MAX_MINUTE) {
+        if (++minute >= MAX_MINUTE) {
             minute = 0;
             addHour();
         }
     }
 
     private void addHour() {
-        if (++hour == MAX_HOUR) {
+        if (++hour >= MAX_HOUR) {
             hour = 0;
             addDay();
         }
@@ -77,10 +77,10 @@ public class Time {
         day++;
     }
 
-    @Override
-    public String toString() {
-        return String.format(Locale.getDefault(), "%d天%d时%d分%d秒", day, hour, minute, second);
-    }
+//    @Override
+//    public String toString() {
+//        return String.format(Locale.getDefault(), "%d天%d时%d分%d秒", day, hour, minute, second);
+//    }
 //
 //    public static void main(String[] args) {
 //        Time time = new Time();

@@ -19,6 +19,7 @@ import butterknife.Unbinder;
 import jn.mjz.aiot.jnuetc.Greendao.Entity.Time;
 import jn.mjz.aiot.jnuetc.R;
 import jn.mjz.aiot.jnuetc.Util.DateUtil;
+import jn.mjz.aiot.jnuetc.Util.GsonUtil;
 
 public class TimerFragment extends Fragment {
 
@@ -53,12 +54,16 @@ public class TimerFragment extends Fragment {
         super.onActivityCreated(savedInstanceState);
     }
 
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+    }
+
     public TimerFragment() {
     }
 
     public TimerFragment(@NonNull Long startTime) {
         this.startTime = startTime;
-
     }
 
     public TimerFragment(String title, @NonNull Long startTime) {
@@ -80,7 +85,11 @@ public class TimerFragment extends Fragment {
         if (title != null) {
             textViewTitle.setText(title);
         }
-
+//        if (savedInstanceState != null) {
+//            if (startTime == null) {
+//                startTime = savedInstanceState.getLong("startTime");
+//            }
+//        }
         time = DateUtil.diffTime(startTime, System.currentTimeMillis());
         time.startTiming(time1 -> {
             tickerViewDay.setText(String.valueOf(time1.getDay()));

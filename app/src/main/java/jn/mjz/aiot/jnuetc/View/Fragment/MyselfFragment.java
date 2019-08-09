@@ -2,7 +2,6 @@ package jn.mjz.aiot.jnuetc.View.Fragment;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,8 +10,8 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.youth.xframe.widget.XToast;
 
@@ -24,7 +23,6 @@ import java.util.Locale;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
-import jn.mjz.aiot.jnuetc.Greendao.Dao.DataDao;
 import jn.mjz.aiot.jnuetc.Greendao.Entity.Data;
 import jn.mjz.aiot.jnuetc.R;
 import jn.mjz.aiot.jnuetc.Util.GlobalUtil;
@@ -41,7 +39,7 @@ public class MyselfFragment extends Fragment implements View.OnClickListener {
     private Unbinder unbinder;
     private MainViewModel mainViewModel;
 
-    private List<Data> dataList4 = new ArrayList<>();
+    private static List<Data> dataList4 = new ArrayList<>();
     private List<Data> dataList5 = new ArrayList<>();
 
     @BindView(R.id.tv_fragment_myself_processing)
@@ -50,39 +48,45 @@ public class MyselfFragment extends Fragment implements View.OnClickListener {
     TextView textViewDone;
     @BindView(R.id.tv_fragment_myself_admin)
     TextView textViewAdmin;
+    @BindView(R.id.srl_myself)
+    SwipeRefreshLayout swipeRefreshLayout;
 
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
         mainViewModel = ViewModelProviders.of(getActivity()).get(MainViewModel.class);
-
-        mainViewModel.getDataList2().observe(this, new Observer<List<Data>>() {
+        mainViewModel.queryAll(new HttpUtil.HttpUtilCallBack<List<Data>>() {
             @Override
-            public void onChanged(List<Data> data) {
-                mainViewModel.getDataList4().setValue(mainViewModel.dataDao.queryBuilder()
-                        .where(DataDao.Properties.Repairer.like(GlobalUtil.user.getName())
-                                , DataDao.Properties.State.eq(1))
-                        .orderAsc(DataDao.Properties.Date)
-                        .build()
-                        .list());
+            public void onResponse(Response response, List<Data> result) {
+                if (result != null) {
+                    mainViewModel.queryDataListAboutMyself(1);
+                    mainViewModel.queryDataListAboutMyself(2);
+                    mainViewModel.haveRoot(new HttpUtil.HttpUtilCallBack<Boolean>() {
+                        @Override
+                        public void onResponse(Response response, Boolean result) {
+                            textViewAdmin.setVisibility(result ? View.VISIBLE : View.GONE);
+                            swipeRefreshLayout.setRefreshing(false);
+                        }
+
+                        @Override
+                        public void onFailure(IOException e) {
+                            swipeRefreshLayout.setRefreshing(false);
+                        }
+                    });
+                } else {
+                    swipeRefreshLayout.setRefreshing(false);
+                }
+
+            }
+
+            @Override
+            public void onFailure(IOException e) {
+                swipeRefreshLayout.setRefreshing(false);
             }
         });
-
-        mainViewModel.getDataList3().observe(this, new Observer<List<Data>>() {
-            @Override
-            public void onChanged(List<Data> data) {
-                mainViewModel.getDataList5().setValue(mainViewModel.dataDao.queryBuilder()
-                        .where(DataDao.Properties.Repairer.like(GlobalUtil.user.getName())
-                                , DataDao.Properties.State.eq(2))
-                        .orderDesc(DataDao.Properties.RepairDate)
-                        .build()
-                        .list());
-            }
-        });
-
         mainViewModel.getDataList4().observe(this, data -> {
-            Log.e(TAG, "onChanged4: " + data);
+//            Log.e(TAG, "onChanged4: " + data);
             dataList4.clear();
             dataList4.addAll(data);
             if (textViewProcessing != null) {
@@ -90,7 +94,7 @@ public class MyselfFragment extends Fragment implements View.OnClickListener {
             }
         });
         mainViewModel.getDataList5().observe(this, data -> {
-            Log.e(TAG, "onChanged5: " + data);
+//            Log.e(TAG, "onChanged5: " + data);
             dataList5.clear();
             dataList5.addAll(data);
             if (textViewDone != null) {
@@ -98,20 +102,9 @@ public class MyselfFragment extends Fragment implements View.OnClickListener {
             }
         });
 
-        mainViewModel.haveRoot(new HttpUtil.HttpUtilCallBack<Boolean>() {
-            @Override
-            public void onResponse(Response response, Boolean result) {
-                textViewAdmin.setVisibility(result ? View.VISIBLE : View.GONE);
-            }
+        getChildFragmentManager().beginTransaction().add(R.id.frameLayout_myself_timer, new TimerFragment("与你相识的第", GlobalUtil.user.getRegDate())).commit();
 
-            @Override
-            public void onFailure(IOException e) {
-            }
-        });
 
-        InitListener();
-
-        getChildFragmentManager().beginTransaction().add(R.id.frameLayout_myself_timer, new TimerFragment("与你相识的第", GlobalUtil.user.getRegDate())).commitAllowingStateLoss();
     }
 
     @Override
@@ -141,34 +134,32 @@ public class MyselfFragment extends Fragment implements View.OnClickListener {
                     intent2.putExtra("state", 2);
                     startActivity(intent2);
                 }
-
                 break;
         }
     }
 
-
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        Log.e(TAG, "onActivityResult: dataList5 " + dataList5);
 //        Log.e(TAG, "onActivityResult: requestCode " + requestCode + "resultCode " + resultCode);
 //        Log.e(TAG, "onActivityResult:data "+data.getStringExtra("data") );
 //        Log.e(TAG, "onActivityResult:dataList "+data.getStringExtra("dataList") );
         if (data != null && requestCode == 4 && resultCode == 4) {
+            //反馈（有自己名字、没有自己名字）、转让,
             String dataListString = data.getStringExtra("dataList");
             if (dataListString != null && !dataListString.isEmpty()) {
-                List<Data> needDelete = GsonUtil.parseJsonArray2ObejctList(dataListString, Data.class);
-                for (Data data1 : needDelete) {
+                List<Data> needDeleteOrUpdate = GsonUtil.parseJsonArray2ObejctList(dataListString, Data.class);
+                for (Data data1 : needDeleteOrUpdate) {
                     for (Data data2 : dataList4) {
                         if (data2.getId().equals(data1.getId())) {
                             dataList4.remove(data2);
-                            // TODO: 2019/8/6 通知dataList2和dataList3
-//                            mainViewModel.getDataList2().getValue().remove(data2);
-                            if (data1.getRepairer().contains(GlobalUtil.user.getName())) {//转让操作
-
-                                dataList5.add(0, data1);
-                            } else {
-                                // TODO: 2019/8/6 更新dataList2
-
+                            if (data1.getState() == 2) {//反馈（有自己名字、没有自己名字）
+                                if (data1.getRepairer().contains(GlobalUtil.user.getName())) {//反馈成功，有自己名字
+                                    dataList5.add(0, data1);
+                                } else {//反馈成功，没有自己名字
+                                    SecondFragment.notifyDataList3Inserted(data1);
+                                }
+                            } else if (data1.getState() == 1) {//转让
+                                SecondFragment.notifyDataList2Inserted(data1);
                             }
                             break;
                         }
@@ -195,7 +186,7 @@ public class MyselfFragment extends Fragment implements View.OnClickListener {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         unbinder = ButterKnife.bind(this, view);
-
+        InitListener();
     }
 
     @Override
@@ -209,6 +200,52 @@ public class MyselfFragment extends Fragment implements View.OnClickListener {
         textViewProcessing.setOnClickListener(this);
         textViewDone.setOnClickListener(this);
         textViewAdmin.setOnClickListener(this);
+
+        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                updateData();
+            }
+        });
     }
 
+    private void updateData() {
+        mainViewModel.queryAll(new HttpUtil.HttpUtilCallBack<List<Data>>() {
+            @Override
+            public void onResponse(Response response, List<Data> result) {
+                if (result != null) {
+                    mainViewModel.queryDataListAboutMyself(1);
+                    mainViewModel.queryDataListAboutMyself(2);
+                    XToast.success("数据更新成功");
+                    mainViewModel.haveRoot(new HttpUtil.HttpUtilCallBack<Boolean>() {
+                        @Override
+                        public void onResponse(Response response, Boolean result) {
+                            textViewAdmin.setVisibility(result ? View.VISIBLE : View.GONE);
+                            swipeRefreshLayout.setRefreshing(false);
+                        }
+
+                        @Override
+                        public void onFailure(IOException e) {
+                            swipeRefreshLayout.setRefreshing(false);
+                        }
+                    });
+                } else {
+                    XToast.error("数据更新失败");
+                    swipeRefreshLayout.setRefreshing(false);
+                }
+
+            }
+
+            @Override
+            public void onFailure(IOException e) {
+                XToast.error("数据更新失败");
+                swipeRefreshLayout.setRefreshing(false);
+            }
+        });
+    }
+
+    public void autoRefresh() {
+        swipeRefreshLayout.setRefreshing(true);
+        updateData();
+    }
 }

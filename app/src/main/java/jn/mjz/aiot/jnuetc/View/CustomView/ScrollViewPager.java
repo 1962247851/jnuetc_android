@@ -21,21 +21,20 @@ public class ScrollViewPager extends ViewPager {
 
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
-        if (isScroll){
+        if (isScroll) {
             return super.onInterceptTouchEvent(ev);
-        }else {
+        } else {
             return false;
         }
     }
 
     @Override
     public boolean onTouchEvent(MotionEvent ev) {
-        if (isScroll){
+        if (isScroll) {
             return super.onTouchEvent(ev);
-        }else {
+        } else {
             return false;
         }
-
     }
 
     public void setScroll(boolean isScroll) {

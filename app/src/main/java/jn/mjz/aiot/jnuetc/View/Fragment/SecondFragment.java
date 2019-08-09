@@ -5,7 +5,6 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -33,8 +32,6 @@ import butterknife.Unbinder;
 import jn.mjz.aiot.jnuetc.Greendao.Dao.DataDao;
 import jn.mjz.aiot.jnuetc.Greendao.Entity.Data;
 import jn.mjz.aiot.jnuetc.R;
-import jn.mjz.aiot.jnuetc.Util.GlobalUtil;
-import jn.mjz.aiot.jnuetc.Util.GsonUtil;
 import jn.mjz.aiot.jnuetc.Util.HttpUtil;
 import jn.mjz.aiot.jnuetc.View.Activity.DetailsActivity;
 import jn.mjz.aiot.jnuetc.View.Adapter.RecyclerView.TaskAdapter;
@@ -55,8 +52,6 @@ public class SecondFragment extends Fragment {
 
     @BindView(R.id.smartRefreshLayout_fragment_second)
     SmartRefreshLayout smartRefreshLayout;
-
-    private boolean firstOpen = true;
 
     private MainViewModel mainViewModel;
     private static SecondPagerAdapter pagerAdapter;
@@ -108,13 +103,11 @@ public class SecondFragment extends Fragment {
             @Override
             public void OnStartSelect(int count) {
                 iSecondListener.OnStartSelect(count, dataLists2.size());
-//                Log.e(TAG, "OnStartSelect: " + count);
             }
 
             @Override
             public void OnSelect(int count) {
                 iSecondListener.OnSelect(count, dataLists2.size());
-//                Log.e(TAG, "OnSelect: " + count);
             }
 
             @Override
@@ -146,8 +139,6 @@ public class SecondFragment extends Fragment {
                         mainViewModel.deleteMany(ids, new HttpUtil.HttpUtilCallBack<Boolean>() {
                             @Override
                             public void onResponse(Response response, Boolean result) {
-
-                                // TODO: 2019/8/4 通知adapter更新数据 (dataList和booleanArray)
 
                                 taskAdapter2.clearSelect();
                                 taskAdapter2.cancelSelect();
@@ -286,8 +277,6 @@ public class SecondFragment extends Fragment {
             }
         };
 
-        autoRefresh();
-
         mainViewModel.getCurrentState().observe(this, integer -> {
             if (integer == 1) {
                 if (pagerAdapter.isSelectMode3()) {
@@ -331,48 +320,11 @@ public class SecondFragment extends Fragment {
 
         smartRefreshLayout.finishLoadMoreWithNoMoreData();
         smartRefreshLayout.setOnRefreshListener(refreshLayout -> {
-            XLoadingDialog.with(getContext()).setMessage("获取最新数据中，请稍后").setCanceled(false).show();
-            mainViewModel.queryAll(new HttpUtil.HttpUtilCallBack<List<Data>>() {
-                @Override
-                public void onResponse(Response response, List<Data> result) {
-
-                    if (result != null) {
-                        XToast.success("数据更新成功");
-                        smartRefreshLayout.finishRefreshWithNoMoreData();
-                        if (firstOpen) {
-                            mainViewModel.queryDataListBySetting(1);
-                            mainViewModel.queryDataListBySetting(2);
-                            firstOpen = false;
-                        } else {
-                            mainViewModel.queryDataListBySetting(null);
-                        }
-                        if (getCurrentPosition() == 0) {
-                            taskAdapter2.clearSelect();
-                            taskAdapter2.cancelSelect();
-                            iSecondListener.OnCancelSelect();
-                        } else {
-                            taskAdapter3.clearSelect();
-                            taskAdapter3.cancelSelect();
-                            iSecondListener.OnCancelSelect();
-                        }
-                    } else {
-                        XToast.error("数据更新失败");
-                        smartRefreshLayout.finishRefresh(0, false, true);
-                    }
-                    XLoadingDialog.with(getContext()).cancel();
-                }
-
-                @Override
-                public void onFailure(IOException e) {
-                    XLoadingDialog.with(getContext()).cancel();
-                    smartRefreshLayout.finishRefresh(0, false, true);
-                    XToast.error("数据更新失败");
-                }
-            });
+            updateData();
         });
 
         mainViewModel.getDataList2().observe(getActivity(), data -> {
-            Log.e(TAG, "onChanged2: " + data);
+//            Log.e(TAG, "onChanged2: " + data);
             taskAdapter2.notifyItemRangeRemoved(0, taskAdapter2.getItemCount());
             dataLists2.clear();
             dataLists2.addAll(data);
@@ -380,7 +332,7 @@ public class SecondFragment extends Fragment {
             pagerAdapter.IsNoData2();
         });
         mainViewModel.getDataList3().observe(getActivity(), data -> {
-            Log.e(TAG, "onChanged3: " + data);
+//            Log.e(TAG, "onChanged3: " + data);
             taskAdapter3.notifyItemRangeRemoved(0, taskAdapter3.getItemCount());
             dataLists3.clear();
             dataLists3.addAll(data);
@@ -389,32 +341,36 @@ public class SecondFragment extends Fragment {
         });
     }
 
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (data != null && requestCode == 0) {
-            if (data.getBooleanExtra("feedback", false)) {
-                int position = data.getIntExtra("position", -1);
-                Data data1 = GsonUtil.getInstance().fromJson(data.getStringExtra("data"), Data.class);//更新后的data
+    private void updateData() {
+        mainViewModel.queryAll(new HttpUtil.HttpUtilCallBack<List<Data>>() {
+            @Override
+            public void onResponse(Response response, List<Data> result) {
 
-                updateMyselfDataList(data1);
-
-                dataLists2.remove(position);
-                pagerAdapter.deleteSelect2(position);
-                taskAdapter2.notifyItemRemoved(position);
-                taskAdapter2.notifyItemRangeChanged(position, dataLists2.size());
-                pagerAdapter.IsNoData2();
+                if (result != null) {
+                    XToast.success("数据更新成功");
+                    smartRefreshLayout.finishRefreshWithNoMoreData();
+                    mainViewModel.queryDataListBySetting(null);
+                    if (getCurrentPosition() == 0) {
+                        taskAdapter2.clearSelect();
+                        taskAdapter2.cancelSelect();
+                        iSecondListener.OnCancelSelect();
+                    } else {
+                        taskAdapter3.clearSelect();
+                        taskAdapter3.cancelSelect();
+                        iSecondListener.OnCancelSelect();
+                    }
+                } else {
+                    XToast.error("数据更新失败");
+                    smartRefreshLayout.finishRefresh(0, false, true);
+                }
             }
-            if (data.getBooleanExtra("makeover", false)) {
-                int position = data.getIntExtra("position", -1);
-                Data data1 = GsonUtil.getInstance().fromJson(data.getStringExtra("data"), Data.class);//更新后的data
 
-                updateMyselfDataList(data1);
-
-                dataLists2.remove(position);
-                dataLists2.add(position, data1);
-                taskAdapter2.notifyItemChanged(position);
+            @Override
+            public void onFailure(IOException e) {
+                smartRefreshLayout.finishRefresh(0, false, true);
+                XToast.error("数据更新失败");
             }
-        }
+        });
     }
 
     public int getCurrentPosition() {
@@ -485,26 +441,6 @@ public class SecondFragment extends Fragment {
         } else {
             pagerAdapter.cancelSelect3();
         }
-    }
-
-    //单独更新处理中和已维修
-    private void updateMyselfDataList(Data data) {
-        List<Data> dataList4 = mainViewModel.getDataList4().getValue();
-        List<Data> dataList5 = mainViewModel.getDataList5().getValue();
-
-        for (Data d : dataList4) {
-            if (d.getId().equals(data.getId())) {
-                dataList4.remove(d);
-                if (data.getRepairer().contains(GlobalUtil.user.getName())) {//反馈
-                    dataList5.add(0, data);
-                }
-                break;
-            }
-        }
-        List<Data> dataList44 = new ArrayList<>(dataList4);
-        List<Data> dataList55 = new ArrayList<>(dataList5);
-        mainViewModel.getDataList4().setValue(dataList44);
-        mainViewModel.getDataList5().setValue(dataList55);
     }
 
 }

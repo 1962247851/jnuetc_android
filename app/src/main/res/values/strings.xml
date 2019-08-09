@@ -1,8 +1,5 @@
 <resources>
     <string name="app_name">JNUETC</string>
-
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="Location">宿舍园区</string>
     <string name="Id">报修序号</string>
     <string name="Date">报修日期</string>
@@ -21,7 +18,7 @@
     <string name="RepairMessage">故障描述及解决过程</string>
     <string name="Confirm">接单</string>
     <string name="DateAndName">时间-姓名</string>
-    <string name="LocationAndId">地点-1</string>
+    <string name="LocationAndId">园区-Id</string>
     <string name="LoginOut">退出登录</string>
     <string name="OrderByTime">按时间排序</string>
     <string name="TimeAsc">升序</string>
@@ -43,5 +40,8 @@
     <string name="ModifyPassword">修改密码</string>
     <string name="NoData">暂无数据</string>
     <string name="CheckForUpdate">检查更新</string>
+    <string name="MakeOver">转让</string>
+    <string name="Submit">提交</string>
+    <string name="Order">接单</string>
 
 </resources>

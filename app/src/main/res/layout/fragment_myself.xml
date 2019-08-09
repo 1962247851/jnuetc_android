@@ -1,62 +1,68 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.swiperefreshlayout.widget.SwipeRefreshLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/srl_myself"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:orientation="vertical">
-
-    <com.google.android.material.card.MaterialCardView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="10dp">
-
-        <FrameLayout
-            android:id="@+id/frameLayout_myself_timer"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-
-    </com.google.android.material.card.MaterialCardView>
-
+    android:layout_height="match_parent">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="10dp">
+        android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/tv_fragment_myself_processing"
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="?selectableItemBackground"
-            android:drawableEnd="@drawable/ic_arrow_right_gray"
-            android:gravity="start|center_vertical"
-            android:padding="5dp"
-            android:text="处理中"
-            android:textSize="20sp" />
+            android:layout_margin="10dp">
 
-        <TextView
-            android:id="@+id/tv_fragment_myself_done"
+            <FrameLayout
+                android:id="@+id/frameLayout_myself_timer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+        </com.google.android.material.card.MaterialCardView>
+
+
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="?selectableItemBackground"
-            android:drawableEnd="@drawable/ic_arrow_right_gray"
-            android:gravity="start|center_vertical"
-            android:padding="5dp"
-            android:text="已维修"
-            android:textSize="20sp" />
+            android:orientation="vertical"
+            android:padding="10dp">
 
-        <TextView
-            android:id="@+id/tv_fragment_myself_admin"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="?selectableItemBackground"
-            android:drawableEnd="@drawable/ic_arrow_right_gray"
-            android:gravity="start|center_vertical"
-            android:padding="5dp"
-            android:text="控制台"
-            android:textSize="20sp"
-            android:visibility="gone" />
+            <TextView
+                android:id="@+id/tv_fragment_myself_processing"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?selectableItemBackground"
+                android:drawableEnd="@drawable/ic_arrow_right_gray"
+                android:gravity="start|center_vertical"
+                android:padding="5dp"
+                android:text="处理中"
+                android:textSize="20sp" />
+
+            <TextView
+                android:id="@+id/tv_fragment_myself_done"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?selectableItemBackground"
+                android:drawableEnd="@drawable/ic_arrow_right_gray"
+                android:gravity="start|center_vertical"
+                android:padding="5dp"
+                android:text="已维修"
+                android:textSize="20sp" />
+
+            <TextView
+                android:id="@+id/tv_fragment_myself_admin"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?selectableItemBackground"
+                android:drawableEnd="@drawable/ic_arrow_right_gray"
+                android:gravity="start|center_vertical"
+                android:padding="5dp"
+                android:text="控制台"
+                android:textSize="20sp"
+                android:visibility="gone" />
+
+        </LinearLayout>
 
     </LinearLayout>
-
-</LinearLayout>
+</androidx.swiperefreshlayout.widget.SwipeRefreshLayout>

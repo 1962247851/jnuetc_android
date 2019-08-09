@@ -8,22 +8,19 @@ import android.os.Build;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.rengwuxian.materialedittext.MaterialEditText;
-import com.youth.xframe.utils.handler.XHandler;
-import com.youth.xframe.utils.http.XHttp;
 import com.youth.xframe.utils.permission.XPermission;
 import com.youth.xframe.widget.XLoadingDialog;
 import com.youth.xframe.widget.XToast;
 
 import java.io.IOException;
-import java.security.acl.Permission;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -52,9 +49,7 @@ public class LoginActivity extends AppCompatActivity {
         } else {
             XPermission.requestPermissions(this, 111, new String[]{Manifest.permission.CALL_PHONE, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.READ_PHONE_STATE}, null);
         }
-
         setContentView(R.layout.activity_login);
-
         sharedPreferences = SharedPreferencesUtil.getSharedPreferences(GlobalUtil.KEYS.LOGIN_ACTIVITY.FILE_NAME);
         String userJson = sharedPreferences.getString(GlobalUtil.KEYS.LOGIN_ACTIVITY.USER_JSON_STRING, "needLogin");
         if (!userJson.equals("needLogin")) {
@@ -184,7 +179,6 @@ public class LoginActivity extends AppCompatActivity {
     private void login() {
         XLoadingDialog.with(this).setCanceled(false).setMessage("账号验证中，请稍等").show();
 
-        // TODO: 2019/7/10
         Map<String, Object> params = new HashMap<>();
         params.put("sno", number);
         params.put("password", password);
@@ -220,11 +214,14 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void onFailure(IOException e) {
                 buttonLogin.setClickable(true);
-                Log.e(TAG, "onFailure: " + e);
                 XToast.error("登录失败");
                 XLoadingDialog.with(LoginActivity.this).cancel();
             }
         });
     }
 
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        XPermission.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    }
 }

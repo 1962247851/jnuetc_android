@@ -62,6 +62,7 @@ public class GlobalUtil {
         public static final class QUERY {
             public static final String BY_ID = HOST + "QueryById";
             public static final String ALL = HOST + "QueryAll";
+            public static final String ALL_USER = HOST + "QueryAllUser";
             public static final String LOGIN = HOST + "Login";
             public static final String CHECK_STATE = HOST + "CheckState";
             public static final String HAVE_ROOT = HOST + "HaveRoot";
@@ -86,7 +87,6 @@ public class GlobalUtil {
 
         }
     }
-
 
     public static GlobalUtil getInstance() {
         if (instance == null)

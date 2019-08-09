@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -28,19 +29,17 @@ import com.youth.xframe.widget.XLoadingDialog;
 import com.youth.xframe.widget.XToast;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
+import java.util.Locale;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import jn.mjz.aiot.jnuetc.Application.MyApplication;
 import jn.mjz.aiot.jnuetc.Greendao.Entity.Data;
 import jn.mjz.aiot.jnuetc.R;
 import jn.mjz.aiot.jnuetc.Util.DateUtil;
 import jn.mjz.aiot.jnuetc.Util.GlobalUtil;
 import jn.mjz.aiot.jnuetc.Util.GsonUtil;
 import jn.mjz.aiot.jnuetc.Util.HttpUtil;
-import jn.mjz.aiot.jnuetc.View.Fragment.SecondFragment;
 import jn.mjz.aiot.jnuetc.ViewModel.MainViewModel;
 import okhttp3.Response;
 
@@ -50,15 +49,12 @@ public class DetailsActivity extends AppCompatActivity implements View.OnClickLi
     private Data data;
     private MainViewModel mainViewModel;
 
-
     @BindView(R.id.toolbar_details)
     Toolbar toolbar;
     @BindView(R.id.button_details_feedback)
     Button buttonFeedback;
     @BindView(R.id.button_details_confirm)
     Button buttonConfirm;
-    @BindView(R.id.button_details_make_over)
-    Button buttonMakeOver;
 
     @BindView(R.id.textView_details_location)
     TextView textViewLocation;
@@ -80,22 +76,6 @@ public class DetailsActivity extends AppCompatActivity implements View.OnClickLi
     @BindView(R.id.textView_details_feedback)
     TextView textViewFeedback;
 
-    //    @BindView(R.id.tidt_details_location)
-//    TextInputEditText textInputEditTextLocation;
-//    @BindView(R.id.tidt_details_id)
-//    TextInputEditText textInputEditTextId;
-//    @BindView(R.id.tidt_details_date)
-//    TextInputEditText textInputEditTextDate;
-//    @BindView(R.id.tidt_details_name)
-//    TextInputEditText textInputEditTextName;
-//    @BindView(R.id.tidt_details_tel)
-//    TextInputEditText textInputEditTextTel;
-//    @BindView(R.id.tidt_details_QQ)
-//    TextInputEditText textInputEditTextQQ;
-//    @BindView(R.id.tidt_details_model)
-//    TextInputEditText textInputEditTextModel;
-//    @BindView(R.id.tidt_details_message)
-//    TextInputEditText textInputEditTextMessage;
     @BindView(R.id.tidt_details_repairer)
     TextInputEditText textInputEditTextRepairer;
     @BindView(R.id.tidt_details_repairDate)
@@ -104,10 +84,6 @@ public class DetailsActivity extends AppCompatActivity implements View.OnClickLi
     TextInputLayout textInputLayoutRepairDate;
     @BindView(R.id.tidt_details_repair_message)
     TextInputEditText textInputEditTextRepairMessage;
-//    @BindView(R.id.til_details_QQ)
-//    TextInputLayout textInputLayoutQQ;
-//    @BindView(R.id.til_details_tel)
-//    TextInputLayout textInputLayoutTel;
 
     @BindView(R.id.spinner_mark)
     Spinner spinnerMark;
@@ -127,7 +103,6 @@ public class DetailsActivity extends AppCompatActivity implements View.OnClickLi
 
         buttonFeedback.setOnClickListener(this);
         buttonConfirm.setOnClickListener(this);
-        buttonMakeOver.setOnClickListener(this);
         textViewQQ.setOnClickListener(this);
         textViewTel.setOnClickListener(this);
 
@@ -156,12 +131,12 @@ public class DetailsActivity extends AppCompatActivity implements View.OnClickLi
                     linearLayoutFeedback.setVisibility(View.VISIBLE);
                     textInputEditTextRepairer.setEnabled(true);
                     textInputEditTextRepairer.setText(data.getRepairer());
+
                 }
                 break;
             case 2://已维修，除了管理员外，所有内容均不可修改
                 linearLayoutFeedback.setVisibility(View.VISIBLE);
                 buttonFeedback.setVisibility(View.GONE);
-                buttonMakeOver.setVisibility(View.GONE);
 
                 spinnerMark.setEnabled(false);
                 spinnerService.setEnabled(false);
@@ -191,7 +166,6 @@ public class DetailsActivity extends AppCompatActivity implements View.OnClickLi
                 break;
         }
 
-
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
@@ -208,9 +182,6 @@ public class DetailsActivity extends AppCompatActivity implements View.OnClickLi
             case R.id.button_details_confirm:
                 order(data);
                 break;
-            case R.id.button_details_make_over:
-                makeOver(data);
-                break;
             case R.id.textView_details_qq:
                 String url = "mqqwpa://im/chat?chat_type=wpa&uin=" + data.getQq();
                 try {
@@ -220,47 +191,88 @@ public class DetailsActivity extends AppCompatActivity implements View.OnClickLi
                 }
                 break;
             case R.id.textView_details_tel:
-                XPermission.requestPermissions(DetailsActivity.this, 0, new String[]{Manifest.permission.CALL_PHONE}, new XPermission.OnPermissionListener() {
-                    @Override
-                    public void onPermissionGranted() {
-                        Intent intent = new Intent();
-                        intent.setAction(Intent.ACTION_DIAL);
-                        intent.setData(Uri.parse("tel:" + data.getTel()));
-                        startActivity(intent);
-                    }
-
-                    @Override
-                    public void onPermissionDenied() {
-
-                    }
-                });
+                openTel(data.getTel());
                 break;
         }
 
     }
 
+    private void openTel(String tel) {
+        XPermission.requestPermissions(DetailsActivity.this, 0, new String[]{Manifest.permission.CALL_PHONE}, new XPermission.OnPermissionListener() {
+            @Override
+            public void onPermissionGranted() {
+                Intent intent = new Intent();
+                intent.setAction(Intent.ACTION_DIAL);
+                intent.setData(Uri.parse(String.format(Locale.getDefault(), "tel:%s", tel)));
+                startActivity(intent);
+            }
+
+            @Override
+            public void onPermissionDenied() {
+                XPermission.showTipsDialog(DetailsActivity.this);
+            }
+        });
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        XPermission.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    }
+
     private void makeOver(Data data) {
-        String repairer = textInputEditTextRepairer.getText().toString();
+        XLoadingDialog.with(DetailsActivity.this).setCanceled(false).setMessage("请求处理中，请稍后").show();
+        mainViewModel.queryAllUser(new HttpUtil.HttpUtilCallBack<List<String>>() {
+            @Override
+            public void onResponse(Response response, List<String> result) {
+                XLoadingDialog.with(DetailsActivity.this).dismiss();
+                result.remove(GlobalUtil.user.getName());
+                String[] names = new String[result.size()];
+                result.toArray(names);
+                boolean[] checkItems = new boolean[result.size()];
+                AlertDialog.Builder builder = new AlertDialog.Builder(DetailsActivity.this);
+                builder.setTitle("请选择一个或多个被转让人")
+                        .setMultiChoiceItems(names, checkItems, new DialogInterface.OnMultiChoiceClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i, boolean b) {
 
-        if (!repairer.isEmpty() && !repairer.contains(GlobalUtil.user.getName())) {
+                            }
+                        })
+                        .setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                StringBuilder names = new StringBuilder();
+                                for (int j = 0; j < checkItems.length; j++) {
+                                    if (checkItems[j]) {
+                                        names.append(result.get(j));
+                                        names.append("，");
+                                    }
+                                }
+                                if (names.toString().isEmpty()) {
+                                    XToast.info("未选择");
+                                } else {
+                                    names.deleteCharAt(names.length() - 1);
+                                    String repairer = names.toString();
+                                    if (!repairer.isEmpty() && !repairer.contains(GlobalUtil.user.getName())) {
+                                        data.setRepairer(repairer);
+                                        data.setOrderDate(data.getOrderDate());
+                                        data.setRepairDate(System.currentTimeMillis());
+                                        makeOver();
+                                    } else {
+                                        XToast.info("请检查被转让人");
+                                    }
+                                }
+                            }
+                        })
+                        .setNegativeButton("取消", null)
+                        .setNeutralButton("我再想想", null)
+                        .show();
+            }
 
-            data.setRepairer(repairer);
-            data.setRepairDate(System.currentTimeMillis());
-
-            AlertDialog dialog = new AlertDialog.Builder(DetailsActivity.this).create();
-            dialog.setTitle("注意");
-            dialog.setMessage("请确保被转让人的姓名无误");
-            dialog.setButton(DialogInterface.BUTTON_NEGATIVE, "确认无误", (dialogInterface, i) -> {
-                dialog.cancel();
-                makeOver();
-            });
-            dialog.setButton(DialogInterface.BUTTON_POSITIVE, "我再瞅瞅", (dialogInterface, i) -> {
-            });
-            dialog.show();
-
-        } else {
-            XToast.info("请检查被转让人");
-        }
+            @Override
+            public void onFailure(IOException e) {
+                XLoadingDialog.with(DetailsActivity.this).cancel();
+            }
+        });
     }
 
     private void makeOver() {
@@ -287,34 +299,32 @@ public class DetailsActivity extends AppCompatActivity implements View.OnClickLi
     }
 
     private void order(Data data) {
-        XLoadingDialog.with(DetailsActivity.this).setMessage("请求处理中，请稍后").setCanceled(false).show();
+        XLoadingDialog.with(this).setMessage("请求处理中，请稍后").setCanceled(false).show();
         mainViewModel.queryById(String.valueOf(data.getId()), new HttpUtil.HttpUtilCallBack<Data>() {
 
             @Override
             public void onResponse(Response response, Data result) {
+                XLoadingDialog.with(DetailsActivity.this).cancel();
                 if (result.getState() == 0) {
                     String[] items = {"接单成功后自动打开QQ会话"};
                     boolean[] booleans = {true};
                     AlertDialog.Builder builder = new AlertDialog.Builder(DetailsActivity.this);
-                    // TODO: 2019/7/10 设置customTitle
                     builder.setTitle(data.getLocal() + " - " + data.getId())
                             .setCancelable(false)
                             .setMultiChoiceItems(items, booleans, (dialogInterface, i, b) -> {
                             })
                             .setNegativeButton("取消", (dialogInterface, i) -> XLoadingDialog.with(DetailsActivity.this).cancel())
                             .setPositiveButton("确定", (dialogInterface, i) -> {
-                                XLoadingDialog.with(DetailsActivity.this).dismiss();
-                                // TODO: 2019/7/10
+                                XLoadingDialog.with(DetailsActivity.this).setMessage("请求处理中，请稍后").setCanceled(false).show();
                                 result.setRepairer(GlobalUtil.user.getName());
                                 result.setState((short) 1);
-                                result.setRepairDate(System.currentTimeMillis());
                                 mainViewModel.feedback(result, new HttpUtil.HttpUtilCallBack<Data>() {
                                     @Override
                                     public void onResponse(Response response1, Data o) {
+                                        XLoadingDialog.with(DetailsActivity.this).dismiss();
                                         XToast.success("接单成功");
 
-                                        SecondFragment.notifyDataList2Inserted(result);
-                                        MyApplication.getDaoSession().getDataDao().update(result);
+                                        mainViewModel.dataDao.update(o);
 
                                         Intent intent = new Intent();
                                         intent.putExtra("order", true);
@@ -335,6 +345,7 @@ public class DetailsActivity extends AppCompatActivity implements View.OnClickLi
 
                                     @Override
                                     public void onFailure(IOException e) {
+                                        XLoadingDialog.with(DetailsActivity.this).cancel();
                                         XToast.error("接单失败");
                                     }
                                 });
@@ -364,7 +375,6 @@ public class DetailsActivity extends AppCompatActivity implements View.OnClickLi
     private void feedback(Data data) {
         data.setState((short) 2);
         data.setRepairer(textInputEditTextRepairer.getText().toString());
-        data.setRepairDate(System.currentTimeMillis());
         data.setMark(spinnerMark.getSelectedItem().toString());
         data.setService(spinnerService.getSelectedItem().toString());
         data.setRepairMessage(textInputEditTextRepairMessage.getText().toString());
@@ -392,8 +402,6 @@ public class DetailsActivity extends AppCompatActivity implements View.OnClickLi
         } else {
             feedback();
         }
-
-
     }
 
     private void feedback() {
@@ -402,16 +410,17 @@ public class DetailsActivity extends AppCompatActivity implements View.OnClickLi
             @Override
             public void onResponse(Response response, Data result) {
                 XLoadingDialog.with(DetailsActivity.this).dismiss();
-                XToast.success("反馈成功");
-
-                SecondFragment.notifyDataList3Inserted(data);
-
-                Intent intent = new Intent();
-                intent.putExtra("feedback", true);
-                intent.putExtra("data", result.toString());
-                intent.putExtra("position", getIntent().getIntExtra("position", -1));
-                setResult(0, intent);
-                finish();
+                if (result != null) {
+                    XToast.success("反馈成功");
+                    Intent intent = new Intent();
+                    intent.putExtra("feedback", true);
+                    intent.putExtra("data", result.toString());
+                    intent.putExtra("position", getIntent().getIntExtra("position", -1));
+                    setResult(0, intent);
+                    finish();
+                } else {
+                    XToast.error("反馈失败");
+                }
             }
 
             @Override
@@ -423,11 +432,28 @@ public class DetailsActivity extends AppCompatActivity implements View.OnClickLi
     }
 
     @Override
-    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        if (item.getItemId() == android.R.id.home) {
-            finish();
-            return true;
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.tool_bar_details, menu);
+        if (data.getState() == 1) {
+            if (data.getRepairer() != null && data.getRepairer().contains(GlobalUtil.user.getName())) {
+                menu.findItem(R.id.menu_details_make_over).setVisible(true);
+            }
         }
-        return super.onOptionsItemSelected(item);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.menu_details_make_over:
+                makeOver(data);
+                return true;
+            case android.R.id.home:
+                finish();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+
     }
 }

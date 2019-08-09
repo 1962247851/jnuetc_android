@@ -153,7 +153,6 @@
                         android:paddingTop="5dp"
                         android:paddingEnd="10dp"
                         android:paddingBottom="5dp"
-                        android:textIsSelectable="true"
                         android:textSize="20sp" />
 
                     <TextView
@@ -176,7 +175,6 @@
                         android:paddingTop="5dp"
                         android:paddingEnd="10dp"
                         android:paddingBottom="5dp"
-                        android:textIsSelectable="true"
                         android:textSize="20sp" />
 
                     <TextView
@@ -225,157 +223,13 @@
                         android:textIsSelectable="true"
                         android:textSize="20sp" />
 
-                    <!--<com.google.android.material.textfield.TextInputLayout-->
-                    <!--android:layout_width="match_parent"-->
-                    <!--android:layout_height="wrap_content"-->
-                    <!--android:paddingBottom="10dp"-->
-                    <!--android:textColorHint="@color/colorPrimary">-->
-
-                    <!--<com.google.android.material.textfield.TextInputEditText-->
-                    <!--android:id="@+id/tidt_details_location"-->
-                    <!--android:layout_width="match_parent"-->
-                    <!--android:layout_height="wrap_content"-->
-                    <!--android:enabled="false"-->
-                    <!--android:hint="@string/Location"-->
-                    <!--android:textColor="@color/MainText"-->
-                    <!--android:textIsSelectable="true"-->
-                    <!--android:textSize="20sp" />-->
-
-                    <!--</com.google.android.material.textfield.TextInputLayout>-->
-
-                    <!--<com.google.android.material.textfield.TextInputLayout-->
-                    <!--android:layout_width="match_parent"-->
-                    <!--android:layout_height="wrap_content"-->
-                    <!--android:paddingBottom="10dp"-->
-                    <!--android:textColorHint="@color/colorPrimary">-->
-
-                    <!--<com.google.android.material.textfield.TextInputEditText-->
-                    <!--android:id="@+id/tidt_details_id"-->
-                    <!--android:layout_width="match_parent"-->
-                    <!--android:layout_height="wrap_content"-->
-                    <!--android:enabled="false"-->
-                    <!--android:hint="@string/Id"-->
-                    <!--android:textColor="@color/MainText"-->
-                    <!--android:textIsSelectable="true"-->
-                    <!--android:textSize="20sp" />-->
-
-                    <!--</com.google.android.material.textfield.TextInputLayout>-->
-
-                    <!--<com.google.android.material.textfield.TextInputLayout-->
-                    <!--android:layout_width="match_parent"-->
-                    <!--android:layout_height="wrap_content"-->
-                    <!--android:paddingBottom="10dp"-->
-                    <!--android:textColorHint="@color/colorPrimary">-->
-
-                    <!--<com.google.android.material.textfield.TextInputEditText-->
-                    <!--android:id="@+id/tidt_details_date"-->
-                    <!--android:layout_width="match_parent"-->
-                    <!--android:layout_height="wrap_content"-->
-                    <!--android:enabled="false"-->
-                    <!--android:hint="@string/Date"-->
-                    <!--android:textColor="@color/MainText"-->
-                    <!--android:textIsSelectable="true"-->
-                    <!--android:textSize="20sp" />-->
-
-                    <!--</com.google.android.material.textfield.TextInputLayout>-->
-
-                    <!--<com.google.android.material.textfield.TextInputLayout-->
-                    <!--android:layout_width="match_parent"-->
-                    <!--android:layout_height="wrap_content"-->
-                    <!--android:paddingBottom="10dp"-->
-                    <!--android:textColorHint="@color/colorPrimary">-->
-
-                    <!--<com.google.android.material.textfield.TextInputEditText-->
-                    <!--android:id="@+id/tidt_details_name"-->
-                    <!--android:layout_width="match_parent"-->
-                    <!--android:layout_height="wrap_content"-->
-                    <!--android:enabled="false"-->
-                    <!--android:hint="@string/Name"-->
-                    <!--android:textColor="@color/MainText"-->
-                    <!--android:textIsSelectable="true"-->
-                    <!--android:textSize="20sp" />-->
-
-                    <!--</com.google.android.material.textfield.TextInputLayout>-->
-
-                    <!--<com.google.android.material.textfield.TextInputLayout-->
-                    <!--android:id="@+id/til_details_tel"-->
-                    <!--android:layout_width="match_parent"-->
-                    <!--android:layout_height="wrap_content"-->
-                    <!--android:paddingBottom="10dp"-->
-                    <!--android:textColorHint="@color/colorPrimary">-->
-
-                    <!--<com.google.android.material.textfield.TextInputEditText-->
-                    <!--android:id="@+id/tidt_details_tel"-->
-                    <!--android:layout_width="match_parent"-->
-                    <!--android:layout_height="wrap_content"-->
-                    <!--android:enabled="false"-->
-                    <!--android:hint="@string/Tel"-->
-                    <!--android:textColor="@color/MainText"-->
-                    <!--android:textIsSelectable="true"-->
-                    <!--android:textSize="20sp" />-->
-
-                    <!--</com.google.android.material.textfield.TextInputLayout>-->
-
-                    <!--<com.google.android.material.textfield.TextInputLayout-->
-                    <!--android:id="@+id/til_details_QQ"-->
-                    <!--android:layout_width="match_parent"-->
-                    <!--android:layout_height="wrap_content"-->
-                    <!--android:paddingBottom="10dp"-->
-                    <!--android:textColorHint="@color/colorPrimary">-->
-
-                    <!--<com.google.android.material.textfield.TextInputEditText-->
-                    <!--android:id="@+id/tidt_details_QQ"-->
-                    <!--android:layout_width="match_parent"-->
-                    <!--android:layout_height="wrap_content"-->
-                    <!--android:enabled="false"-->
-                    <!--android:hint="@string/qq"-->
-                    <!--android:textColor="@color/MainText"-->
-                    <!--android:textIsSelectable="true"-->
-                    <!--android:textSize="20sp" />-->
-
-                    <!--</com.google.android.material.textfield.TextInputLayout>-->
-
-                    <!--<com.google.android.material.textfield.TextInputLayout-->
-                    <!--android:layout_width="match_parent"-->
-                    <!--android:layout_height="wrap_content"-->
-                    <!--android:paddingBottom="10dp"-->
-                    <!--android:textColorHint="@color/colorPrimary">-->
-
-                    <!--<com.google.android.material.textfield.TextInputEditText-->
-                    <!--android:id="@+id/tidt_details_model"-->
-                    <!--android:layout_width="match_parent"-->
-                    <!--android:layout_height="wrap_content"-->
-                    <!--android:enabled="false"-->
-                    <!--android:hint="@string/Model"-->
-                    <!--android:textColor="@color/MainText"-->
-                    <!--android:textIsSelectable="true"-->
-                    <!--android:textSize="20sp" />-->
-
-                    <!--</com.google.android.material.textfield.TextInputLayout>-->
-
-                    <!--<com.google.android.material.textfield.TextInputLayout-->
-                    <!--android:layout_width="match_parent"-->
-                    <!--android:layout_height="wrap_content"-->
-                    <!--android:paddingBottom="10dp"-->
-                    <!--android:textColorHint="@color/colorPrimary">-->
-
-                    <!--<com.google.android.material.textfield.TextInputEditText-->
-                    <!--android:id="@+id/tidt_details_message"-->
-                    <!--android:layout_width="match_parent"-->
-                    <!--android:layout_height="wrap_content"-->
-                    <!--android:enabled="false"-->
-                    <!--android:hint="@string/Message"-->
-                    <!--android:textColor="@color/MainText"-->
-                    <!--android:textIsSelectable="true"-->
-                    <!--android:textSize="20sp" />-->
-
-                    <!--</com.google.android.material.textfield.TextInputLayout>-->
-
                     <Button
+                        android:background="@drawable/button_confirm"
                         android:id="@+id/button_details_confirm"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="接单"
+                        android:text="@string/Order"
+                        android:textColor="@color/white"
                         android:visibility="gone" />
                 </LinearLayout>
 
@@ -421,8 +275,8 @@
                                 android:layout_height="wrap_content"
                                 android:enabled="false"
                                 android:hint="@string/Repairer"
-                                android:maxLength="20"
-                                android:maxLines="1"
+                                android:maxLength="100"
+                                android:maxLines="2"
                                 android:textColor="@color/MainText"
                                 android:textIsSelectable="true"
                                 android:textSize="20sp" />
@@ -477,34 +331,40 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content" />
 
-                        <com.google.android.material.textfield.TextInputLayout
+                        <RelativeLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:paddingBottom="10dp"
-                            android:textColorHint="@color/colorPrimary">
+                            android:paddingBottom="10dp">
 
-                            <com.google.android.material.textfield.TextInputEditText
-                                android:id="@+id/tidt_details_repair_message"
+                            <com.google.android.material.textfield.TextInputLayout
+                                android:id="@+id/til_details_repairMessage"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:hint="@string/RepairMessage"
-                                android:textColor="@color/MainText"
-                                android:textIsSelectable="true"
-                                android:textSize="20sp" />
+                                android:layout_alignParentStart="true"
+                                android:layout_toStartOf="@+id/button_details_feedback"
+                                android:textColorHint="@color/colorPrimary">
 
-                        </com.google.android.material.textfield.TextInputLayout>
+                                <com.google.android.material.textfield.TextInputEditText
+                                    android:id="@+id/tidt_details_repair_message"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:hint="@string/RepairMessage"
+                                    android:textColor="@color/MainText"
+                                    android:textIsSelectable="true"
+                                    android:textSize="20sp" />
 
-                        <Button
-                            android:id="@+id/button_details_feedback"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="提交反馈" />
+                            </com.google.android.material.textfield.TextInputLayout>
 
-                        <Button
-                            android:id="@+id/button_details_make_over"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="转让" />
+                            <Button
+                                android:id="@+id/button_details_feedback"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_alignBottom="@id/til_details_repairMessage"
+                                android:layout_alignParentEnd="true"
+                                android:background="@drawable/button_confirm"
+                                android:text="@string/Submit"
+                                android:textColor="@color/white" />
+                        </RelativeLayout>
                     </LinearLayout>
                 </LinearLayout>
             </LinearLayout>

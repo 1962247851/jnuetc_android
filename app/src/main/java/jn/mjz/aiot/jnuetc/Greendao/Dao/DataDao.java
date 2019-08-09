@@ -38,10 +38,11 @@ public class DataDao extends AbstractDao<Data, Long> {
         public final static Property Model = new Property(11, String.class, "model", false, "MODEL");
         public final static Property Message = new Property(12, String.class, "message", false, "MESSAGE");
         public final static Property Repairer = new Property(13, String.class, "repairer", false, "REPAIRER");
-        public final static Property RepairDate = new Property(14, long.class, "repairDate", false, "REPAIR_DATE");
-        public final static Property Mark = new Property(15, String.class, "mark", false, "MARK");
-        public final static Property Service = new Property(16, String.class, "service", false, "SERVICE");
-        public final static Property RepairMessage = new Property(17, String.class, "repairMessage", false, "REPAIR_MESSAGE");
+        public final static Property OrderDate = new Property(14, long.class, "orderDate", false, "ORDER_DATE");
+        public final static Property RepairDate = new Property(15, long.class, "repairDate", false, "REPAIR_DATE");
+        public final static Property Mark = new Property(16, String.class, "mark", false, "MARK");
+        public final static Property Service = new Property(17, String.class, "service", false, "SERVICE");
+        public final static Property RepairMessage = new Property(18, String.class, "repairMessage", false, "REPAIR_MESSAGE");
     }
 
 
@@ -71,10 +72,11 @@ public class DataDao extends AbstractDao<Data, Long> {
                 "\"MODEL\" TEXT NOT NULL ," + // 11: model
                 "\"MESSAGE\" TEXT NOT NULL ," + // 12: message
                 "\"REPAIRER\" TEXT," + // 13: repairer
-                "\"REPAIR_DATE\" INTEGER NOT NULL ," + // 14: repairDate
-                "\"MARK\" TEXT," + // 15: mark
-                "\"SERVICE\" TEXT," + // 16: service
-                "\"REPAIR_MESSAGE\" TEXT);"); // 17: repairMessage
+                "\"ORDER_DATE\" INTEGER NOT NULL ," + // 14: orderDate
+                "\"REPAIR_DATE\" INTEGER NOT NULL ," + // 15: repairDate
+                "\"MARK\" TEXT," + // 16: mark
+                "\"SERVICE\" TEXT," + // 17: service
+                "\"REPAIR_MESSAGE\" TEXT);"); // 18: repairMessage
         // Add Indexes
         db.execSQL("CREATE UNIQUE INDEX " + constraint + "IDX_DATA_UUID ON \"DATA\"" +
                 " (\"UUID\" ASC);");
@@ -119,21 +121,22 @@ public class DataDao extends AbstractDao<Data, Long> {
         if (repairer != null) {
             stmt.bindString(14, repairer);
         }
-        stmt.bindLong(15, entity.getRepairDate());
+        stmt.bindLong(15, entity.getOrderDate());
+        stmt.bindLong(16, entity.getRepairDate());
  
         String mark = entity.getMark();
         if (mark != null) {
-            stmt.bindString(16, mark);
+            stmt.bindString(17, mark);
         }
  
         String service = entity.getService();
         if (service != null) {
-            stmt.bindString(17, service);
+            stmt.bindString(18, service);
         }
  
         String repairMessage = entity.getRepairMessage();
         if (repairMessage != null) {
-            stmt.bindString(18, repairMessage);
+            stmt.bindString(19, repairMessage);
         }
     }
 
@@ -170,21 +173,22 @@ public class DataDao extends AbstractDao<Data, Long> {
         if (repairer != null) {
             stmt.bindString(14, repairer);
         }
-        stmt.bindLong(15, entity.getRepairDate());
+        stmt.bindLong(15, entity.getOrderDate());
+        stmt.bindLong(16, entity.getRepairDate());
  
         String mark = entity.getMark();
         if (mark != null) {
-            stmt.bindString(16, mark);
+            stmt.bindString(17, mark);
         }
  
         String service = entity.getService();
         if (service != null) {
-            stmt.bindString(17, service);
+            stmt.bindString(18, service);
         }
  
         String repairMessage = entity.getRepairMessage();
         if (repairMessage != null) {
-            stmt.bindString(18, repairMessage);
+            stmt.bindString(19, repairMessage);
         }
     }
 
@@ -210,10 +214,11 @@ public class DataDao extends AbstractDao<Data, Long> {
             cursor.getString(offset + 11), // model
             cursor.getString(offset + 12), // message
             cursor.isNull(offset + 13) ? null : cursor.getString(offset + 13), // repairer
-            cursor.getLong(offset + 14), // repairDate
-            cursor.isNull(offset + 15) ? null : cursor.getString(offset + 15), // mark
-            cursor.isNull(offset + 16) ? null : cursor.getString(offset + 16), // service
-            cursor.isNull(offset + 17) ? null : cursor.getString(offset + 17) // repairMessage
+            cursor.getLong(offset + 14), // orderDate
+            cursor.getLong(offset + 15), // repairDate
+            cursor.isNull(offset + 16) ? null : cursor.getString(offset + 16), // mark
+            cursor.isNull(offset + 17) ? null : cursor.getString(offset + 17), // service
+            cursor.isNull(offset + 18) ? null : cursor.getString(offset + 18) // repairMessage
         );
         return entity;
     }
@@ -234,10 +239,11 @@ public class DataDao extends AbstractDao<Data, Long> {
         entity.setModel(cursor.getString(offset + 11));
         entity.setMessage(cursor.getString(offset + 12));
         entity.setRepairer(cursor.isNull(offset + 13) ? null : cursor.getString(offset + 13));
-        entity.setRepairDate(cursor.getLong(offset + 14));
-        entity.setMark(cursor.isNull(offset + 15) ? null : cursor.getString(offset + 15));
-        entity.setService(cursor.isNull(offset + 16) ? null : cursor.getString(offset + 16));
-        entity.setRepairMessage(cursor.isNull(offset + 17) ? null : cursor.getString(offset + 17));
+        entity.setOrderDate(cursor.getLong(offset + 14));
+        entity.setRepairDate(cursor.getLong(offset + 15));
+        entity.setMark(cursor.isNull(offset + 16) ? null : cursor.getString(offset + 16));
+        entity.setService(cursor.isNull(offset + 17) ? null : cursor.getString(offset + 17));
+        entity.setRepairMessage(cursor.isNull(offset + 18) ? null : cursor.getString(offset + 18));
      }
     
     @Override

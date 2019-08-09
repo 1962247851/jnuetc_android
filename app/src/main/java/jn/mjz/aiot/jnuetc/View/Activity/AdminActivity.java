@@ -4,7 +4,6 @@ import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
-import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.Switch;
 
@@ -33,7 +32,6 @@ public class AdminActivity extends AppCompatActivity implements View.OnClickList
     private MainViewModel mainViewModel;
     private boolean firstOpen = true;
 
-
     @BindView(R.id.switch_admin)
     Switch aSwitch;
     @BindView(R.id.button_admin_delete)
@@ -48,41 +46,69 @@ public class AdminActivity extends AppCompatActivity implements View.OnClickList
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_admin);
         ButterKnife.bind(this);
-
+        mainViewModel = ViewModelProviders.of(this).get(MainViewModel.class);
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         XStatusBar.setColorNoTranslucent(this, getResources().getColor(R.color.colorPrimary));
 
-        mainViewModel = ViewModelProviders.of(this).get(MainViewModel.class);
-
-        aSwitch.setOnCheckedChangeListener((compoundButton, b) -> {
-            if (!firstOpen) {
-                if (b) {
-                    startService();
-                } else {
-                    closeService();
-                }
-            }
-        });
-
-        XLoadingDialog.with(this).setCanceled(false).setMessage("获取最新数据中").show();
-        mainViewModel.checkState(new HttpUtil.HttpUtilCallBack<Boolean>() {
+        XLoadingDialog.with(AdminActivity.this).setCanceled(false).setMessage("获取最新数据中").show();
+        mainViewModel.haveRoot(new HttpUtil.HttpUtilCallBack<Boolean>() {
             @Override
             public void onResponse(Response response, Boolean result) {
-                XLoadingDialog.with(AdminActivity.this).dismiss();
-                aSwitch.setChecked(result);
-                firstOpen = false;
+                if (!result) {
+                    XToast.info("您已不是管理员");
+                    finish();
+                } else {
+                    aSwitch.setOnCheckedChangeListener((compoundButton, b) -> {
+                        if (!firstOpen) {
+                            XLoadingDialog.with(AdminActivity.this).setCanceled(false).setMessage("请求处理中，请稍后").show();
+                            mainViewModel.haveRoot(new HttpUtil.HttpUtilCallBack<Boolean>() {
+                                @Override
+                                public void onResponse(Response response, Boolean result) {
+                                    XLoadingDialog.with(AdminActivity.this).dismiss();
+                                    if (result) {
+                                        if (b) {
+                                            startService();
+                                        } else {
+                                            closeService();
+                                        }
+                                    } else {
+                                        XToast.info("您已不是管理员");
+                                        finish();
+                                    }
+                                }
+
+                                @Override
+                                public void onFailure(IOException e) {
+                                }
+                            });
+
+                        }
+                    });
+                    mainViewModel.checkState(new HttpUtil.HttpUtilCallBack<Boolean>() {
+                        @Override
+                        public void onResponse(Response response, Boolean result) {
+                            XLoadingDialog.with(AdminActivity.this).dismiss();
+                            aSwitch.setChecked(result);
+                            firstOpen = false;
+                        }
+
+                        @Override
+                        public void onFailure(IOException e) {
+                            XLoadingDialog.with(AdminActivity.this).dismiss();
+                            aSwitch.setChecked(false);
+                            firstOpen = false;
+                        }
+                    });
+                    buttonDelete.setOnClickListener(AdminActivity.this);
+                }
             }
 
             @Override
             public void onFailure(IOException e) {
-                XLoadingDialog.with(AdminActivity.this).dismiss();
-                aSwitch.setChecked(false);
-                firstOpen = false;
             }
         });
 
-        buttonDelete.setOnClickListener(this);
     }
 
     @Override
@@ -93,44 +119,59 @@ public class AdminActivity extends AppCompatActivity implements View.OnClickList
                 if (id.isEmpty()) {
                     XToast.error("Id不能为空");
                 } else {
-                    XLoadingDialog.with(AdminActivity.this).setCanceled(false).setMessage("删除中").show();
-                    mainViewModel.queryById(id, new HttpUtil.HttpUtilCallBack<Data>() {
+                    mainViewModel.haveRoot(new HttpUtil.HttpUtilCallBack<Boolean>() {
                         @Override
-                        public void onResponse(Response response, Data result) {
-                            if (result != null) {
-                                mainViewModel.delete(id, new HttpUtil.HttpUtilCallBack<Boolean>() {
+                        public void onResponse(Response response, Boolean result) {
+                            if (result) {
+                                XLoadingDialog.with(AdminActivity.this).setCanceled(false).setMessage("删除中").show();
+                                mainViewModel.queryById(id, new HttpUtil.HttpUtilCallBack<Data>() {
                                     @Override
-                                    public void onResponse(Response response, Boolean result) {
-                                        XLoadingDialog.with(AdminActivity.this).dismiss();
-                                        if (result) {
-                                            XToast.success("删除成功");
+                                    public void onResponse(Response response, Data result) {
+                                        if (result != null) {
+                                            mainViewModel.delete(id, new HttpUtil.HttpUtilCallBack<Boolean>() {
+                                                @Override
+                                                public void onResponse(Response response, Boolean result) {
+                                                    XLoadingDialog.with(AdminActivity.this).dismiss();
+                                                    if (result) {
+                                                        XToast.success("删除成功");
+                                                    } else {
+                                                        XToast.error("删除失败");
+                                                    }
+                                                }
+
+                                                @Override
+                                                public void onFailure(IOException e) {
+                                                    XToast.error("删除失败");
+                                                    XLoadingDialog.with(AdminActivity.this).dismiss();
+                                                }
+                                            });
                                         } else {
-                                            XToast.error("删除失败");
+                                            XToast.error("报修单不存在");
+                                            XLoadingDialog.with(AdminActivity.this).dismiss();
                                         }
                                     }
 
                                     @Override
                                     public void onFailure(IOException e) {
-                                        XToast.error("删除失败");
+                                        if (e == null) {
+                                            XToast.error("该单不存在");
+                                        } else {
+                                            XToast.error("删除失败");
+                                        }
                                         XLoadingDialog.with(AdminActivity.this).dismiss();
                                     }
                                 });
                             } else {
-                                XToast.error("报修单不存在");
-                                XLoadingDialog.with(AdminActivity.this).dismiss();
+                                XToast.info("您已不是管理员");
+                                finish();
                             }
                         }
 
                         @Override
                         public void onFailure(IOException e) {
-                            if (e == null) {
-                                XToast.error("该单不存在");
-                            } else {
-                                XToast.error("删除失败");
-                            }
-                            XLoadingDialog.with(AdminActivity.this).dismiss();
                         }
                     });
+
                 }
                 break;
         }

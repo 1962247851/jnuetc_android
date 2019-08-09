@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Rect;
 import android.net.Uri;
@@ -102,9 +101,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public static final String APP_ID = "2882303761518054312";
     public static final String APP_KEY = "5181805484312";
 
+    private long backTime = 0;
+
     public RadioGroup radioGroup;
 
-    private MainViewModel mainViewModel;
+    public static MainViewModel mainViewModel;
 
     private NewTaskFragment newTaskFragment;
     private SecondFragment secondFragment;
@@ -122,9 +123,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         GlobalUtil.user = GsonUtil.getInstance().fromJson(getIntent().getStringExtra("user"), User.class);
-
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
+        UpdateUtil.checkForUpdate(true, this, drawer);
         mainViewModel = ViewModelProviders.of(this).get(MainViewModel.class);
 
         radioGroup = navigationView.getHeaderView(0).findViewById(R.id.radioGroup_main);
@@ -298,16 +299,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             @Override
             public void onDrawerClosed(View drawerView) {
-//                Log.d(TAG, "onDrawerClosed: " + mainViewModel.getSelectedLocalsN().getValue());
-//                Log.d(TAG, "onDrawerClosed: " + mainViewModel.getSelectedLocalsS().getValue());
                 mainViewModel.saveAllSettings();
                 mainViewModel.queryDataListBySetting(null);
-            }
-
-            @Override
-            public void onDrawerOpened(View drawerView) {
-//                Log.d(TAG, "onDrawerOpened: " + mainViewModel.getSelectedLocalsN().getValue());
-//                Log.d(TAG, "onDrawerOpened: " + mainViewModel.getSelectedLocalsS().getValue());
             }
         });
 
@@ -341,21 +334,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             } else if (position == 1) {
                 secondFragment.autoRefresh();
             } else {
-                // TODO: 2019/7/18
-
+                myselfFragment.autoRefresh();
             }
         });
     }
 
     private void InitView() {
-
         bottomNavigationBar.setEntities(entities);
         setSupportActionBar(toolbar);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
         toggle.syncState();
-//        navigationView.setNavigationItemSelectedListener(this);
         toolbar.setPadding(0, getStatusHeight(this), 0, 0);
         XStatusBar.setTranslucentForDrawerLayout(this, drawer, 0);
         TimerFragment timerFragment = new TimerFragment("与你相识的第", GlobalUtil.user.getRegDate());
@@ -372,66 +362,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
             case R.id.menu_main_update:
-                UpdateUtil.checkForUpdate(new UpdateUtil.IUpdateListener() {
-                    @Override
-                    public void HaveNewVersion(String url, String message, float newVersion) {
-                        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-                        builder.setMessage(message)
-                                .setTitle("发现新版本" + newVersion)
-                                .setPositiveButton("立即下载", new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialogInterface, int i) {
-                                        XToast.warning("因为服务器带宽太小，下载会造成其他功能响应时间过长或者失败，所以暂未开放下载");
-                                        /*
-                                        HashMap<String, Object> params = new HashMap<>();
-                                        params.put("url", url);
-                                        params.put("version", newVersion);
-                                        HttpUtil.get.downloadFile(MainActivity.this, GlobalUtil.URLS.FILE.DOWNLOAD, params, new HttpUtil.IFileDownloadListener() {
-                                            @Override
-                                            public void onStart() {
-                                                Log.e(TAG, "onStart: ");
-                                                XLoadingDialog.with(MainActivity.this).setCanceled(false).setMessage("下载中").show();
-                                            }
-
-                                            @Override
-                                            public void onDownloading(int progress) {
-//                                XLoadingDialog.with(MainActivity.this).setMessage(String.format("已下载%d", progress));
-                                                Log.e(TAG, "onDownloading: " + progress);
-                                            }
-
-                                            @Override
-                                            public void onFinish(File file) {
-                                                Log.e(TAG, "onFinish: ");
-                                                XLoadingDialog.with(MainActivity.this).dismiss();
-                                                XToast.success("下载完成");
-                                            }
-
-                                            @Override
-                                            public void onError(String errorMessage) {
-                                                Log.e(TAG, "onError: " + errorMessage);
-                                                XToast.error("下载失败");
-                                            }
-                                        });
-                                         */
-
-                                    }
-                                });
-                        builder.show();
-                    }
-
-
-                    @Override
-                    public void NoUpdate() {
-                        Log.e(TAG, "NoUpdate: ");
-                        XToast.success("当前是最新版本");
-                    }
-
-                    @Override
-                    public void Error() {
-                        Log.e(TAG, "Error: ");
-                        XToast.error("检查更新失败");
-                    }
-                });
+                UpdateUtil.checkForUpdate(false, this, drawer);
                 break;
             case R.id.menu_main_logout:
                 SharedPreferencesUtil.getSharedPreferences(GlobalUtil.KEYS.LOGIN_ACTIVITY.FILE_NAME)
@@ -641,130 +572,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             } else if (secondFragment.isSelectMode()) {
                 secondFragment.cancelSelect();
             } else {
-                super.onBackPressed();
+                if (System.currentTimeMillis() - backTime < 2 * 1000) {
+//                    Intent i = new Intent(Intent.ACTION_MAIN);
+//                    i.addCategory(Intent.CATEGORY_HOME);
+//                    startActivity(i);
+                    finish();
+                } else {
+                    backTime = System.currentTimeMillis();
+                    XToast.info("再次点击退出");
+                }
             }
         }
     }
-
-//    @Override
-//    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-//        SharedPreferences.Editor editor = mainViewModel.getSharedPreferences().getValue().edit();
-//        switch (item.getItemId()) {
-//            case R.id.menu_main_group_location_select_all:
-//                if (item.getTitle().equals("选择全部")) {
-//                    item.setTitle("取消全选");
-//                    for (int i = 1; i <= 16; i++) {
-//                        editor.putBoolean("n_" + i, true);
-//                    }
-//                } else {
-//                    item.setTitle("选择全部");
-//                    for (int i = 1; i <= 16; i++) {
-//                        editor.putBoolean("n_" + i, false);
-//                    }
-//                }
-//                editor.apply();
-//                mainViewModel.loadLocationSettings(navigationView);
-//                return true;
-//            case R.id.menu_main_group_college_select_all:
-//                if (item.getTitle().equals("选择全部")) {
-//                    item.setTitle("取消全选");
-//                    for (int i = 1; i <= 18; i++) {
-//                        editor.putBoolean("e_" + i, true);
-//                    }
-//                } else {
-//                    item.setTitle("选择全部");
-//                    for (int i = 1; i <= 18; i++) {
-//                        editor.putBoolean("e_" + i, false);
-//                    }
-//                }
-//                editor.apply();
-//                mainViewModel.loadCollegeSettings(navigationView);
-//                return true;
-//        }
-//
-//        switch (item.getGroupId()) {
-//            case R.id.menu_main_group_time:
-//                switch (item.getItemId()) {
-//                    case R.id.menu_main_group_asc:
-//                        item.setChecked(!item.isChecked());
-//                        editor.putBoolean("时间", item.isChecked());
-//                        editor.apply();
-//                        mainViewModel.loadTimeSettings(navigationView);
-//                        return false;
-//                    case R.id.menu_main_group_desc:
-//                        item.setChecked(!item.isChecked());
-//                        editor.putBoolean("时间", !item.isChecked());
-//                        editor.apply();
-//                        mainViewModel.loadTimeSettings(navigationView);
-//                        return false;
-//                }
-//
-//            case R.id.menu_main_group_location:
-//                String locationId = getResources().getResourceName(item.getItemId());
-//                String selectLocation = locationId.substring(locationId.lastIndexOf("_") - 1);
-//                editor.putBoolean(selectLocation, !item.isChecked());
-//                editor.apply();
-//                switch (item.getItemId()) {
-//                    case R.id.menu_main_group_location_1:
-//                    case R.id.menu_main_group_location_2:
-//                    case R.id.menu_main_group_location_3:
-//                    case R.id.menu_main_group_location_4:
-//                    case R.id.menu_main_group_location_5:
-//                    case R.id.menu_main_group_location_6:
-//                    case R.id.menu_main_group_location_7:
-//                    case R.id.menu_main_group_location_8:
-//                    case R.id.menu_main_group_location_9:
-//                    case R.id.menu_main_group_location_10:
-//                    case R.id.menu_main_group_location_11:
-//                    case R.id.menu_main_group_location_12:
-//                    case R.id.menu_main_group_location_13:
-//                    case R.id.menu_main_group_location_14:
-//                    case R.id.menu_main_group_location_15:
-//                    case R.id.menu_main_group_location_16:
-//                        item.setChecked(!item.isChecked());
-//                        if (mainViewModel.isLocationSelectAll(navigationView)) {
-//                            navigationView.getMenu().findItem(R.id.menu_main_group_location_select_all).setTitle("取消全选");
-//                        } else {
-//                            navigationView.getMenu().findItem(R.id.menu_main_group_location_select_all).setTitle("选择全部");
-//                        }
-//                        return false;
-//                }
-//
-//            case R.id.menu_main_group_college:
-//                String collegeId = getResources().getResourceName(item.getItemId());
-//                String selectCollege = collegeId.substring(collegeId.lastIndexOf("_") - 1);
-//                editor.putBoolean(selectCollege, !item.isChecked());
-//                editor.apply();
-//                switch (item.getItemId()) {
-//                    case R.id.menu_main_group_college_1:
-//                    case R.id.menu_main_group_college_2:
-//                    case R.id.menu_main_group_college_3:
-//                    case R.id.menu_main_group_college_4:
-//                    case R.id.menu_main_group_college_5:
-//                    case R.id.menu_main_group_college_6:
-//                    case R.id.menu_main_group_college_7:
-//                    case R.id.menu_main_group_college_8:
-//                    case R.id.menu_main_group_college_9:
-//                    case R.id.menu_main_group_college_10:
-//                    case R.id.menu_main_group_college_11:
-//                    case R.id.menu_main_group_college_12:
-//                    case R.id.menu_main_group_college_13:
-//                    case R.id.menu_main_group_college_14:
-//                    case R.id.menu_main_group_college_15:
-//                    case R.id.menu_main_group_college_16:
-//                    case R.id.menu_main_group_college_17:
-//                    case R.id.menu_main_group_college_18:
-//                        item.setChecked(!item.isChecked());
-//                        if (mainViewModel.isCollegeSelectAll(navigationView)) {
-//                            navigationView.getMenu().findItem(R.id.menu_main_group_college_select_all).setTitle("取消全选");
-//                        } else {
-//                            navigationView.getMenu().findItem(R.id.menu_main_group_college_select_all).setTitle("选择全部");
-//                        }
-//                        return false;
-//                }
-//        }
-//        return true;
-//    }
 
 
     private boolean shouldInit() {
@@ -814,31 +633,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if (checkableAdapterNorth != null && checkableAdapterSouth != null) {
             checkableAdapterNorth.notifyItemRangeChanged(0, 8, 0);
             checkableAdapterSouth.notifyItemRangeChanged(0, 8, 0);
-//
-//            if (GlobalUtil.user.getRoot() != 1) {
-//                Integer current = mainViewModel.getCurrentState().getValue();
-//                if (current != null && current == 0) {
-//                    if (GlobalUtil.user.getGroup() == 0) {
-//                        checkableAdapterNorth.notifyItemRangeChanged(0, 8, 0);
-//                    } else {
-//                        checkableAdapterSouth.notifyItemRangeChanged(0, 8, 0);
-//                    }
-//                } else {
-//                    checkableAdapterNorth.notifyItemRangeChanged(0, 8, 0);
-//                    checkableAdapterSouth.notifyItemRangeChanged(0, 8, 0);
-//                }
-//            } else {
-//                checkableAdapterNorth.notifyItemRangeChanged(0, 8, 0);
-//                checkableAdapterSouth.notifyItemRangeChanged(0, 8, 0);
-//            }
-
-
         }
         Boolean b = mainViewModel.getTimeOrder().getValue();
         radioGroup.check(b != null && b ? R.id.radioButton_asc : R.id.radioButton_desc);
         textViewSelectAllNorth.setText(mainViewModel.isSelectAll(mainViewModel.getSelectedLocalsN().getValue()) ? "取消全选" : "全选");
         textViewSelectAllSouth.setText(mainViewModel.isSelectAll(mainViewModel.getSelectedLocalsS().getValue()) ? "取消全选" : "全选");
-
     }
 
     @Override
@@ -862,9 +661,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             case R.id.textView_main_sub_title:
                 String url = "http://qm.qq.com/cgi-bin/qm/qr?k=Jc1GFeE-TU3kSawFNUwgVJ1Vmquuu5f1&group_code=459121889";
-//                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-//                                                        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-//                                                        intent.setAction(Intent.ACTION_VIEW);
                 startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
                 break;
             case R.id.fab_main_delete:

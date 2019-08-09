@@ -1,7 +1,7 @@
 package jn.mjz.aiot.jnuetc.View.Adapter.RecyclerView;
 
 import android.content.Context;
-import android.os.Build;
+import android.graphics.Color;
 import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -22,16 +22,17 @@ import butterknife.ButterKnife;
 import jn.mjz.aiot.jnuetc.Greendao.Entity.Data;
 import jn.mjz.aiot.jnuetc.R;
 import jn.mjz.aiot.jnuetc.Util.DateUtil;
+import jn.mjz.aiot.jnuetc.Util.GlobalUtil;
 
 public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder> {
 
 
-    private boolean enableSelect = true;
     private static final String TAG = "TaskAdapter";
     private List<Data> dataList;
     private Context context;
     private ITaskListener iTaskListener;
     private boolean isSelectMode = false;
+    private boolean enableSelect = true;
     private SparseBooleanArray booleanArray = new SparseBooleanArray();
     private int selectCnt = 0;
 
@@ -137,17 +138,6 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
 //        Log.e(TAG, "selectMode: " + holder.materialCardView.getTag());
         if (!booleanArray.get(position, false)) {
             holder.relativeLayoutState.setBackgroundResource(R.drawable.background_task_view_state_unselect);
-//            switch (dataList.get(position).getState()) {
-//                case 0:
-//                    holder.relativeLayoutState.setBackgroundResource(R.drawable.background_task_view_state_new_unselect);
-//                    break;
-//                case 1:
-//                    holder.relativeLayoutState.setBackgroundResource(R.drawable.background_task_view_state_processing_unselect);
-//                    break;
-//                case 2:
-//                    holder.relativeLayoutState.setBackgroundResource(R.drawable.background_task_view_state_done_unselect);
-//                    break;
-//            }
         }
     }
 
@@ -155,17 +145,6 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
 //        Log.e(TAG, "updateSelect: " + holder.materialCardView.getTag());
         if (!booleanArray.get(position, false)) {
             holder.relativeLayoutState.setBackgroundResource(R.drawable.background_task_view_state_unselect);
-//            switch (dataList.get(position).getState()) {
-//                case 0:
-//                    holder.relativeLayoutState.setBackgroundResource(R.drawable.background_task_view_state_new_unselect);
-//                    break;
-//                case 1:
-//                    holder.relativeLayoutState.setBackgroundResource(R.drawable.background_task_view_state_processing_unselect);
-//                    break;
-//                case 2:
-//                    holder.relativeLayoutState.setBackgroundResource(R.drawable.background_task_view_state_done_unselect);
-//                    break;
-//            }
         } else {
             switch (dataList.get(position).getState()) {
                 case 0:
@@ -214,36 +193,32 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
     }
 
     private void updateState(Data data, TaskViewHolder holder) {
+        String repairer = data.getRepairer();
         switch (data.getState()) {
             case 0:
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    holder.relativeLayoutState.setBackgroundResource(R.drawable.background_task_view_state_new_left);
-                    holder.textViewConfirm.setTextColor(context.getColor(R.color.colorPrimary));
-                } else {
-                    holder.textViewConfirm.setTextColor(context.getResources().getColor(R.color.colorPrimary));
-                }
-                holder.textViewState.setText("未处理");
+                holder.relativeLayoutState.setBackgroundResource(R.drawable.background_task_view_state_new_left);
                 holder.textViewConfirm.setEnabled(true);
+                holder.textViewState.setText("未处理");
                 break;
             case 1:
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    holder.relativeLayoutState.setBackgroundResource(R.drawable.background_task_view_state_processing_left);
-                    holder.textViewConfirm.setTextColor(context.getColor(R.color.SubText));
+                holder.relativeLayoutState.setBackgroundResource(R.drawable.background_task_view_state_processing_left);
+                if (!repairer.contains(GlobalUtil.user.getName())) {
+                    holder.textViewState.setText(String.format("%s 处理中", repairer));
                 } else {
-                    holder.textViewConfirm.setTextColor(context.getResources().getColor(R.color.SubText));
+                    holder.textViewState.setText("");
                 }
-                holder.textViewState.setText(String.format("%s 处理中", data.getRepairer()));
-                holder.textViewConfirm.setEnabled(false);
+                holder.textViewConfirm.setTextColor(Color.GRAY);
+                holder.textViewConfirm.setText(String.format("接单时间：%s", DateUtil.getDateAndTime(data.getOrderDate(), " ")));
                 break;
             case 2:
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    holder.relativeLayoutState.setBackgroundResource(R.drawable.background_task_view_state_done_left);
-                    holder.textViewConfirm.setTextColor(context.getColor(R.color.SubText));
+                holder.relativeLayoutState.setBackgroundResource(R.drawable.background_task_view_state_done_left);
+                if (repairer.contains(GlobalUtil.user.getName())) {
+                    holder.textViewState.setText("");
                 } else {
-                    holder.textViewConfirm.setTextColor(context.getResources().getColor(R.color.SubText));
+                    holder.textViewState.setText(String.format("%s 已维修", repairer));
                 }
-                holder.textViewState.setText(String.format("%s 已维修\n反馈时间：%s", data.getRepairer(), DateUtil.getDateAndTime(data.getRepairDate(), " - ")));
-                holder.textViewConfirm.setEnabled(false);
+                holder.textViewConfirm.setTextColor(Color.GRAY);
+                holder.textViewConfirm.setText(String.format("接单时间：%s\n反馈时间：%s", DateUtil.getDateAndTime(data.getOrderDate(), " "), DateUtil.getDateAndTime(data.getRepairDate(), " ")));
                 break;
         }
     }

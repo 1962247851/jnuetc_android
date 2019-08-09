@@ -75,7 +75,7 @@ public class HttpUtil {
                         String result = response.body().string();
                         XHttp.handler.post(() -> callback.onResponse(response, result));
                     } else {
-                        XHttp.handler.post(() -> callback.onFailure(null));
+                        XHttp.handler.post(() -> callback.onResponse(response, null));
                     }
                 }
 

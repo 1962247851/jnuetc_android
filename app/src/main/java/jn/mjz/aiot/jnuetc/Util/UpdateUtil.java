@@ -1,20 +1,83 @@
 package jn.mjz.aiot.jnuetc.Util;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.net.Uri;
+import android.view.View;
 
+import com.google.android.material.snackbar.Snackbar;
 import com.google.gson.JsonObject;
 import com.youth.xframe.XFrame;
+import com.youth.xframe.widget.XToast;
 
 import java.io.IOException;
 import java.util.HashMap;
 
 import okhttp3.Response;
 
+import static com.google.android.material.snackbar.Snackbar.LENGTH_SHORT;
+
 public class UpdateUtil {
 
-    public static void checkForUpdate(IUpdateListener updateListener) {
+    private static String FILE_NAME = "update";
+
+    public static void checkForUpdate(boolean firstOpen, Context context, View snackBarView) {
+
+        UpdateUtil.checkForUpdate(new UpdateUtil.IUpdateListener() {
+            @Override
+            public void HaveNewVersion(String date, String url, String message, float newVersion) {
+                SharedPreferences sharedPreferences = SharedPreferencesUtil.getSharedPreferences(FILE_NAME);
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                AlertDialog.Builder builder = new AlertDialog.Builder(context);
+                String[] messages = message.split("。");
+                StringBuilder stringBuilder = new StringBuilder();
+                for (String s : messages) {
+                    stringBuilder.append(s)
+                            .append("\n");
+                }
+                stringBuilder.deleteCharAt(stringBuilder.length() - 1);
+                builder.setMessage("更新时间：" + date + "\n\n" + stringBuilder.toString())
+                        .setTitle("发现新版本" + newVersion)
+                        .setNeutralButton("不再提醒该版本", (dialogInterface, i) -> {
+                            editor.putBoolean(String.valueOf(newVersion), false);
+                            editor.apply();
+                            XToast.success("屏蔽成功");
+                        })
+                        .setPositiveButton("前往下载", (dialogInterface, i) -> context.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url))));
+
+                if (sharedPreferences.getBoolean(String.valueOf(newVersion), true)) {
+                    builder.show();
+                } else if (!firstOpen) {
+                    Snackbar.make(snackBarView, "发现新版本（已屏蔽）", LENGTH_SHORT)
+                            .setAction("取消屏蔽", view -> {
+                                editor.putBoolean(String.valueOf(newVersion), true);
+                                editor.apply();
+                                builder.show();
+                            })
+                            .show();
+                }
+            }
+
+
+            @Override
+            public void NoUpdate() {
+                if (!firstOpen) {
+                    XToast.success("当前是最新版本");
+                }
+            }
+
+            @Override
+            public void Error() {
+                XToast.error("检查更新失败");
+            }
+        });
+    }
+
+    private static void checkForUpdate(IUpdateListener updateListener) {
         HashMap<String, Object> p = new HashMap<>();
         p.put("id", 1);
         HttpUtil.post.haveResponse(GlobalUtil.URLS.QUERY.CHECK_FOR_UPDATE, p, new HttpUtil.HttpUtilCallBack<String>() {
@@ -27,7 +90,7 @@ public class UpdateUtil {
                     float newVersion = Float.parseFloat(jsonObject.get("version").getAsString());
                     float localVersion = Float.parseFloat(UpdateUtil.getLocalVersionName(XFrame.getContext()));
                     if (newVersion > localVersion) {
-                        updateListener.HaveNewVersion(jsonObject.get("url").getAsString(), jsonObject.get("message").getAsString(),newVersion);
+                        updateListener.HaveNewVersion(DateUtil.getDateAndTime(jsonObject.get("date").getAsLong(), " "), jsonObject.get("url").getAsString(), jsonObject.get("message").getAsString(), newVersion);
                     } else if (newVersion == localVersion) {
                         updateListener.NoUpdate();
                     }
@@ -59,7 +122,7 @@ public class UpdateUtil {
     }
 
     public interface IUpdateListener {
-        void HaveNewVersion(String url,String message, float newVersion);
+        void HaveNewVersion(String date, String url, String message, float newVersion);
 
         void NoUpdate();
 

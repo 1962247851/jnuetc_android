@@ -2,30 +2,26 @@ package jn.mjz.aiot.jnuetc.ViewModel;
 
 import android.content.SharedPreferences;
 import android.util.Log;
-import android.widget.RadioGroup;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
-import org.greenrobot.greendao.query.WhereCondition;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import jn.mjz.aiot.jnuetc.Application.MyApplication;
 import jn.mjz.aiot.jnuetc.Greendao.Dao.DataDao;
 import jn.mjz.aiot.jnuetc.Greendao.Entity.Data;
-import jn.mjz.aiot.jnuetc.R;
+import jn.mjz.aiot.jnuetc.Greendao.Entity.User;
 import jn.mjz.aiot.jnuetc.Util.GlobalUtil;
 import jn.mjz.aiot.jnuetc.Util.GsonUtil;
 import jn.mjz.aiot.jnuetc.Util.HttpUtil;
 import jn.mjz.aiot.jnuetc.Util.SharedPreferencesUtil;
-import jn.mjz.aiot.jnuetc.View.Activity.MainActivity;
 import okhttp3.Response;
 
 public class MainViewModel extends ViewModel {
@@ -51,6 +47,30 @@ public class MainViewModel extends ViewModel {
     private MutableLiveData<List<Data>> dataList4;
     private MutableLiveData<List<Data>> dataList5;
 
+    public void queryAllUser(HttpUtil.HttpUtilCallBack<List<String>> callBack) {
+        HttpUtil.post.haveResponse(GlobalUtil.URLS.QUERY.ALL_USER, null, new HttpUtil.HttpUtilCallBack<String>() {
+
+            @Override
+            public void onResponse(Response response, String result) {
+                if (result != null) {
+                    List<User> resultList = GsonUtil.parseJsonArray2ObejctList(result, User.class);
+                    List<String> userNames = new ArrayList<>();
+                    for (int i = 0; i < resultList.size(); i++) {
+                        userNames.add(resultList.get(i).getName());
+                    }
+                    callBack.onResponse(response, userNames);
+                } else {
+                    callBack.onFailure(null);
+                }
+            }
+
+            @Override
+            public void onFailure(IOException e) {
+                callBack.onFailure(e);
+            }
+
+        });
+    }
 
     /**
      * 从服务器获取最新保修单数据，并且赋值给{@link MainViewModel#dataListAll}
@@ -67,7 +87,7 @@ public class MainViewModel extends ViewModel {
                     dataDao.insertInTx(resultList);
                     callBack.onResponse(response, resultList);
                 } else {
-                    callBack.onResponse(response, null);
+                    callBack.onFailure(null);
                 }
             }
 
@@ -525,6 +545,25 @@ public class MainViewModel extends ViewModel {
         }
     }
 
+    public void queryDataListAboutMyself(@NonNull Integer state) {
+        List<Data> dataList;
+        if (state == 1) {
+            dataList = dataDao.queryBuilder().where(
+                    DataDao.Properties.State.eq(1)
+                    , DataDao.Properties.Repairer.like(GlobalUtil.user.getName()))
+                    .orderAsc(DataDao.Properties.Date)
+                    .build().list();
+            getDataList4().setValue(dataList);
+        } else if (state == 2) {
+            dataList = dataDao.queryBuilder().where(
+                    DataDao.Properties.State.eq(2)
+                    , DataDao.Properties.Repairer.like("%" + GlobalUtil.user.getName() + "%"))
+                    .orderDesc(DataDao.Properties.RepairDate)
+                    .build().list();
+            getDataList5().setValue(dataList);
+        }
+    }
+
     public MutableLiveData<Boolean> getTimeOrder() {
         if (timeOrder == null) {
             timeOrder = new MutableLiveData<>();
@@ -631,9 +670,6 @@ public class MainViewModel extends ViewModel {
             dataList4 = new MutableLiveData<>();
             dataList4.setValue(new ArrayList<>());
         }
-//        if (dataList4.getValue() == null) {
-//            dataList4.setValue(new ArrayList<>());
-//        }
         return dataList4;
     }
 

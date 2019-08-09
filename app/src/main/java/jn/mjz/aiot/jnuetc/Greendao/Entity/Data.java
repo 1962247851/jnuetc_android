@@ -53,6 +53,8 @@ public class Data {
 
     private String repairer;
 
+    private long orderDate;
+
     private long repairDate;
 
     private String mark;
@@ -68,14 +70,13 @@ public class Data {
     }
 
 
-
-
-    @Generated(hash = 1965641157)
+    @Generated(hash = 850390961)
     public Data(Long id, @NotNull String uuid, long date, short state,
             @NotNull String name, @NotNull String college, @NotNull String grade,
             String tel, String qq, @NotNull String local, short district,
             @NotNull String model, @NotNull String message, String repairer,
-            long repairDate, String mark, String service, String repairMessage) {
+            long orderDate, long repairDate, String mark, String service,
+            String repairMessage) {
         this.id = id;
         this.uuid = uuid;
         this.date = date;
@@ -90,6 +91,7 @@ public class Data {
         this.model = model;
         this.message = message;
         this.repairer = repairer;
+        this.orderDate = orderDate;
         this.repairDate = repairDate;
         this.mark = mark;
         this.service = service;
@@ -97,6 +99,9 @@ public class Data {
     }
 
 
+
+
+    
 
 
     @Override
@@ -287,6 +292,26 @@ public class Data {
 
     public void setDistrict(short district) {
         this.district = district;
+    }
+
+
+
+
+
+
+
+    public long getOrderDate() {
+        return this.orderDate;
+    }
+
+
+
+
+
+
+
+    public void setOrderDate(long orderDate) {
+        this.orderDate = orderDate;
     }
 
 
