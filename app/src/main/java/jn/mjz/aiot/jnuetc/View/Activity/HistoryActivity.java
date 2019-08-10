@@ -29,7 +29,9 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import jn.mjz.aiot.jnuetc.Greendao.Dao.DataDao;
 import jn.mjz.aiot.jnuetc.Greendao.Entity.Data;
+import jn.mjz.aiot.jnuetc.Greendao.Entity.User;
 import jn.mjz.aiot.jnuetc.R;
+import jn.mjz.aiot.jnuetc.Util.GlobalUtil;
 import jn.mjz.aiot.jnuetc.Util.GsonUtil;
 import jn.mjz.aiot.jnuetc.Util.HttpUtil;
 import jn.mjz.aiot.jnuetc.View.Adapter.RecyclerView.TaskAdapter;
@@ -68,7 +70,7 @@ public class HistoryActivity extends AppCompatActivity implements View.OnClickLi
 
         getSupportActionBar().setTitle(state == 1 ? String.format(Locale.getDefault(), "处理中（%d）", dataList.size()) : String.format(Locale.getDefault(), "已维修（%d）", dataList.size()));
 
-        adapter = new TaskAdapter(dataList, this, new TaskAdapter.ITaskListener() {
+        adapter = new TaskAdapter(GlobalUtil.user.getRoot() == 1, dataList, this, new TaskAdapter.ITaskListener() {
             @Override
             public void OnItemClick(int position, Data data) {
                 Intent intent = new Intent(HistoryActivity.this, DetailsActivity.class);
@@ -112,79 +114,96 @@ public class HistoryActivity extends AppCompatActivity implements View.OnClickLi
 
 
     private void deleteSelect(SparseBooleanArray sparseBooleanArray) {
-        if (adapter.selectNone()) {
-            XToast.info("请至少选择一项");
-        } else {
-            AlertDialog dialog = new AlertDialog.Builder(HistoryActivity.this).create();
-            dialog.setTitle("注意");
-            dialog.setMessage("删除数据仅限无用的报修单，删除后无法还原，请谨慎操作");
-            dialog.setButton(AlertDialog.BUTTON_POSITIVE, "取消", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialogInterface, int i1) {
+        mainViewModel.updateUserInfo(new HttpUtil.HttpUtilCallBack<User>() {
+            @Override
+            public void onResponse(Response response, User result) {
+                if (result.getRoot() == 1) {
+                    if (adapter.selectNone()) {
+                        XToast.info("请至少选择一项");
+                    } else {
+                        AlertDialog dialog = new AlertDialog.Builder(HistoryActivity.this).create();
+                        dialog.setTitle("注意");
+                        dialog.setMessage("删除数据仅限无用的报修单，删除后无法还原，请谨慎操作");
+                        dialog.setButton(AlertDialog.BUTTON_POSITIVE, "取消", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i1) {
 
-                }
-            });
+                            }
+                        });
 
-            dialog.setButton(AlertDialog.BUTTON_NEGATIVE, "删除", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialogInterface, int i1) {
-                    XLoadingDialog.with(HistoryActivity.this).setCanceled(false).setMessage("请求处理中,请稍后").show();
-                    List<Integer> ids = new ArrayList<>();
+                        dialog.setButton(AlertDialog.BUTTON_NEGATIVE, "删除", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i1) {
+                                XLoadingDialog.with(HistoryActivity.this).setCanceled(false).setMessage("请求处理中,请稍后").show();
+                                List<Integer> ids = new ArrayList<>();
 
-                    for (int i = 0; i < sparseBooleanArray.size(); i++) {
-                        int key = sparseBooleanArray.keyAt(i);
-                        if (sparseBooleanArray.get(key)) {
-                            ids.add(Integer.valueOf(dataList.get(key).getId().toString()));
-                        }
-                    }
+                                for (int i = 0; i < sparseBooleanArray.size(); i++) {
+                                    int key = sparseBooleanArray.keyAt(i);
+                                    if (sparseBooleanArray.get(key)) {
+                                        ids.add(Integer.valueOf(dataList.get(key).getId().toString()));
+                                    }
+                                }
 
-                    mainViewModel.deleteMany(ids, new HttpUtil.HttpUtilCallBack<Boolean>() {
-                        @Override
-                        public void onResponse(Response response, Boolean result) {
+                                mainViewModel.deleteMany(ids, new HttpUtil.HttpUtilCallBack<Boolean>() {
+                                    @Override
+                                    public void onResponse(Response response, Boolean result) {
 
-                            List<Data> needToDelete = mainViewModel.dataDao.queryBuilder()
-                                    .where(DataDao.Properties.Id.in(ids))
-                                    .build()
-                                    .list();
+                                        List<Data> needToDelete = mainViewModel.dataDao.queryBuilder()
+                                                .where(DataDao.Properties.Id.in(ids))
+                                                .build()
+                                                .list();
 
 //                            Log.e(TAG, "onResponse: ids" + ids);
 //                            Log.e(TAG, "onResponse: state" + state);
 //                            Log.e(TAG, "onResponse: needToDelete" + needToDelete);
-                            mainViewModel.dataDao.deleteInTx(needToDelete);
+                                        mainViewModel.dataDao.deleteInTx(needToDelete);
 
-                            mainViewModel.queryDataListAboutMyself(state);
+                                        mainViewModel.queryDataListAboutMyself(state);
 
-                            for (int id : ids) {
-                                for (int i = 0; i < dataList.size(); i++) {
-                                    if (dataList.get(i).getId() == id) {
-                                        dataList.remove(i);
-                                        adapter.notifyItemRemoved(i);
-                                        adapter.notifyItemRangeChanged(i, adapter.getItemCount() - i);
-                                        break;
+                                        for (int id : ids) {
+                                            for (int i = 0; i < dataList.size(); i++) {
+                                                if (dataList.get(i).getId() == id) {
+                                                    dataList.remove(i);
+                                                    adapter.notifyItemRemoved(i);
+                                                    adapter.notifyItemRangeChanged(i, adapter.getItemCount() - i);
+                                                    break;
+                                                }
+                                            }
+                                        }
+
+                                        adapter.clearSelect();
+                                        adapter.cancelSelect();
+
+                                        XLoadingDialog.with(HistoryActivity.this).cancel();
+                                        dialog.dismiss();
+                                        XToast.success("删除成功");
                                     }
-                                }
+
+                                    @Override
+                                    public void onFailure(IOException e) {
+                                        XLoadingDialog.with(HistoryActivity.this).cancel();
+                                        XToast.error("删除失败");
+                                        dialog.cancel();
+                                    }
+                                });
                             }
+                        });
 
-                            adapter.clearSelect();
-                            adapter.cancelSelect();
-
-                            XLoadingDialog.with(HistoryActivity.this).cancel();
-                            dialog.dismiss();
-                            XToast.success("删除成功");
-                        }
-
-                        @Override
-                        public void onFailure(IOException e) {
-                            XLoadingDialog.with(HistoryActivity.this).cancel();
-                            XToast.error("删除失败");
-                            dialog.cancel();
-                        }
-                    });
+                        dialog.show();
+                    }
+                } else {
+                    XToast.info("您已不是管理员");
+                    adapter.setEnableSelect(false);
+                    adapter.cancelSelect();
                 }
-            });
+            }
 
-            dialog.show();
-        }
+            @Override
+            public void onFailure(IOException e) {
+
+            }
+        });
+
     }
 
     @Override

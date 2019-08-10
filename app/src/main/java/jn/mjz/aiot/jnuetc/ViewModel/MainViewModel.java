@@ -1,12 +1,14 @@
 package jn.mjz.aiot.jnuetc.ViewModel;
 
 import android.content.SharedPreferences;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
+
+import com.xiaomi.mipush.sdk.MiPushClient;
+import com.youth.xframe.XFrame;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -46,6 +48,80 @@ public class MainViewModel extends ViewModel {
     private MutableLiveData<List<Data>> dataList3;
     private MutableLiveData<List<Data>> dataList4;
     private MutableLiveData<List<Data>> dataList5;
+
+    public void updateUserInfo(HttpUtil.HttpUtilCallBack<User> callBack) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("sno", GlobalUtil.user.getSno());
+        params.put("password", GlobalUtil.user.getPassword());
+        HttpUtil.post.haveResponse(GlobalUtil.URLS.QUERY.LOGIN, params, new HttpUtil.HttpUtilCallBack<String>() {
+            @Override
+            public void onResponse(Response response, String result) {
+                String state = response.headers().get("state");
+                if (state != null && state.equals("OK")) {
+                    SharedPreferences.Editor editor = SharedPreferencesUtil.getSharedPreferences(GlobalUtil.KEYS.LOGIN_ACTIVITY.FILE_NAME).edit();
+                    editor.putString(GlobalUtil.KEYS.LOGIN_ACTIVITY.USER_JSON_STRING, result);
+                    editor.apply();
+                    User user = GsonUtil.getInstance().fromJson(result, User.class);
+
+                    editor = SharedPreferencesUtil.getSharedPreferences(GlobalUtil.KEYS.NEW.FILE_NAME_DRAWER).edit();
+
+                    if (GlobalUtil.user.getRoot() == 0) {
+                        if (user.getRoot() == 1) {//升级为管理员
+                            if (GlobalUtil.user.getGroup() == 0) {//原来是北区，把所有南区全选
+                                MiPushClient.subscribe(XFrame.getContext(), "1", null);
+                                for (String local : GlobalUtil.titlesS) {
+                                    editor.putBoolean(local, true);
+                                }
+                            } else {
+                                MiPushClient.subscribe(XFrame.getContext(), "0", null);
+                                for (String local : GlobalUtil.titlesN) {
+                                    editor.putBoolean(local, true);
+                                }
+                            }
+                            editor.apply();
+                            if (getCurrentState().getValue() != 0) {
+                                loadAllSettings(0);
+                                queryDataListBySetting(0);
+                                loadAllSettings(null);
+                            }
+                        }
+                    } else {
+                        if (user.getRoot() == 0) {//降级
+                            if (GlobalUtil.user.getGroup() == 0) {//原来是北区，把所有南区取消选中
+                                MiPushClient.unsubscribe(XFrame.getContext(), "1", null);
+                                for (String local : GlobalUtil.titlesS) {
+                                    editor.putBoolean(local, false);
+                                }
+                            } else {
+                                MiPushClient.unsubscribe(XFrame.getContext(), "0", null);
+                                for (String local : GlobalUtil.titlesN) {
+                                    editor.putBoolean(local, false);
+                                }
+                            }
+                        } else {//依旧是管理员
+                            MiPushClient.subscribe(XFrame.getContext(), "0", null);
+                            MiPushClient.subscribe(XFrame.getContext(), "1", null);
+                        }
+                        editor.apply();
+                        if (getCurrentState().getValue() != 0) {
+                            loadAllSettings(0);
+                            queryDataListBySetting(0);
+                            loadAllSettings(null);
+                        }
+                    }
+
+                    GlobalUtil.user = user;
+                    callBack.onResponse(response, user);
+                }
+            }
+
+            @Override
+            public void onFailure(IOException e) {
+                callBack.onFailure(e);
+            }
+        });
+//        Log.e(TAG, "updateUserInfo: 所有订阅" + MiPushClient.getAllTopic(XFrame.getContext()));
+    }
 
     public void queryAllUser(HttpUtil.HttpUtilCallBack<List<String>> callBack) {
         HttpUtil.post.haveResponse(GlobalUtil.URLS.QUERY.ALL_USER, null, new HttpUtil.HttpUtilCallBack<String>() {
@@ -263,33 +339,6 @@ public class MainViewModel extends ViewModel {
 
 
     /**
-     * 通过学号判断是或否为管理员
-     *
-     * @param callBack 回调
-     */
-    public void haveRoot(HttpUtil.HttpUtilCallBack<Boolean> callBack) {
-        Map<String, Object> params = new HashMap<>();
-        params.put("sno", GlobalUtil.user.getSno());
-        HttpUtil.post.haveResponse(GlobalUtil.URLS.QUERY.HAVE_ROOT, params, new HttpUtil.HttpUtilCallBack<String>() {
-            @Override
-            public void onResponse(Response response, @Nullable String result) {
-                String s = response.header("state");
-                if (s != null && s.equals("OK")) {
-                    callBack.onResponse(response, true);
-                } else if (s != null && s.equals("FAILURE")) {
-                    callBack.onResponse(response, false);
-                }
-            }
-
-            @Override
-            public void onFailure(IOException e) {
-                callBack.onFailure(e);
-            }
-        });
-
-    }
-
-    /**
      * 查询当前报修服务状态
      *
      * @param callBack 回调,返回状态
@@ -404,11 +453,12 @@ public class MainViewModel extends ViewModel {
     /**
      * 加载当前drawer的所有设置
      */
-    public void loadAllSettings(int state) {
+    public void loadAllSettings(@Nullable Integer state) {
 
         Map<String, Boolean> mapN = getSelectedLocalsN().getValue();
         Map<String, Boolean> mapS = getSelectedLocalsS().getValue();
         SharedPreferences sharedPreferences = null;
+        state = state == null ? getCurrentState().getValue() : state;
         switch (state) {
             case 0:
                 sharedPreferences = SharedPreferencesUtil.getSharedPreferences(GlobalUtil.KEYS.NEW.FILE_NAME_DRAWER);
@@ -422,6 +472,7 @@ public class MainViewModel extends ViewModel {
         }
 
         if (mapN != null && mapS != null && sharedPreferences != null) {
+
             getTimeOrder().setValue(sharedPreferences.getBoolean("time", false));
 
             for (int i = 0; i < 8; i++) {
@@ -550,7 +601,7 @@ public class MainViewModel extends ViewModel {
         if (state == 1) {
             dataList = dataDao.queryBuilder().where(
                     DataDao.Properties.State.eq(1)
-                    , DataDao.Properties.Repairer.like(GlobalUtil.user.getName()))
+                    , DataDao.Properties.Repairer.like("%" + GlobalUtil.user.getName() + "%"))
                     .orderAsc(DataDao.Properties.Date)
                     .build().list();
             getDataList4().setValue(dataList);

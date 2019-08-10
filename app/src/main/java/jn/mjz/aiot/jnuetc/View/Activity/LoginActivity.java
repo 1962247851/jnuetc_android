@@ -189,7 +189,6 @@ public class LoginActivity extends AppCompatActivity {
                 XLoadingDialog.with(LoginActivity.this).cancel();
                 String state = response.headers().get("state");
                 if (state != null && state.equals("OK")) {
-                    // TODO: 2019/7/10 登录成功
                     XToast.success("登录成功");
                     SharedPreferences.Editor editor = sharedPreferences.edit();
                     editor.putString(GlobalUtil.KEYS.LOGIN_ACTIVITY.USER_NUMBER, number);

@@ -12,6 +12,7 @@ import android.view.View;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.gson.JsonObject;
 import com.youth.xframe.XFrame;
+import com.youth.xframe.widget.XLoadingDialog;
 import com.youth.xframe.widget.XToast;
 
 import java.io.IOException;
@@ -27,9 +28,18 @@ public class UpdateUtil {
 
     public static void checkForUpdate(boolean firstOpen, Context context, View snackBarView) {
 
+        if (!firstOpen) {
+            XLoadingDialog.with(context).setMessage("检查更新中，请稍后").setCanceled(false).show();
+        }
+
         UpdateUtil.checkForUpdate(new UpdateUtil.IUpdateListener() {
             @Override
             public void HaveNewVersion(String date, String url, String message, float newVersion) {
+
+                if (!firstOpen) {
+                    XLoadingDialog.with(context).dismiss();
+                }
+
                 SharedPreferences sharedPreferences = SharedPreferencesUtil.getSharedPreferences(FILE_NAME);
                 SharedPreferences.Editor editor = sharedPreferences.edit();
                 AlertDialog.Builder builder = new AlertDialog.Builder(context);
@@ -66,13 +76,17 @@ public class UpdateUtil {
             @Override
             public void NoUpdate() {
                 if (!firstOpen) {
+                    XLoadingDialog.with(context).dismiss();
                     XToast.success("当前是最新版本");
                 }
             }
 
             @Override
             public void Error() {
-                XToast.error("检查更新失败");
+                if (!firstOpen) {
+                    XLoadingDialog.with(context).dismiss();
+                    XToast.error("检查更新失败");
+                }
             }
         });
     }

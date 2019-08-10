@@ -10,6 +10,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
@@ -24,6 +25,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
 import jn.mjz.aiot.jnuetc.Greendao.Entity.Data;
+import jn.mjz.aiot.jnuetc.Greendao.Entity.User;
 import jn.mjz.aiot.jnuetc.R;
 import jn.mjz.aiot.jnuetc.Util.GlobalUtil;
 import jn.mjz.aiot.jnuetc.Util.GsonUtil;
@@ -56,16 +58,24 @@ public class MyselfFragment extends Fragment implements View.OnClickListener {
         super.onActivityCreated(savedInstanceState);
 
         mainViewModel = ViewModelProviders.of(getActivity()).get(MainViewModel.class);
+        mainViewModel.getCurrentState().observe(this, new Observer<Integer>() {
+            @Override
+            public void onChanged(Integer integer) {
+                if (integer == 3) {
+                    textViewAdmin.setVisibility(GlobalUtil.user.getRoot() == 1 ? View.VISIBLE : View.GONE);
+                }
+            }
+        });
         mainViewModel.queryAll(new HttpUtil.HttpUtilCallBack<List<Data>>() {
             @Override
             public void onResponse(Response response, List<Data> result) {
                 if (result != null) {
                     mainViewModel.queryDataListAboutMyself(1);
                     mainViewModel.queryDataListAboutMyself(2);
-                    mainViewModel.haveRoot(new HttpUtil.HttpUtilCallBack<Boolean>() {
+                    mainViewModel.updateUserInfo(new HttpUtil.HttpUtilCallBack<User>() {
                         @Override
-                        public void onResponse(Response response, Boolean result) {
-                            textViewAdmin.setVisibility(result ? View.VISIBLE : View.GONE);
+                        public void onResponse(Response response, User result) {
+                            textViewAdmin.setVisibility(result.getRoot() == 1 ? View.VISIBLE : View.GONE);
                             swipeRefreshLayout.setRefreshing(false);
                         }
 
@@ -217,23 +227,22 @@ public class MyselfFragment extends Fragment implements View.OnClickListener {
                     mainViewModel.queryDataListAboutMyself(1);
                     mainViewModel.queryDataListAboutMyself(2);
                     XToast.success("数据更新成功");
-                    mainViewModel.haveRoot(new HttpUtil.HttpUtilCallBack<Boolean>() {
+                    mainViewModel.updateUserInfo(new HttpUtil.HttpUtilCallBack<User>() {
                         @Override
-                        public void onResponse(Response response, Boolean result) {
-                            textViewAdmin.setVisibility(result ? View.VISIBLE : View.GONE);
+                        public void onResponse(Response response, User result) {
+                            textViewAdmin.setVisibility(result.getRoot() == 1 ? View.VISIBLE : View.GONE);
                             swipeRefreshLayout.setRefreshing(false);
                         }
 
                         @Override
                         public void onFailure(IOException e) {
-                            swipeRefreshLayout.setRefreshing(false);
+
                         }
                     });
                 } else {
                     XToast.error("数据更新失败");
                     swipeRefreshLayout.setRefreshing(false);
                 }
-
             }
 
             @Override

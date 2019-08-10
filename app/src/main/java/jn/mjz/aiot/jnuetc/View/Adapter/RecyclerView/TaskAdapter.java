@@ -32,7 +32,9 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
     private Context context;
     private ITaskListener iTaskListener;
     private boolean isSelectMode = false;
-    private boolean enableSelect = true;
+
+
+    private boolean enableSelect = false;
     private SparseBooleanArray booleanArray = new SparseBooleanArray();
     private int selectCnt = 0;
 
@@ -303,6 +305,11 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
             }
         }
         return true;
+    }
+
+
+    public void setEnableSelect(boolean enableSelect) {
+        this.enableSelect = enableSelect;
     }
 
 }

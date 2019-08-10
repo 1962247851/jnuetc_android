@@ -32,6 +32,7 @@ import butterknife.ButterKnife;
 import butterknife.Unbinder;
 import jn.mjz.aiot.jnuetc.Greendao.Dao.DataDao;
 import jn.mjz.aiot.jnuetc.Greendao.Entity.Data;
+import jn.mjz.aiot.jnuetc.Greendao.Entity.User;
 import jn.mjz.aiot.jnuetc.R;
 import jn.mjz.aiot.jnuetc.Util.GlobalUtil;
 import jn.mjz.aiot.jnuetc.Util.GsonUtil;
@@ -70,6 +71,7 @@ public class NewTaskFragment extends Fragment {
                 if (taskAdapter.isSelectMode()) {
                     taskAdapter.cancelSelect();
                 }
+                taskAdapter.setEnableSelect(GlobalUtil.user.getRoot() == 1);
             }
         });
 
@@ -159,7 +161,7 @@ public class NewTaskFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         unbinder = ButterKnife.bind(this, view);
-        taskAdapter = new TaskAdapter(dataLis1, getContext(), new TaskAdapter.ITaskListener() {
+        taskAdapter = new TaskAdapter(GlobalUtil.user.getRoot() == 1, dataLis1, getContext(), new TaskAdapter.ITaskListener() {
             @Override
             public void OnItemClick(int position, Data data) {
                 Intent intent = new Intent(getContext(), DetailsActivity.class);
@@ -183,64 +185,82 @@ public class NewTaskFragment extends Fragment {
 
             @Override
             public void OnConfirmSelect(SparseBooleanArray sparseBooleanArray) {
-                AlertDialog dialog = new AlertDialog.Builder(getContext()).create();
-                dialog.setTitle("注意");
-                dialog.setMessage("删除数据仅限无用的报修单，删除后无法还原，请谨慎操作");
-                dialog.setButton(android.app.AlertDialog.BUTTON_POSITIVE, "取消", new DialogInterface.OnClickListener() {
+                mainViewModel.updateUserInfo(new HttpUtil.HttpUtilCallBack<User>() {
                     @Override
-                    public void onClick(DialogInterface dialogInterface, int i1) {
+                    public void onResponse(Response response, User result) {
+                        if (result.getRoot() == 1) {
+                            AlertDialog dialog = new AlertDialog.Builder(getContext()).create();
+                            dialog.setTitle("注意");
+                            dialog.setMessage("删除数据仅限无用的报修单，删除后无法还原，请谨慎操作");
+                            dialog.setButton(android.app.AlertDialog.BUTTON_POSITIVE, "取消", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i1) {
 
-                    }
-                });
+                                }
+                            });
 
-                dialog.setButton(android.app.AlertDialog.BUTTON_NEGATIVE, "删除", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i1) {
-                        XLoadingDialog.with(getContext()).setCanceled(false).setMessage("请求处理中,请稍后").show();
-                        List<Integer> ids = new ArrayList<>();
+                            dialog.setButton(android.app.AlertDialog.BUTTON_NEGATIVE, "删除", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i1) {
+                                    XLoadingDialog.with(getContext()).setCanceled(false).setMessage("请求处理中,请稍后").show();
+                                    List<Integer> ids = new ArrayList<>();
 
-                        for (int i = 0; i < sparseBooleanArray.size(); i++) {
-                            int key = sparseBooleanArray.keyAt(i);
-                            if (sparseBooleanArray.get(key)) {
-                                ids.add(Integer.valueOf(dataLis1.get(key).getId().toString()));
-                            }
+                                    for (int i = 0; i < sparseBooleanArray.size(); i++) {
+                                        int key = sparseBooleanArray.keyAt(i);
+                                        if (sparseBooleanArray.get(key)) {
+                                            ids.add(Integer.valueOf(dataLis1.get(key).getId().toString()));
+                                        }
+                                    }
+
+                                    mainViewModel.deleteMany(ids, new HttpUtil.HttpUtilCallBack<Boolean>() {
+                                        @Override
+                                        public void onResponse(Response response, Boolean result) {
+
+                                            taskAdapter.clearSelect();
+                                            taskAdapter.cancelSelect();
+                                            iNewTaskListener.OnCancelSelect();
+
+                                            List<Data> needToDelete = mainViewModel.dataDao.queryBuilder()
+                                                    .where(DataDao.Properties.Id.in(ids))
+                                                    .build()
+                                                    .list();
+                                            mainViewModel.dataDao.deleteInTx(needToDelete);
+
+                                            mainViewModel.queryDataListBySetting(null);
+
+                                            dialog.dismiss();
+                                            XToast.success("删除成功");
+                                            XLoadingDialog.with(getContext()).cancel();
+
+                                        }
+
+                                        @Override
+                                        public void onFailure(IOException e) {
+                                            XLoadingDialog.with(getContext()).cancel();
+                                            XToast.error("删除失败");
+                                            dialog.cancel();
+                                        }
+                                    });
+                                }
+                            });
+
+                            dialog.show();
+                        } else {
+                            XToast.info("您已不是管理员");
+                            mainViewModel.loadAllSettings(0);
+                            mainViewModel.queryDataListBySetting(0);
+                            mainViewModel.loadAllSettings(null);
+                            taskAdapter.setEnableSelect(false);
+                            taskAdapter.cancelSelect();
                         }
+                    }
 
-                        mainViewModel.deleteMany(ids, new HttpUtil.HttpUtilCallBack<Boolean>() {
-                            @Override
-                            public void onResponse(Response response, Boolean result) {
+                    @Override
+                    public void onFailure(IOException e) {
 
-                                // TODO: 2019/8/4 通知adapter更新数据 (dataList和booleanArray)
-
-                                taskAdapter.clearSelect();
-                                taskAdapter.cancelSelect();
-                                iNewTaskListener.OnCancelSelect();
-
-                                List<Data> needToDelete = mainViewModel.dataDao.queryBuilder()
-                                        .where(DataDao.Properties.Id.in(ids))
-                                        .build()
-                                        .list();
-                                mainViewModel.dataDao.deleteInTx(needToDelete);
-
-                                mainViewModel.queryDataListBySetting(null);
-
-                                dialog.dismiss();
-                                XToast.success("删除成功");
-                                XLoadingDialog.with(getContext()).cancel();
-
-                            }
-
-                            @Override
-                            public void onFailure(IOException e) {
-                                XLoadingDialog.with(getContext()).cancel();
-                                XToast.error("删除失败");
-                                dialog.cancel();
-                            }
-                        });
                     }
                 });
 
-                dialog.show();
 
             }
 

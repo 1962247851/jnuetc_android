@@ -127,9 +127,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         ButterKnife.bind(this);
         UpdateUtil.checkForUpdate(true, this, drawer);
         mainViewModel = ViewModelProviders.of(this).get(MainViewModel.class);
-
         radioGroup = navigationView.getHeaderView(0).findViewById(R.id.radioGroup_main);
-
         RecyclerView recyclerViewNorth = navigationView.getHeaderView(0).findViewById(R.id.recyclerView_main_north);
         RecyclerView recyclerViewSouth = navigationView.getHeaderView(0).findViewById(R.id.recyclerView_main_south);
         textViewSubTitle = navigationView.getHeaderView(0).findViewById(R.id.textView_main_sub_title);
@@ -157,22 +155,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if (shouldInit()) {
             MiPushClient.registerPush(this, APP_ID, APP_KEY);
         }
-
-        if (MiPushClient.getAllTopic(MainActivity.this).size() == 0) {
-
-            //订阅通知，如果是管理员订阅所有标签
-            if (GlobalUtil.user.getRoot() == 1) {
-                System.out.println("订阅（管理员）");
-                MiPushClient.subscribe(MainActivity.this, "0", null);
-                MiPushClient.subscribe(MainActivity.this, "1", null);
-            } else {
-                System.out.println("订阅");
-                MiPushClient.subscribe(MainActivity.this, String.valueOf(GlobalUtil.user.getGroup()), null);
-            }
-        }
-
-        System.out.println("所有订阅：\n" + MiPushClient.getAllTopic(MainActivity.this));
-
 
         //打开Log
         LoggerInterface newLogger = new LoggerInterface() {
@@ -253,6 +235,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         bottomNavigationBar.setEntities(entities);
         bottomNavigationBar.setCurrentPosition(0);
 
+        mainViewModel.updateUserInfo(new HttpUtil.HttpUtilCallBack<User>() {
+            @Override
+            public void onResponse(Response response, User result) {
+            }
+
+            @Override
+            public void onFailure(IOException e) {
+            }
+        });
     }
 
     private void InitListener() {
@@ -270,22 +261,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //                frameLayout.setVisibility(View.GONE);
                 mainViewModel.loadAllSettings(integer);
                 updateDrawer();
-                if (GlobalUtil.user.getRoot() != 1) {
-                    LinearLayout linearLayoutNorth = navigationView.getHeaderView(0).findViewById(R.id.linearLayout_main_north);
-                    LinearLayout linearLayoutSouth = navigationView.getHeaderView(0).findViewById(R.id.linearLayout_main_south);
-                    if (integer == 0) {
-                        if (GlobalUtil.user.getGroup() == 0) {
-                            linearLayoutSouth.setVisibility(View.GONE);
-                            linearLayoutNorth.setVisibility(View.VISIBLE);
-                        } else {
-                            linearLayoutNorth.setVisibility(View.GONE);
-                            linearLayoutSouth.setVisibility(View.VISIBLE);
-                        }
-                    } else {
-                        linearLayoutSouth.setVisibility(View.VISIBLE);
-                        linearLayoutNorth.setVisibility(View.VISIBLE);
-                    }
-                }
             } else {
 //                navigationView.getHeaderView(0).findViewById(R.id.linearLayout_main_header).setVisibility(View.GONE);
 //                frameLayout.setVisibility(View.VISIBLE);
@@ -301,6 +276,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             public void onDrawerClosed(View drawerView) {
                 mainViewModel.saveAllSettings();
                 mainViewModel.queryDataListBySetting(null);
+            }
+
+            @Override
+            public void onDrawerOpened(View drawerView) {
+                updateDrawer();
             }
         });
 
@@ -638,6 +618,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         radioGroup.check(b != null && b ? R.id.radioButton_asc : R.id.radioButton_desc);
         textViewSelectAllNorth.setText(mainViewModel.isSelectAll(mainViewModel.getSelectedLocalsN().getValue()) ? "取消全选" : "全选");
         textViewSelectAllSouth.setText(mainViewModel.isSelectAll(mainViewModel.getSelectedLocalsS().getValue()) ? "取消全选" : "全选");
+        LinearLayout linearLayoutNorth = navigationView.getHeaderView(0).findViewById(R.id.linearLayout_main_north);
+        LinearLayout linearLayoutSouth = navigationView.getHeaderView(0).findViewById(R.id.linearLayout_main_south);
+        if (GlobalUtil.user.getRoot() != 1) {
+            if (GlobalUtil.user.getGroup() == 0) {
+                linearLayoutSouth.setVisibility(View.GONE);
+                linearLayoutNorth.setVisibility(View.VISIBLE);
+            } else {
+                linearLayoutNorth.setVisibility(View.GONE);
+                linearLayoutSouth.setVisibility(View.VISIBLE);
+            }
+        } else {
+            linearLayoutNorth.setVisibility(View.VISIBLE);
+            linearLayoutSouth.setVisibility(View.VISIBLE);
+        }
     }
 
     @Override

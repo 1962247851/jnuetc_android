@@ -21,6 +21,7 @@ import java.io.IOException;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import jn.mjz.aiot.jnuetc.Greendao.Entity.Data;
+import jn.mjz.aiot.jnuetc.Greendao.Entity.User;
 import jn.mjz.aiot.jnuetc.R;
 import jn.mjz.aiot.jnuetc.Util.HttpUtil;
 import jn.mjz.aiot.jnuetc.ViewModel.MainViewModel;
@@ -52,21 +53,21 @@ public class AdminActivity extends AppCompatActivity implements View.OnClickList
         XStatusBar.setColorNoTranslucent(this, getResources().getColor(R.color.colorPrimary));
 
         XLoadingDialog.with(AdminActivity.this).setCanceled(false).setMessage("获取最新数据中").show();
-        mainViewModel.haveRoot(new HttpUtil.HttpUtilCallBack<Boolean>() {
+        mainViewModel.updateUserInfo(new HttpUtil.HttpUtilCallBack<User>() {
             @Override
-            public void onResponse(Response response, Boolean result) {
-                if (!result) {
+            public void onResponse(Response response, User result) {
+                if (!(result.getRoot() == 1)) {
                     XToast.info("您已不是管理员");
                     finish();
                 } else {
                     aSwitch.setOnCheckedChangeListener((compoundButton, b) -> {
                         if (!firstOpen) {
                             XLoadingDialog.with(AdminActivity.this).setCanceled(false).setMessage("请求处理中，请稍后").show();
-                            mainViewModel.haveRoot(new HttpUtil.HttpUtilCallBack<Boolean>() {
+                            mainViewModel.updateUserInfo(new HttpUtil.HttpUtilCallBack<User>() {
                                 @Override
-                                public void onResponse(Response response, Boolean result) {
+                                public void onResponse(Response response, User result) {
                                     XLoadingDialog.with(AdminActivity.this).dismiss();
-                                    if (result) {
+                                    if (result.getRoot() == 1) {
                                         if (b) {
                                             startService();
                                         } else {
@@ -119,10 +120,10 @@ public class AdminActivity extends AppCompatActivity implements View.OnClickList
                 if (id.isEmpty()) {
                     XToast.error("Id不能为空");
                 } else {
-                    mainViewModel.haveRoot(new HttpUtil.HttpUtilCallBack<Boolean>() {
+                    mainViewModel.updateUserInfo(new HttpUtil.HttpUtilCallBack<User>() {
                         @Override
-                        public void onResponse(Response response, Boolean result) {
-                            if (result) {
+                        public void onResponse(Response response, User result) {
+                            if (result.getRoot() == 1) {
                                 XLoadingDialog.with(AdminActivity.this).setCanceled(false).setMessage("删除中").show();
                                 mainViewModel.queryById(id, new HttpUtil.HttpUtilCallBack<Data>() {
                                     @Override
