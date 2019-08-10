@@ -32,7 +32,6 @@ public class MainViewModel extends ViewModel {
     public DataDao dataDao = MyApplication.getDaoSession().getDataDao();
     private SharedPreferences sharedPreferences = SharedPreferencesUtil.getSharedPreferences(GlobalUtil.KEYS.NEW.FILE_NAME_DRAWER);
 
-
     //保存当前所在的界面，变化时会刷新sharePreferences
     private MutableLiveData<Integer> currentState;
     //暂时存放筛选配置的变量，用于从本地数据库筛选数据,会跟随currentState变化
@@ -40,15 +39,18 @@ public class MainViewModel extends ViewModel {
     private MutableLiveData<Map<String, Boolean>> selectedLocalsS;
     private MutableLiveData<Boolean> timeOrder;
 
-
     //暂时存放筛选结果的Data列表，并在变化时通知adapter刷新数据
-    private MutableLiveData<List<Data>> dataListAll;
     private MutableLiveData<List<Data>> dataList1;
     private MutableLiveData<List<Data>> dataList2;
     private MutableLiveData<List<Data>> dataList3;
     private MutableLiveData<List<Data>> dataList4;
     private MutableLiveData<List<Data>> dataList5;
 
+    /**
+     * 更新用户信息（更新管理员权限）
+     *
+     * @param callBack 回调
+     */
     public void updateUserInfo(HttpUtil.HttpUtilCallBack<User> callBack) {
         Map<String, Object> params = new HashMap<>();
         params.put("sno", GlobalUtil.user.getSno());
@@ -123,6 +125,11 @@ public class MainViewModel extends ViewModel {
 //        Log.e(TAG, "updateUserInfo: 所有订阅" + MiPushClient.getAllTopic(XFrame.getContext()));
     }
 
+    /**
+     * 查询所有用户（转让用）
+     *
+     * @param callBack 回调
+     */
     public void queryAllUser(HttpUtil.HttpUtilCallBack<List<String>> callBack) {
         HttpUtil.post.haveResponse(GlobalUtil.URLS.QUERY.ALL_USER, null, new HttpUtil.HttpUtilCallBack<String>() {
 
@@ -149,7 +156,9 @@ public class MainViewModel extends ViewModel {
     }
 
     /**
-     * 从服务器获取最新保修单数据，并且赋值给{@link MainViewModel#dataListAll}
+     * 从服务器获取最新保修单数据，并且保存到本地数据库（先删除所有再插入所有）
+     *
+     * @param callBack 回调
      */
     public void queryAll(HttpUtil.HttpUtilCallBack<List<Data>> callBack) {
         HttpUtil.post.haveResponse(GlobalUtil.URLS.QUERY.ALL, null, new HttpUtil.HttpUtilCallBack<String>() {
@@ -158,7 +167,6 @@ public class MainViewModel extends ViewModel {
             public void onResponse(Response response, String result) {
                 if (result != null) {
                     List<Data> resultList = GsonUtil.parseJsonArray2ObejctList(result, Data.class);
-                    getDataListAll().setValue(resultList);
                     dataDao.deleteAll();
                     dataDao.insertInTx(resultList);
                     callBack.onResponse(response, resultList);
@@ -315,6 +323,12 @@ public class MainViewModel extends ViewModel {
 
     }
 
+    /**
+     * 批量删除报修单
+     *
+     * @param ids      要删除的id列表
+     * @param callBack 回调
+     */
     public void deleteMany(List<Integer> ids, HttpUtil.HttpUtilCallBack<Boolean> callBack) {
         Map<String, Object> params = new HashMap<>();
         params.put("ids", GsonUtil.getInstance().toJson(ids));
@@ -336,7 +350,6 @@ public class MainViewModel extends ViewModel {
         });
 
     }
-
 
     /**
      * 查询当前报修服务状态
@@ -420,6 +433,27 @@ public class MainViewModel extends ViewModel {
     }
 
     /**
+     * 根据当前所在的界面拿对应的SharedPreference
+     *
+     * @return 返回SharedPreference
+     */
+    private SharedPreferences getSharedPreferences() {
+        int current = getCurrentState().getValue() == null ? 0 : getCurrentState().getValue();
+        switch (current) {
+            case 0:
+                sharedPreferences = SharedPreferencesUtil.getSharedPreferences(GlobalUtil.KEYS.NEW.FILE_NAME_DRAWER);
+                break;
+            case 1:
+                sharedPreferences = SharedPreferencesUtil.getSharedPreferences(GlobalUtil.KEYS.PROCESSING.FILE_NAME_DRAWER);
+                break;
+            case 2:
+                sharedPreferences = SharedPreferencesUtil.getSharedPreferences(GlobalUtil.KEYS.DONE.FILE_NAME_DRAWER);
+                break;
+        }
+        return sharedPreferences;
+    }
+
+    /**
      * 当drawer关闭的时候调用保存所有设置
      */
     public void saveAllSettings() {
@@ -483,10 +517,6 @@ public class MainViewModel extends ViewModel {
             }
 
         }
-
-//        Log.d(TAG, "loadAllSettings: state = " + state);
-//        Log.d(TAG, "loadAllSettings: N " + getSelectedLocalsN().getValue());
-//        Log.d(TAG, "loadAllSettings: S " + getSelectedLocalsS().getValue());
     }
 
     /**
@@ -525,7 +555,7 @@ public class MainViewModel extends ViewModel {
     /**
      * 根据设置和state更新显示的dataList
      *
-     * @return 查询得到的报修单
+     * @param state 要查询哪个界面的
      */
     public void queryDataListBySetting(@Nullable Integer state) {
         state = state == null ? getCurrentState().getValue() : state;
@@ -596,6 +626,11 @@ public class MainViewModel extends ViewModel {
         }
     }
 
+    /**
+     * 查询与我有关的报修单（注意GreenDao like的用法）
+     *
+     * @param state 要查询的状态
+     */
     public void queryDataListAboutMyself(@NonNull Integer state) {
         List<Data> dataList;
         if (state == 1) {
@@ -648,22 +683,6 @@ public class MainViewModel extends ViewModel {
         return selectedLocalsS;
     }
 
-    public SharedPreferences getSharedPreferences() {
-        int current = getCurrentState().getValue() == null ? 0 : getCurrentState().getValue();
-        switch (current) {
-            case 0:
-                sharedPreferences = SharedPreferencesUtil.getSharedPreferences(GlobalUtil.KEYS.NEW.FILE_NAME_DRAWER);
-                break;
-            case 1:
-                sharedPreferences = SharedPreferencesUtil.getSharedPreferences(GlobalUtil.KEYS.PROCESSING.FILE_NAME_DRAWER);
-                break;
-            case 2:
-                sharedPreferences = SharedPreferencesUtil.getSharedPreferences(GlobalUtil.KEYS.DONE.FILE_NAME_DRAWER);
-                break;
-        }
-        return sharedPreferences;
-    }
-
     public MutableLiveData<Integer> getCurrentState() {
         if (currentState == null) {
             currentState = new MutableLiveData<>();
@@ -672,25 +691,11 @@ public class MainViewModel extends ViewModel {
         return currentState;
     }
 
-    public MutableLiveData<List<Data>> getDataListAll() {
-        if (dataListAll == null) {
-            dataListAll = new MutableLiveData<>();
-            dataListAll.setValue(dataDao.loadAll());
-        }
-//        if (dataListAll.getValue() == null) {
-//            dataListAll.setValue(dataDao.loadAll());
-//        }
-        return dataListAll;
-    }
-
     public MutableLiveData<List<Data>> getDataList1() {
         if (dataList1 == null) {
             dataList1 = new MutableLiveData<>();
             dataList1.setValue(new ArrayList<>());
         }
-//        if (dataList1.getValue() == null) {
-//            dataList1.setValue(new ArrayList<>());
-//        }
         return dataList1;
     }
 
@@ -699,9 +704,6 @@ public class MainViewModel extends ViewModel {
             dataList2 = new MutableLiveData<>();
             dataList2.setValue(new ArrayList<>());
         }
-//        if (dataList2.getValue() == null) {
-//            dataList2.setValue(new ArrayList<>());
-//        }
         return dataList2;
     }
 
@@ -710,9 +712,6 @@ public class MainViewModel extends ViewModel {
             dataList3 = new MutableLiveData<>();
             dataList3.setValue(new ArrayList<>());
         }
-//        if (dataList3.getValue() == null) {
-//            dataList3.setValue(new ArrayList<>());
-//        }
         return dataList3;
     }
 
@@ -729,9 +728,6 @@ public class MainViewModel extends ViewModel {
             dataList5 = new MutableLiveData<>();
             dataList5.setValue(new ArrayList<>());
         }
-//        if (dataList5.getValue() == null) {
-//            dataList5.setValue(new ArrayList<>());
-//        }
         return dataList5;
     }
 

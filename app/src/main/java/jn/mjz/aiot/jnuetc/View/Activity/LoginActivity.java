@@ -156,7 +156,6 @@ public class LoginActivity extends AppCompatActivity {
             switch (v.getId()) {
                 case R.id.button_login_login:
                     if (isPasswordAvailable && isNumberAvailable) {
-                        // TODO: 2019/4/24 登录
                         login();
                         buttonLogin.setClickable(false);
                     } else if (!isNumberAvailable && !isPasswordAvailable) {

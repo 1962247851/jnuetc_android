@@ -47,11 +47,18 @@ public class AdminActivity extends AppCompatActivity implements View.OnClickList
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_admin);
         ButterKnife.bind(this);
-        mainViewModel = ViewModelProviders.of(this).get(MainViewModel.class);
-        setSupportActionBar(toolbar);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        XStatusBar.setColorNoTranslucent(this, getResources().getColor(R.color.colorPrimary));
 
+        InitData();
+        InitView();
+        InitListener();
+        FirstOpen();
+    }
+
+    private void InitListener() {
+        buttonDelete.setOnClickListener(AdminActivity.this);
+    }
+
+    private void FirstOpen() {
         XLoadingDialog.with(AdminActivity.this).setCanceled(false).setMessage("获取最新数据中").show();
         mainViewModel.updateUserInfo(new HttpUtil.HttpUtilCallBack<User>() {
             @Override
@@ -101,7 +108,6 @@ public class AdminActivity extends AppCompatActivity implements View.OnClickList
                             firstOpen = false;
                         }
                     });
-                    buttonDelete.setOnClickListener(AdminActivity.this);
                 }
             }
 
@@ -109,7 +115,16 @@ public class AdminActivity extends AppCompatActivity implements View.OnClickList
             public void onFailure(IOException e) {
             }
         });
+    }
 
+    private void InitView() {
+        setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        XStatusBar.setColorNoTranslucent(this, getResources().getColor(R.color.colorPrimary));
+    }
+
+    private void InitData() {
+        mainViewModel = ViewModelProviders.of(this).get(MainViewModel.class);
     }
 
     @Override

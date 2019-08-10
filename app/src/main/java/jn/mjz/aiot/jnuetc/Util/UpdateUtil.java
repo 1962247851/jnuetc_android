@@ -120,6 +120,8 @@ public class UpdateUtil {
         });
     }
 
+
+
     /* 获取本地软件版本号​名字
      */
     private static String getLocalVersionName(Context ctx) {

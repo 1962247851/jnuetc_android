@@ -2,8 +2,6 @@ package jn.mjz.aiot.jnuetc.Greendao.Entity;
 
 import android.os.Handler;
 
-import java.util.Locale;
-
 public class Time {
     private int day = 0;
     private int hour = 0;
@@ -11,10 +9,7 @@ public class Time {
     private int second = 0;
 
     private Handler handler = new Handler();
-
     private boolean pause = false;
-
-
     private static final int MAX_HOUR = 24;
     private static final int MAX_MINUTE = 60;
     private static final int MAX_SECOND = 60;
@@ -76,17 +71,6 @@ public class Time {
     private void addDay() {
         day++;
     }
-
-//    @Override
-//    public String toString() {
-//        return String.format(Locale.getDefault(), "%d天%d时%d分%d秒", day, hour, minute, second);
-//    }
-//
-//    public static void main(String[] args) {
-//        Time time = new Time();
-//        time.startTiming();
-//    }
-
 
     public int getDay() {
         return day;
