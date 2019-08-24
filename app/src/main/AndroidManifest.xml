@@ -27,7 +27,8 @@
         android:screenOrientation="portrait"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".View.Activity.HistoryActivity"></activity>
+        <activity android:name=".View.Activity.AboutActivity"></activity>
+        <activity android:name=".View.Activity.HistoryActivity" />
         <activity android:name=".View.Activity.AdminActivity" />
         <activity
             android:name=".View.Activity.DetailsActivity"

@@ -36,33 +36,6 @@
             android:textSize="20sp" />
 
 
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-
-            <EditText
-                android:id="@+id/editText_admin_delete"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignTop="@id/button_admin_delete"
-                android:layout_alignBottom="@id/button_admin_delete"
-                android:layout_alignParentStart="true"
-                android:layout_toStartOf="@id/button_admin_delete"
-                android:hint="请输入要删除的报修单的Id"
-                android:inputType="number"
-                android:maxLength="4"
-                android:maxLines="1" />
-
-            <Button
-                android:id="@+id/button_admin_delete"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentEnd="true"
-                android:background="@drawable/button_delete"
-                android:text="删除"
-                android:textColor="@color/white" />
-        </RelativeLayout>
-
     </LinearLayout>
 
 

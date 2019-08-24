@@ -3,8 +3,6 @@ package jn.mjz.aiot.jnuetc.View.Activity;
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
 import android.widget.Switch;
 
 import androidx.annotation.NonNull;
@@ -20,7 +18,6 @@ import java.io.IOException;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import jn.mjz.aiot.jnuetc.Greendao.Entity.Data;
 import jn.mjz.aiot.jnuetc.Greendao.Entity.User;
 import jn.mjz.aiot.jnuetc.R;
 import jn.mjz.aiot.jnuetc.Util.HttpUtil;
@@ -35,10 +32,6 @@ public class AdminActivity extends AppCompatActivity implements View.OnClickList
 
     @BindView(R.id.switch_admin)
     Switch aSwitch;
-    @BindView(R.id.button_admin_delete)
-    Button buttonDelete;
-    @BindView(R.id.editText_admin_delete)
-    EditText editTextDelete;
     @BindView(R.id.toolbar_admin)
     Toolbar toolbar;
 
@@ -55,7 +48,6 @@ public class AdminActivity extends AppCompatActivity implements View.OnClickList
     }
 
     private void InitListener() {
-        buttonDelete.setOnClickListener(AdminActivity.this);
     }
 
     private void FirstOpen() {
@@ -129,68 +121,8 @@ public class AdminActivity extends AppCompatActivity implements View.OnClickList
 
     @Override
     public void onClick(View view) {
-        switch (view.getId()) {
-            case R.id.button_admin_delete:
-                String id = editTextDelete.getText().toString();
-                if (id.isEmpty()) {
-                    XToast.error("Id不能为空");
-                } else {
-                    mainViewModel.updateUserInfo(new HttpUtil.HttpUtilCallBack<User>() {
-                        @Override
-                        public void onResponse(Response response, User result) {
-                            if (result.getRoot() == 1) {
-                                XLoadingDialog.with(AdminActivity.this).setCanceled(false).setMessage("删除中").show();
-                                mainViewModel.queryById(id, new HttpUtil.HttpUtilCallBack<Data>() {
-                                    @Override
-                                    public void onResponse(Response response, Data result) {
-                                        if (result != null) {
-                                            mainViewModel.delete(id, new HttpUtil.HttpUtilCallBack<Boolean>() {
-                                                @Override
-                                                public void onResponse(Response response, Boolean result) {
-                                                    XLoadingDialog.with(AdminActivity.this).dismiss();
-                                                    if (result) {
-                                                        XToast.success("删除成功");
-                                                    } else {
-                                                        XToast.error("删除失败");
-                                                    }
-                                                }
-
-                                                @Override
-                                                public void onFailure(IOException e) {
-                                                    XToast.error("删除失败");
-                                                    XLoadingDialog.with(AdminActivity.this).dismiss();
-                                                }
-                                            });
-                                        } else {
-                                            XToast.error("报修单不存在");
-                                            XLoadingDialog.with(AdminActivity.this).dismiss();
-                                        }
-                                    }
-
-                                    @Override
-                                    public void onFailure(IOException e) {
-                                        if (e == null) {
-                                            XToast.error("该单不存在");
-                                        } else {
-                                            XToast.error("删除失败");
-                                        }
-                                        XLoadingDialog.with(AdminActivity.this).dismiss();
-                                    }
-                                });
-                            } else {
-                                XToast.info("您已不是管理员");
-                                finish();
-                            }
-                        }
-
-                        @Override
-                        public void onFailure(IOException e) {
-                        }
-                    });
-
-                }
-                break;
-        }
+//        switch (view.getId()) {
+//        }
     }
 
     private void closeService() {

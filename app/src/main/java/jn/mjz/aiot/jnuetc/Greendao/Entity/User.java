@@ -7,7 +7,7 @@ public class User {
     private String openId;
     private String name;
     private short sex;
-    private int sno;
+    private String sno;
     private String password;
     private short root;
     private int group;
@@ -55,11 +55,11 @@ public class User {
         this.sex = sex;
     }
 
-    public int getSno() {
+    public String getSno() {
         return sno;
     }
 
-    public void setSno(int sno) {
+    public void setSno(String sno) {
         this.sno = sno;
     }
 

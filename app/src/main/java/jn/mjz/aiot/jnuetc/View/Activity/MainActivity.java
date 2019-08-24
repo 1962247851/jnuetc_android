@@ -341,8 +341,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.menu_main_update:
-                UpdateUtil.checkForUpdate(false, this, drawer);
+            case R.id.menu_main_about:
+                startActivity(new Intent(MainActivity.this, AboutActivity.class));
                 break;
             case R.id.menu_main_logout:
                 SharedPreferencesUtil.getSharedPreferences(GlobalUtil.KEYS.LOGIN_ACTIVITY.FILE_NAME)
@@ -486,7 +486,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         } else {
                             XLoadingDialog.with(this).setMessage("数据请求中,请稍后").setCanceled(false).show();
                             User user = new User();
-                            user.setSno(Integer.parseInt(sno[0]));
+                            user.setSno(sno[0]);
                             user.setPassword(password[0]);
                             user.setName(password1[0]);
 

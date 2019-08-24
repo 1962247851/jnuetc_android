@@ -91,15 +91,12 @@ public class UpdateUtil {
         });
     }
 
-    private static void checkForUpdate(IUpdateListener updateListener) {
-        HashMap<String, Object> p = new HashMap<>();
-        p.put("id", 1);
-        HttpUtil.post.haveResponse(GlobalUtil.URLS.QUERY.CHECK_FOR_UPDATE, p, new HttpUtil.HttpUtilCallBack<String>() {
+    public static void checkForUpdate(IUpdateListener updateListener) {
+        HttpUtil.post.haveResponse(GlobalUtil.URLS.QUERY.CHECK_FOR_UPDATE, null, new HttpUtil.HttpUtilCallBack<String>() {
             @Override
             public void onResponse(Response response, String result) {
                 String state = response.headers().get("state");
                 if (state != null && state.equals("OK")) {
-//                    Log.e("versionResult: ", result);
                     JsonObject jsonObject = GsonUtil.getInstance().fromJson(result, JsonObject.class);
                     float newVersion = Float.parseFloat(jsonObject.get("version").getAsString());
                     float localVersion = Float.parseFloat(UpdateUtil.getLocalVersionName(XFrame.getContext()));
@@ -121,10 +118,9 @@ public class UpdateUtil {
     }
 
 
-
     /* 获取本地软件版本号​名字
      */
-    private static String getLocalVersionName(Context ctx) {
+    public static String getLocalVersionName(Context ctx) {
         String localVersionName = null;
         try {
             PackageInfo packageInfo = ctx.getApplicationContext()

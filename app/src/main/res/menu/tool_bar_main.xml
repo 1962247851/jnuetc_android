@@ -7,11 +7,12 @@
         android:title="@string/ModifyPassword"
         app:showAsAction="never" />
     <item
-        android:id="@+id/menu_main_update"
-        android:title="@string/CheckForUpdate"
-        app:showAsAction="never" />
-    <item
         android:id="@+id/menu_main_logout"
         android:title="@string/LoginOut"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/menu_main_about"
+        android:title="@string/About"
         app:showAsAction="never" />
 </menu>

@@ -168,8 +168,11 @@ public class LoginActivity extends AppCompatActivity {
                     break;
                 case R.id.button_login_forget:
                     String url = "mqqwpa://im/chat?chat_type=wpa&uin=1962247851";
-                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-                    startActivity(intent);
+                    try {
+                        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
+                    } catch (Exception e) {
+                        XToast.error("未安装手Q或安装的版本不支持");
+                    }
                     break;
             }
         }

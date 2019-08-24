@@ -20,6 +20,7 @@
     <string name="DateAndName">时间-姓名</string>
     <string name="LocationAndId">园区-Id</string>
     <string name="LoginOut">退出登录</string>
+    <string name="About">关于</string>
     <string name="OrderByTime">按时间排序</string>
     <string name="TimeAsc">升序</string>
     <string name="TimeDesc">降序</string>
