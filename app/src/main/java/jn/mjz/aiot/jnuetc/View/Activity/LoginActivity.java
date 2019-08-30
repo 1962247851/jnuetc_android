@@ -24,8 +24,10 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import jn.mjz.aiot.jnuetc.Greendao.Entity.User;
 import jn.mjz.aiot.jnuetc.R;
 import jn.mjz.aiot.jnuetc.Util.GlobalUtil;
+import jn.mjz.aiot.jnuetc.Util.GsonUtil;
 import jn.mjz.aiot.jnuetc.Util.HttpUtil;
 import jn.mjz.aiot.jnuetc.Util.SharedPreferencesUtil;
 import okhttp3.Response;
@@ -52,14 +54,10 @@ public class LoginActivity extends AppCompatActivity {
         setContentView(R.layout.activity_login);
         sharedPreferences = SharedPreferencesUtil.getSharedPreferences(GlobalUtil.KEYS.LOGIN_ACTIVITY.FILE_NAME);
         String userJson = sharedPreferences.getString(GlobalUtil.KEYS.LOGIN_ACTIVITY.USER_JSON_STRING, "needLogin");
+        InitView();
+        InitListener();
         if (!userJson.equals("needLogin")) {
-            Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-            intent.putExtra("user", userJson);
-            startActivity(intent);
-            finish();
-        } else {
-            InitView();
-            InitListener();
+            login(false);
         }
     }
 
@@ -144,7 +142,6 @@ public class LoginActivity extends AppCompatActivity {
         }
         if (autoLogin.equals("1")) {
             checkBoxAutoLogin.setChecked(true);
-            login();
         }
 
     }
@@ -156,8 +153,7 @@ public class LoginActivity extends AppCompatActivity {
             switch (v.getId()) {
                 case R.id.button_login_login:
                     if (isPasswordAvailable && isNumberAvailable) {
-                        login();
-                        buttonLogin.setClickable(false);
+                        login(true);
                     } else if (!isNumberAvailable && !isPasswordAvailable) {
                         XToast.error("请检查账号和密码!");
                     } else if (!isNumberAvailable) {
@@ -178,7 +174,7 @@ public class LoginActivity extends AppCompatActivity {
         }
     }
 
-    private void login() {
+    private void login(boolean firstOpen) {
         XLoadingDialog.with(this).setCanceled(false).setMessage("账号验证中，请稍等").show();
 
         Map<String, Object> params = new HashMap<>();
@@ -187,11 +183,11 @@ public class LoginActivity extends AppCompatActivity {
         HttpUtil.post.haveResponse(GlobalUtil.URLS.QUERY.LOGIN, params, new HttpUtil.HttpUtilCallBack<String>() {
             @Override
             public void onResponse(Response response, String result) {
-                buttonLogin.setClickable(true);
-                XLoadingDialog.with(LoginActivity.this).cancel();
+                GlobalUtil.user = GsonUtil.getInstance().fromJson(result, User.class);
+                XLoadingDialog.with(LoginActivity.this).dismiss();
                 String state = response.headers().get("state");
                 if (state != null && state.equals("OK")) {
-                    XToast.success("登录成功");
+                    XToast.success(firstOpen ? "登录成功" : String.format("欢迎回来 %s", GlobalUtil.user.getName()));
                     SharedPreferences.Editor editor = sharedPreferences.edit();
                     editor.putString(GlobalUtil.KEYS.LOGIN_ACTIVITY.USER_NUMBER, number);
                     editor.putString(GlobalUtil.KEYS.LOGIN_ACTIVITY.USER_PASSWORD, password);
@@ -205,7 +201,6 @@ public class LoginActivity extends AppCompatActivity {
                     editor.apply();
                     finish();
                     Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-                    intent.putExtra("user", result);
                     startActivity(intent);
                 } else {
                     XToast.error("登录失败");
@@ -214,9 +209,8 @@ public class LoginActivity extends AppCompatActivity {
 
             @Override
             public void onFailure(IOException e) {
-                buttonLogin.setClickable(true);
                 XToast.error("登录失败");
-                XLoadingDialog.with(LoginActivity.this).cancel();
+                XLoadingDialog.with(LoginActivity.this).dismiss();
             }
         });
     }

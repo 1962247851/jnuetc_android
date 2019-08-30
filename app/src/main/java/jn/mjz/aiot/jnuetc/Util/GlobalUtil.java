@@ -67,11 +67,13 @@ public class GlobalUtil {
             public static final String CHECK_STATE = HOST + "CheckState";
             public static final String HAVE_ROOT = HOST + "HaveRoot";
             public static final String CHECK_FOR_UPDATE = HOST + "CheckUpdate";
+            public static final String CHECK_HISTORY = HOST + "CheckHistory";
 
         }
 
         public static final class INSERT {
             public static final String INSERT = HOST + "Insert";
+            public static final String INSERT_CODE = HOST + "InsertNewCode";
         }
 
         public static final class DELETE {

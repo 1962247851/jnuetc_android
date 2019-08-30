@@ -36,6 +36,46 @@
             android:textSize="20sp" />
 
 
+        <RelativeLayout
+            android:id="@+id/relativeLayout_admin_code"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingBottom="10dp"
+            android:visibility="gone">
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/til_admin_code"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_toStartOf="@+id/button_admin_insert"
+                android:textColorHint="@color/colorPrimary">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/tidt_admin_code"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="新的邀请码"
+                    android:inputType="number"
+                    android:maxLength="4"
+                    android:textColor="@color/MainText"
+                    android:textIsSelectable="true"
+                    android:textSize="20sp" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <Button
+                android:id="@+id/button_admin_insert"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignBottom="@id/til_admin_code"
+                android:layout_alignParentEnd="true"
+                android:background="@drawable/button_confirm"
+                android:text="添加"
+                android:textColor="@color/white" />
+        </RelativeLayout>
+
+
     </LinearLayout>
 
 

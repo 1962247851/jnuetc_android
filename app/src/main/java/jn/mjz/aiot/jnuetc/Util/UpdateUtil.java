@@ -7,16 +7,17 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.util.Log;
 import android.view.View;
 
 import com.google.android.material.snackbar.Snackbar;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.youth.xframe.XFrame;
 import com.youth.xframe.widget.XLoadingDialog;
 import com.youth.xframe.widget.XToast;
 
 import java.io.IOException;
-import java.util.HashMap;
 
 import okhttp3.Response;
 
@@ -117,6 +118,42 @@ public class UpdateUtil {
         });
     }
 
+    public static void checkHistory(IHistoryListener iHistoryListener) {
+        HttpUtil.post.haveResponse(GlobalUtil.URLS.QUERY.CHECK_HISTORY, null, new HttpUtil.HttpUtilCallBack<String>() {
+            @Override
+            public void onResponse(Response response, String result) {
+                String state = response.headers().get("state");
+                if (state != null && state.equals("OK")) {
+                    StringBuilder builder = new StringBuilder();
+                    JsonArray jsonArray = GsonUtil.getInstance().fromJson(result, JsonArray.class);
+
+                    for (int i = 0; i < jsonArray.size(); i++) {
+                        String[] messages = jsonArray.get(i).getAsJsonObject().get("message").getAsString().split("。");
+                        builder.append("版本：")
+                                .append(jsonArray.get(i).getAsJsonObject().get("version").getAsString())
+                                .append("（")
+                                .append(DateUtil.getDateAndTime(jsonArray.get(i).getAsJsonObject().get("date").getAsLong(), " "))
+                                .append("）\n更新内容：");
+                        for (String s : messages) {
+                            builder.append(s).append("\n");
+                        }
+                        builder.deleteCharAt(builder.length() - 1);
+//                                .append(jsonArray.get(i).getAsJsonObject().get("message").getAsString())
+                        builder.append(i == jsonArray.size() - 1 ? "" : "\n\n");
+                    }
+                    iHistoryListener.Success(builder.toString());
+                } else {
+                    iHistoryListener.Error();
+                }
+            }
+
+            @Override
+            public void onFailure(IOException e) {
+                XToast.error("数据获取失败");
+                iHistoryListener.Error();
+            }
+        });
+    }
 
     /* 获取本地软件版本号​名字
      */
@@ -133,10 +170,31 @@ public class UpdateUtil {
         return localVersionName;
     }
 
+    /* 获取本地软件版本号​
+     */
+    public static int getLocalVersionCode(Context ctx) {
+        int localVersionName = 1;
+        try {
+            PackageInfo packageInfo = ctx.getApplicationContext()
+                    .getPackageManager()
+                    .getPackageInfo(ctx.getPackageName(), 0);
+            localVersionName = packageInfo.versionCode;
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
+        return localVersionName;
+    }
+
     public interface IUpdateListener {
         void HaveNewVersion(String date, String url, String message, float newVersion);
 
         void NoUpdate();
+
+        void Error();
+    }
+
+    public interface IHistoryListener {
+        void Success(String historyString);
 
         void Error();
     }

@@ -40,6 +40,7 @@ public class MyselfFragment extends Fragment implements View.OnClickListener {
     private static final String TAG = "MyselfFragment";
     private Unbinder unbinder;
     private MainViewModel mainViewModel;
+    private IMyselfFragmentListener iMyselfFragmentListener;
 
     private static List<Data> dataList4 = new ArrayList<>();
     private List<Data> dataList5 = new ArrayList<>();
@@ -69,24 +70,20 @@ public class MyselfFragment extends Fragment implements View.OnClickListener {
         mainViewModel.queryAll(new HttpUtil.HttpUtilCallBack<List<Data>>() {
             @Override
             public void onResponse(Response response, List<Data> result) {
-                if (result != null) {
-                    mainViewModel.queryDataListAboutMyself(1);
-                    mainViewModel.queryDataListAboutMyself(2);
-                    mainViewModel.updateUserInfo(new HttpUtil.HttpUtilCallBack<User>() {
-                        @Override
-                        public void onResponse(Response response, User result) {
-                            textViewAdmin.setVisibility(result.getRoot() == 1 ? View.VISIBLE : View.GONE);
-                            swipeRefreshLayout.setRefreshing(false);
-                        }
+                mainViewModel.queryDataListAboutMyself(1);
+                mainViewModel.queryDataListAboutMyself(2);
+                mainViewModel.updateUserInfo(new HttpUtil.HttpUtilCallBack<User>() {
+                    @Override
+                    public void onResponse(Response response, User result) {
+                        textViewAdmin.setVisibility(result.getRoot() == 1 ? View.VISIBLE : View.GONE);
+                        swipeRefreshLayout.setRefreshing(false);
+                    }
 
-                        @Override
-                        public void onFailure(IOException e) {
-                            swipeRefreshLayout.setRefreshing(false);
-                        }
-                    });
-                } else {
-                    swipeRefreshLayout.setRefreshing(false);
-                }
+                    @Override
+                    public void onFailure(IOException e) {
+                        swipeRefreshLayout.setRefreshing(false);
+                    }
+                });
 
             }
 
@@ -184,7 +181,8 @@ public class MyselfFragment extends Fragment implements View.OnClickListener {
         }
     }
 
-    public MyselfFragment() {
+    public MyselfFragment(IMyselfFragmentListener iMyselfFragmentListener) {
+        this.iMyselfFragmentListener = iMyselfFragmentListener;
     }
 
     @Override
@@ -223,26 +221,25 @@ public class MyselfFragment extends Fragment implements View.OnClickListener {
         mainViewModel.queryAll(new HttpUtil.HttpUtilCallBack<List<Data>>() {
             @Override
             public void onResponse(Response response, List<Data> result) {
-                if (result != null) {
-                    mainViewModel.queryDataListAboutMyself(1);
-                    mainViewModel.queryDataListAboutMyself(2);
-                    XToast.success("数据更新成功");
-                    mainViewModel.updateUserInfo(new HttpUtil.HttpUtilCallBack<User>() {
-                        @Override
-                        public void onResponse(Response response, User result) {
-                            textViewAdmin.setVisibility(result.getRoot() == 1 ? View.VISIBLE : View.GONE);
-                            swipeRefreshLayout.setRefreshing(false);
-                        }
+                mainViewModel.queryDataListAboutMyself(1);
+                mainViewModel.queryDataListAboutMyself(2);
+                mainViewModel.updateUserInfo(new HttpUtil.HttpUtilCallBack<User>() {
+                    @Override
+                    public void onResponse(Response response, User result) {
+                        textViewAdmin.setVisibility(result.getRoot() == 1 ? View.VISIBLE : View.GONE);
+                        swipeRefreshLayout.setRefreshing(false);
+                        XToast.success("数据更新成功");
+                    }
 
-                        @Override
-                        public void onFailure(IOException e) {
-
+                    @Override
+                    public void onFailure(IOException e) {
+                        if (e == null) {
+                            iMyselfFragmentListener.OnUserInfoChanged();
                         }
-                    });
-                } else {
-                    XToast.error("数据更新失败");
-                    swipeRefreshLayout.setRefreshing(false);
-                }
+                        XToast.error("数据更新失败");
+                        swipeRefreshLayout.setRefreshing(false);
+                    }
+                });
             }
 
             @Override
@@ -256,5 +253,9 @@ public class MyselfFragment extends Fragment implements View.OnClickListener {
     public void autoRefresh() {
         swipeRefreshLayout.setRefreshing(true);
         updateData();
+    }
+
+    public interface IMyselfFragmentListener {
+        void OnUserInfoChanged();
     }
 }

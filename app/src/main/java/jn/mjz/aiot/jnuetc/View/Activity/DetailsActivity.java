@@ -253,6 +253,7 @@ public class DetailsActivity extends AppCompatActivity implements View.OnClickLi
                                     names.deleteCharAt(names.length() - 1);
                                     String repairer = names.toString();
                                     if (!repairer.isEmpty() && !repairer.contains(GlobalUtil.user.getName())) {
+                                        data.setState((short) 1);
                                         data.setRepairer(repairer);
                                         data.setOrderDate(data.getOrderDate());
                                         data.setRepairDate(System.currentTimeMillis());

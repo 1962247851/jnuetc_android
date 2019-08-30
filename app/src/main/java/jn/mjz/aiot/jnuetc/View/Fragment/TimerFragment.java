@@ -57,6 +57,7 @@ public class TimerFragment extends Fragment {
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
+        outState.putLong("startTime", startTime);
     }
 
     public TimerFragment() {
@@ -90,6 +91,9 @@ public class TimerFragment extends Fragment {
 //                startTime = savedInstanceState.getLong("startTime");
 //            }
 //        }
+        if (savedInstanceState != null) {
+            startTime = savedInstanceState.getLong("startTime");
+        }
         time = DateUtil.diffTime(startTime, System.currentTimeMillis());
         time.startTiming(time1 -> {
             tickerViewDay.setText(String.valueOf(time1.getDay()));

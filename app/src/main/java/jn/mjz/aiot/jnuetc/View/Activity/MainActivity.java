@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Rect;
 import android.net.Uri;
@@ -56,7 +57,6 @@ import butterknife.ButterKnife;
 import jn.mjz.aiot.jnuetc.Greendao.Entity.User;
 import jn.mjz.aiot.jnuetc.R;
 import jn.mjz.aiot.jnuetc.Util.GlobalUtil;
-import jn.mjz.aiot.jnuetc.Util.GsonUtil;
 import jn.mjz.aiot.jnuetc.Util.HttpUtil;
 import jn.mjz.aiot.jnuetc.Util.SharedPreferencesUtil;
 import jn.mjz.aiot.jnuetc.Util.UpdateUtil;
@@ -122,7 +122,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        GlobalUtil.user = GsonUtil.getInstance().fromJson(getIntent().getStringExtra("user"), User.class);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
         UpdateUtil.checkForUpdate(true, this, drawer);
@@ -223,7 +222,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 getSupportActionBar().setTitle("JNUETC");
             }
         });
-        myselfFragment = new MyselfFragment();
+        myselfFragment = new MyselfFragment(new MyselfFragment.IMyselfFragmentListener() {
+            @Override
+            public void OnUserInfoChanged() {
+                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                builder.setMessage("学号或密码变更，请重新登录")
+                        .setCancelable(false)
+                        .setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                finish();
+                                startActivity(new Intent(MainActivity.this, LoginActivity.class));
+                            }
+                        })
+                        .show();
+            }
+        });
         fragments.add(newTaskFragment);
         fragments.add(secondFragment);
         fragments.add(myselfFragment);
@@ -674,6 +688,5 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
         }
     }
-
 
 }

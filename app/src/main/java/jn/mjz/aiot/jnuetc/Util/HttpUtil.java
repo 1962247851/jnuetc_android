@@ -1,14 +1,14 @@
 package jn.mjz.aiot.jnuetc.Util;
 
 
-import android.Manifest;
 import android.app.Activity;
+import android.net.Uri;
 import android.os.Environment;
+import android.os.ParcelFileDescriptor;
 import android.util.Log;
 
 import com.youth.xframe.XFrame;
 import com.youth.xframe.utils.http.XHttp;
-import com.youth.xframe.utils.permission.XPermission;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -38,15 +38,7 @@ public class HttpUtil {
     public static class post {
 
         public static void haveResponse(String url, Map<String, Object> params, HttpUtilCallBack<String> callback) {
-            if (client == null) {
-                client = new OkHttpClient().newBuilder()
-                        .retryOnConnectionFailure(true)
-                        .connectTimeout(10, TimeUnit.SECONDS)
-                        .readTimeout(10, TimeUnit.SECONDS)
-                        .writeTimeout(10, TimeUnit.SECONDS)
-                        .cache(new Cache(XFrame.getContext().getCacheDir(), cacheSize))
-                        .build();
-            }
+            initClient();
 
             RequestBody body = EMPTY_REQUEST;
             if (null != params && !params.isEmpty()) {
@@ -83,15 +75,7 @@ public class HttpUtil {
         }
 
         public static void uploadHaveResponse(String url, Map<String, Object> params, HttpUtilCallBack callBack) {
-            if (client == null) {
-                client = new OkHttpClient().newBuilder()
-                        .retryOnConnectionFailure(true)
-                        .connectTimeout(10, TimeUnit.SECONDS)
-                        .readTimeout(10, TimeUnit.SECONDS)
-                        .writeTimeout(10, TimeUnit.SECONDS)
-                        .cache(new Cache(XFrame.getContext().getCacheDir(), cacheSize))
-                        .build();
-            }
+            initClient();
             RequestBody body = EMPTY_REQUEST;
             if (null != params && !params.isEmpty()) {
                 MultipartBody.Builder builder = new MultipartBody.Builder().setType(MultipartBody.FORM);
@@ -143,15 +127,7 @@ public class HttpUtil {
 
     public static class get {
         public static void haveResponse(String url, Map<String, Object> params, HttpUtilCallBack<String> callback) {
-            if (client == null) {
-                client = new OkHttpClient().newBuilder()
-                        .retryOnConnectionFailure(true)
-                        .connectTimeout(10, TimeUnit.SECONDS)
-                        .readTimeout(10, TimeUnit.SECONDS)
-                        .writeTimeout(10, TimeUnit.SECONDS)
-                        .cache(new Cache(XFrame.getContext().getCacheDir(), cacheSize))
-                        .build();
-            }
+            initClient();
 
             Request request = new Request.Builder().url(url + getUrlParamsByMap(params)).build();
             client.newCall(request).enqueue(new Callback() {
@@ -171,93 +147,86 @@ public class HttpUtil {
             });
         }
 
-        public static void downloadFile(Activity activity, String url, Map<String, Object> params, IFileDownloadListener fileDownloadListener) {
-            if (client == null) {
-                client = new OkHttpClient().newBuilder()
-                        .retryOnConnectionFailure(true)
-                        .connectTimeout(10, TimeUnit.SECONDS)
-                        .readTimeout(10, TimeUnit.SECONDS)
-                        .writeTimeout(10, TimeUnit.SECONDS)
-                        .cache(new Cache(XFrame.getContext().getCacheDir(), cacheSize))
-                        .build();
-            }
-
+        public static void downloadFile(Activity activity, Uri uri, String url, Map<String, Object> params, IFileDownloadListener fileDownloadListener) {
+            initClient();
             Request request = new Request.Builder().url(url + getUrlParamsByMap(params)).build();
-            XPermission.requestPermissions(activity, 0, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE}, new XPermission.OnPermissionListener() {
+            client.newCall(request).enqueue(new Callback() {
                 @Override
-                public void onPermissionGranted() {
-                    fileDownloadListener.onStart();
-                    client.newCall(request).enqueue(new Callback() {
-                        @Override
-                        public void onFailure(Call call, IOException e) {
-                            fileDownloadListener.onError(e.getMessage());
-                        }
-
-                        @Override
-                        public void onResponse(Call call, Response response) {
-
-                            if (response.isSuccessful()) {
-                                InputStream is = null;
-                                byte[] buf = new byte[2048];
-                                int len;
-                                FileOutputStream fos = null;
-                                //储存下载文件
-                                if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
-                                    Log.e("onResponse: ", "Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED");
-                                }
-
-                                File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "jnuetc.apk");
-                                try {
-                                    if (file.exists()) {
-                                        file.delete();
-                                    } else {
-                                        file.createNewFile();
-                                    }
-                                    is = response.body().byteStream();
-                                    long total = response.body().contentLength();
-                                    Log.e("onResponse:", " contentLength = " + total);
-                                    fos = new FileOutputStream(file);
-                                    long sum = 0;
-                                    while ((len = is.read(buf)) != -1) {
-                                        fos.write(buf, 0, len);
-                                        sum += len;
-                                        int progress = (int) (sum * 1.0 / total);
-                                        fileDownloadListener.onDownloading(progress);
-                                    }
-                                    fos.flush();
-                                    //下载完成
-                                    XHttp.handler.post(() -> fileDownloadListener.onFinish(file));
-                                } catch (Exception e) {
-                                    fileDownloadListener.onError(e.getMessage());
-                                } finally {
-                                    try {
-                                        if (is != null) {
-                                            is.close();
-                                        }
-                                        if (fos != null) {
-                                            fos.close();
-                                        }
-                                    } catch (IOException e) {
-                                        fileDownloadListener.onError(e.getMessage());
-                                    }
-
-                                }
-
-                            }
-                        }
-                    });
+                public void onFailure(Call call, IOException e) {
+                    fileDownloadListener.onError(e.getMessage());
                 }
 
                 @Override
-                public void onPermissionDenied() {
-                    fileDownloadListener.onError("permissionDenied");
+                public void onResponse(Call call, Response response) {
+                    if (response.isSuccessful()) {
+                        fileDownloadListener.onStart();
+                        InputStream is = null;
+                        byte[] buf = new byte[2048];
+                        int len;
+                        FileOutputStream fos = null;
+                        //储存下载文件
+                        if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
+                            Log.e("onResponse: ", "Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)");
+                        }
+//                                File file = new File(activity.getExternalFilesDir(null), fileName);
+//                                File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), fileName);//Q用不了
+                        try {
+                            ParcelFileDescriptor pfd = activity.getContentResolver().
+                                    openFileDescriptor(uri, "w");
+                            fos = new FileOutputStream(pfd.getFileDescriptor());
+//                            if (file.exists()) {
+//                                file.delete();
+//                            } else {
+//                                file.createNewFile();
+//                            }
+                            is = response.body().byteStream();
+                            long total = response.body().contentLength();
+                            Log.e("onResponse:", " contentLength = " + total);
+//                            fos = new FileOutputStream(file);
+                            long sum = 0;
+                            while ((len = is.read(buf)) != -1) {
+                                fos.write(buf, 0, len);
+                                sum += len;
+                                int progress = (int) (sum * 1.0 / total);
+                                fileDownloadListener.onDownloading(progress);
+                            }
+                            fos.flush();
+                            //下载完成
+                            XHttp.handler.post(() -> fileDownloadListener.onFinish());
+                        } catch (Exception e) {
+                            fileDownloadListener.onError(e.getMessage());
+                        } finally {
+                            try {
+                                if (is != null) {
+                                    is.close();
+                                }
+                                if (fos != null) {
+                                    fos.close();
+                                }
+                            } catch (IOException e) {
+                                fileDownloadListener.onError(e.getMessage());
+                            }
+                        }
+                    }
                 }
             });
 
 
         }
+
     }
 
+    private static void initClient() {
+        if (client == null) {
+            client = new OkHttpClient().newBuilder()
+                    .retryOnConnectionFailure(true)
+                    .connectTimeout(10, TimeUnit.SECONDS)
+                    .readTimeout(10, TimeUnit.SECONDS)
+                    .writeTimeout(10, TimeUnit.SECONDS)
+                    .cache(new Cache(XFrame.getContext().getCacheDir(), cacheSize))
+                    .build();
+        }
+    }
 
     private static String getUrlParamsByMap(Map<String, Object> map) {
         if (map == null || map.isEmpty()) {
@@ -285,7 +254,7 @@ public class HttpUtil {
 
         void onDownloading(int progress);
 
-        void onFinish(File file);
+        void onFinish();
 
         void onError(String errorMessage);
     }

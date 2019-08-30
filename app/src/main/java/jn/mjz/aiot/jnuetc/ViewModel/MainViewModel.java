@@ -1,5 +1,6 @@
 package jn.mjz.aiot.jnuetc.ViewModel;
 
+import android.app.AlertDialog;
 import android.content.SharedPreferences;
 
 import androidx.annotation.NonNull;
@@ -9,6 +10,7 @@ import androidx.lifecycle.ViewModel;
 
 import com.xiaomi.mipush.sdk.MiPushClient;
 import com.youth.xframe.XFrame;
+import com.youth.xframe.widget.XToast;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -114,6 +116,14 @@ public class MainViewModel extends ViewModel {
 
                     GlobalUtil.user = user;
                     callBack.onResponse(response, user);
+                } else {
+                    SharedPreferences sharedPreferences = SharedPreferencesUtil.getSharedPreferences(GlobalUtil.KEYS.LOGIN_ACTIVITY.FILE_NAME);
+                    SharedPreferences.Editor editor = sharedPreferences.edit();
+                    editor.putString(GlobalUtil.KEYS.LOGIN_ACTIVITY.USER_JSON_STRING, "needLogin");
+                    editor.putString(GlobalUtil.KEYS.LOGIN_ACTIVITY.USER_NUMBER, "");
+                    editor.putString(GlobalUtil.KEYS.LOGIN_ACTIVITY.REMEMBER_PASSWORD, "");
+                    editor.apply();
+                    callBack.onFailure(null);
                 }
             }
 

@@ -93,6 +93,9 @@ public class NewTaskFragment extends Fragment {
         });
 
         smartRefreshLayout.finishLoadMoreWithNoMoreData();
+        mainViewModel.queryDataListBySetting(0);
+        mainViewModel.queryDataListBySetting(1);
+        mainViewModel.queryDataListBySetting(2);
         autoRefresh();
         smartRefreshLayout.setOnRefreshListener(refreshLayout -> updateData());
     }
