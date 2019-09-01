@@ -1,6 +1,5 @@
 package jn.mjz.aiot.jnuetc.ViewModel;
 
-import android.app.AlertDialog;
 import android.content.SharedPreferences;
 
 import androidx.annotation.NonNull;
@@ -10,7 +9,6 @@ import androidx.lifecycle.ViewModel;
 
 import com.xiaomi.mipush.sdk.MiPushClient;
 import com.youth.xframe.XFrame;
-import com.youth.xframe.widget.XToast;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -235,6 +233,7 @@ public class MainViewModel extends ViewModel {
             public void onResponse(Response response, String result) {
                 String s = response.header("state");
                 if (s != null && s.equals("OK") && result != null && !result.equals("{}")) {
+                    dataDao.update(data);
                     callBack.onResponse(response, GsonUtil.getInstance().fromJson(result, Data.class));
                 } else {
                     callBack.onFailure(null);
@@ -263,6 +262,7 @@ public class MainViewModel extends ViewModel {
             public void onResponse(Response response, @Nullable String result) {
                 String s = response.header("state");
                 if (s != null && s.equals("OK") && result != null && !result.equals("{}")) {
+                    dataDao.update(data);
                     callBack.onResponse(response, GsonUtil.getInstance().fromJson(result, Data.class));
                 } else {
                     callBack.onFailure(null);
@@ -347,6 +347,11 @@ public class MainViewModel extends ViewModel {
             public void onResponse(Response response, @Nullable String result) {
                 String s = response.header("state");
                 if (s != null && s.equals("OK")) {
+                    List<Long> longs = new ArrayList<>();
+                    for (Integer integer : ids) {
+                        longs.add(Long.valueOf(integer));
+                    }
+                    dataDao.deleteByKeyInTx(longs);
                     callBack.onResponse(response, true);
                 } else {
                     callBack.onResponse(response, false);

@@ -1,5 +1,7 @@
 package jn.mjz.aiot.jnuetc.View.Activity;
 
+import android.Manifest;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
@@ -8,11 +10,13 @@ import android.widget.RelativeLayout;
 import android.widget.Switch;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.lifecycle.ViewModelProviders;
 
 import com.google.android.material.textfield.TextInputEditText;
+import com.youth.xframe.utils.permission.XPermission;
 import com.youth.xframe.utils.statusbar.XStatusBar;
 import com.youth.xframe.widget.XLoadingDialog;
 import com.youth.xframe.widget.XToast;
@@ -25,6 +29,8 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import jn.mjz.aiot.jnuetc.Greendao.Entity.User;
 import jn.mjz.aiot.jnuetc.R;
+import jn.mjz.aiot.jnuetc.Util.DateUtil;
+import jn.mjz.aiot.jnuetc.Util.FileUtil;
 import jn.mjz.aiot.jnuetc.Util.GlobalUtil;
 import jn.mjz.aiot.jnuetc.Util.HttpUtil;
 import jn.mjz.aiot.jnuetc.ViewModel.MainViewModel;
@@ -35,6 +41,7 @@ public class AdminActivity extends AppCompatActivity implements View.OnClickList
     private static final String TAG = "AdminActivity";
     private MainViewModel mainViewModel;
     private boolean firstOpen = true;
+    private static final int EXPORT2EXCEL = 1;
 
     @BindView(R.id.switch_admin)
     Switch aSwitch;
@@ -42,6 +49,9 @@ public class AdminActivity extends AppCompatActivity implements View.OnClickList
     Toolbar toolbar;
     @BindView(R.id.button_admin_insert)
     Button buttonInsert;
+    @BindView(R.id.button_admin_export)
+    Button buttonExport;
+
     @BindView(R.id.tidt_admin_code)
     TextInputEditText textInputEditTextCode;
     @BindView(R.id.relativeLayout_admin_code)
@@ -61,6 +71,7 @@ public class AdminActivity extends AppCompatActivity implements View.OnClickList
 
     private void InitListener() {
         buttonInsert.setOnClickListener(this);
+        buttonExport.setOnClickListener(this);
     }
 
     private void FirstOpen() {
@@ -140,7 +151,6 @@ public class AdminActivity extends AppCompatActivity implements View.OnClickList
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.button_admin_insert:
-                // TODO: 2019/8/27 增加邀请码
                 String code = textInputEditTextCode.getText().toString();
                 if (!code.isEmpty()) {
                     insertCode(code);
@@ -148,6 +158,39 @@ public class AdminActivity extends AppCompatActivity implements View.OnClickList
                     XToast.error("邀请码不能为空");
                 }
                 break;
+            case R.id.button_admin_export:
+                XPermission.requestPermissions(AdminActivity.this, EXPORT2EXCEL, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, new XPermission.OnPermissionListener() {
+                    @Override
+                    public void onPermissionGranted() {
+                        FileUtil.createFile(AdminActivity.this, "text/*", String.format("报修单数据%s.xls", DateUtil.getDateAndTime(System.currentTimeMillis(), " ")));
+                    }
+
+                    @Override
+                    public void onPermissionDenied() {
+                        XToast.error("未获取读写权限");
+                    }
+                });
+                break;
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        if (requestCode == FileUtil.WRITE_REQUEST_CODE && data != null) {
+            XLoadingDialog.with(AdminActivity.this).setCanceled(false).setMessage("导出中，请稍等...");
+            FileUtil.ExportDatasToExcel(AdminActivity.this, data.getData(), new FileUtil.IOnExportListener() {
+                @Override
+                public void OnSuccess() {
+                    XToast.success("导出成功");
+                    XLoadingDialog.with(AdminActivity.this).dismiss();
+                }
+
+                @Override
+                public void OnError() {
+                    XToast.error("导出失败，请重试");
+                    XLoadingDialog.with(AdminActivity.this).dismiss();
+                }
+            });
         }
     }
 
@@ -174,6 +217,11 @@ public class AdminActivity extends AppCompatActivity implements View.OnClickList
             }
         });
 
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        XPermission.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
     private void closeService() {

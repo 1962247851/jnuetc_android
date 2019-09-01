@@ -5,7 +5,6 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
@@ -26,7 +25,6 @@
         android:orientation="vertical"
         android:padding="10dp">
 
-
         <Switch
             android:id="@+id/switch_admin"
             android:layout_width="match_parent"
@@ -35,6 +33,14 @@
             android:text="报修开关"
             android:textSize="20sp" />
 
+        <Button
+            android:textColor="@color/white"
+            android:background="@drawable/button_confirm"
+            android:id="@+id/button_admin_export"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="导出报修单数据到Excel文件"
+            android:textAllCaps="false" />
 
         <RelativeLayout
             android:id="@+id/relativeLayout_admin_code"
@@ -42,6 +48,16 @@
             android:layout_height="wrap_content"
             android:paddingBottom="10dp"
             android:visibility="gone">
+
+            <Button
+                android:id="@+id/button_admin_insert"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignBottom="@id/til_admin_code"
+                android:layout_alignParentEnd="true"
+                android:background="@drawable/button_confirm"
+                android:text="添加"
+                android:textColor="@color/white" />
 
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/til_admin_code"
@@ -63,20 +79,13 @@
                     android:textSize="20sp" />
 
             </com.google.android.material.textfield.TextInputLayout>
-
-            <Button
-                android:id="@+id/button_admin_insert"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignBottom="@id/til_admin_code"
-                android:layout_alignParentEnd="true"
-                android:background="@drawable/button_confirm"
-                android:text="添加"
-                android:textColor="@color/white" />
         </RelativeLayout>
 
 
+
     </LinearLayout>
+
+
 
 
 </LinearLayout>

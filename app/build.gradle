@@ -9,7 +9,7 @@ android {
         minSdkVersion 21
         targetSdkVersion 29
         versionCode 1
-        versionName "1.7"
+        versionName "1.8"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         dataBinding {
             enabled false
@@ -63,4 +63,10 @@ dependencies {
     implementation 'com.jakewharton:butterknife:10.1.0'
     annotationProcessor 'com.jakewharton:butterknife-compiler:10.1.0'
     implementation files('libs/MiPush_SDK_Client_3_6_19.jar')
+    // https://mvnrepository.com/artifact/org.apache.poi/poi
+    implementation group: 'org.apache.poi', name: 'poi', version: '3.17'
+//    // https://mvnrepository.com/artifact/commons-io/commons-io
+//    implementation group: 'commons-io', name: 'commons-io', version: '2.4'
+
+
 }
