@@ -11,10 +11,8 @@
     <color name="MainText">@color/colorBlack</color>
     <color name="SubText">@color/colorGray</color>
     <color name="Yellow">#ffff00</color>
-    <color name="YellowDark">#999900</color>
     <color name="Green">#00ff00</color>
-    <color name="GreenDark">#009900</color>
     <color name="Blue">#0000ff</color>
-    <color name="BlueDark">#000099</color>
     <color name="white">#ffffff</color>
+
 </resources>

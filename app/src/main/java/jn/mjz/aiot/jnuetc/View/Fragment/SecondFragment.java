@@ -1,7 +1,6 @@
 package jn.mjz.aiot.jnuetc.View.Fragment;
 
 
-import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
@@ -12,6 +11,7 @@ import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.viewpager.widget.ViewPager;
@@ -358,6 +358,18 @@ public class SecondFragment extends Fragment {
         smartRefreshLayout.finishLoadMoreWithNoMoreData();
         smartRefreshLayout.setOnRefreshListener(refreshLayout -> {
             updateData();
+        });
+
+        mainViewModel.getDrawerOpen().observe(getActivity(), aBoolean -> {
+            if (aBoolean) {
+                if (taskAdapter2.isSelectMode()){
+                    taskAdapter2.clearSelect();
+                    taskAdapter2.cancelSelect();
+                }else {
+                    taskAdapter3.clearSelect();
+                    taskAdapter3.cancelSelect();
+                }
+            }
         });
 
         mainViewModel.getDataList2().observe(getActivity(), data -> {

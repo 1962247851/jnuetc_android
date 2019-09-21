@@ -1,8 +1,6 @@
 package jn.mjz.aiot.jnuetc.View.Activity;
 
-import android.app.Activity;
 import android.app.ActivityManager;
-import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -25,6 +23,7 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBarDrawerToggle;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.view.GravityCompat;
@@ -288,12 +287,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             @Override
             public void onDrawerClosed(View drawerView) {
+                mainViewModel.getDrawerOpen().setValue(false);
                 mainViewModel.saveAllSettings();
                 mainViewModel.queryDataListBySetting(null);
             }
 
             @Override
             public void onDrawerOpened(View drawerView) {
+                mainViewModel.getDrawerOpen().setValue(true);
                 updateDrawer();
             }
         });
@@ -362,7 +363,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 SharedPreferencesUtil.getSharedPreferences(GlobalUtil.KEYS.LOGIN_ACTIVITY.FILE_NAME)
                         .edit()
                         .putString(GlobalUtil.KEYS.LOGIN_ACTIVITY.USER_JSON_STRING, "needLogin")
-                        .putString(GlobalUtil.KEYS.LOGIN_ACTIVITY.AUTO_LOGIN, "0")
+                        .putBoolean(GlobalUtil.KEYS.LOGIN_ACTIVITY.AUTO_LOGIN, false)
                         .apply();
                 finish();
                 startActivity(new Intent(MainActivity.this, LoginActivity.class));
@@ -518,8 +519,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                         SharedPreferencesUtil.getSharedPreferences(GlobalUtil.KEYS.LOGIN_ACTIVITY.FILE_NAME)
                                                 .edit()
                                                 .putString(GlobalUtil.KEYS.LOGIN_ACTIVITY.USER_JSON_STRING, "needLogin")
-                                                .putString(GlobalUtil.KEYS.LOGIN_ACTIVITY.AUTO_LOGIN, "0")
-                                                .putString(GlobalUtil.KEYS.LOGIN_ACTIVITY.USER_PASSWORD, "")
+                                                .putBoolean(GlobalUtil.KEYS.LOGIN_ACTIVITY.AUTO_LOGIN, false)
                                                 .apply();
                                         finish();
                                         startActivity(new Intent(MainActivity.this, LoginActivity.class));
@@ -600,7 +600,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      * @param activity
      * @return
      */
-    public int getStatusHeight(Activity activity) {
+    public int getStatusHeight(AppCompatActivity activity) {
         int statusHeight = 0;
         Rect rect = new Rect();
         activity.getWindow().getDecorView()

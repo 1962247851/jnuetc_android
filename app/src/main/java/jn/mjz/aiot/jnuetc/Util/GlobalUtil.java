@@ -22,9 +22,7 @@ public class GlobalUtil {
             public static final String FILE_NAME = "login_info";
             public static final String REMEMBER_PASSWORD = "0";
             public static final String AUTO_LOGIN = "1";
-            public static final String USER_NUMBER = "2";
-            public static final String USER_PASSWORD = "3";
-            public static final String USER_JSON_STRING = "4";
+            public static final String USER_JSON_STRING = "2";
         }
 
         public static final class NEW {

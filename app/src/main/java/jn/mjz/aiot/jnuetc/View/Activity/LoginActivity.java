@@ -37,7 +37,8 @@ public class LoginActivity extends AppCompatActivity {
     private static final String TAG = "LoginActivity=====";
 
     private boolean isPasswordAvailable = false, isNumberAvailable = false;
-    private String number = "", password = "", autoLogin = "", rememberPassword = "";
+    private String number = "", password = "";
+    private boolean autoLogin = false, rememberPassword = false;
     private MaterialEditText materialEditTextNumber, materialEditTextPassword;
     private Button buttonLogin, buttonForgetPassword;
     private SharedPreferences sharedPreferences;
@@ -54,9 +55,14 @@ public class LoginActivity extends AppCompatActivity {
         setContentView(R.layout.activity_login);
         sharedPreferences = SharedPreferencesUtil.getSharedPreferences(GlobalUtil.KEYS.LOGIN_ACTIVITY.FILE_NAME);
         String userJson = sharedPreferences.getString(GlobalUtil.KEYS.LOGIN_ACTIVITY.USER_JSON_STRING, "needLogin");
+        if (!userJson.equals("needLogin")) {
+            GlobalUtil.user = GsonUtil.getInstance().fromJson(userJson, User.class);
+        }
         InitView();
         InitListener();
-        if (!userJson.equals("needLogin")) {
+        if (GlobalUtil.user != null && autoLogin) {
+            materialEditTextNumber.setText(String.valueOf(GlobalUtil.user.getSno()));
+            materialEditTextPassword.setText(String.valueOf(GlobalUtil.user.getPassword()));
             login(false);
         }
     }
@@ -128,22 +134,19 @@ public class LoginActivity extends AppCompatActivity {
         buttonForgetPassword = findViewById(R.id.button_login_forget);
 
 
-        rememberPassword = sharedPreferences.getString(GlobalUtil.KEYS.LOGIN_ACTIVITY.REMEMBER_PASSWORD, "");
-        autoLogin = sharedPreferences.getString(GlobalUtil.KEYS.LOGIN_ACTIVITY.AUTO_LOGIN, "");
+        rememberPassword = sharedPreferences.getBoolean(GlobalUtil.KEYS.LOGIN_ACTIVITY.REMEMBER_PASSWORD, false);
+        autoLogin = sharedPreferences.getBoolean(GlobalUtil.KEYS.LOGIN_ACTIVITY.AUTO_LOGIN, false);
 
-        if (rememberPassword.equals("1")) {
-            checkBoxRememberPassword.setChecked(true);
-            number = sharedPreferences.getString(GlobalUtil.KEYS.LOGIN_ACTIVITY.USER_NUMBER, "");
-            password = sharedPreferences.getString(GlobalUtil.KEYS.LOGIN_ACTIVITY.USER_PASSWORD, "");
+        checkBoxRememberPassword.setChecked(rememberPassword);
+        checkBoxAutoLogin.setChecked(autoLogin);
+        if (rememberPassword) {
+            number = GlobalUtil.user.getSno();
+            password = GlobalUtil.user.getPassword();
             materialEditTextNumber.setText(number);
             materialEditTextPassword.setText(password);
             isNumberAvailable = true;
             isPasswordAvailable = true;
         }
-        if (autoLogin.equals("1")) {
-            checkBoxAutoLogin.setChecked(true);
-        }
-
     }
 
     private class MyOnClick implements View.OnClickListener {
@@ -158,7 +161,7 @@ public class LoginActivity extends AppCompatActivity {
                         XToast.error("请检查账号和密码!");
                     } else if (!isNumberAvailable) {
                         XToast.error("请检查账号!");
-                    } else if (!isPasswordAvailable) {
+                    } else {
                         XToast.error("请检查密码!");
                     }
                     break;
@@ -178,8 +181,8 @@ public class LoginActivity extends AppCompatActivity {
         XLoadingDialog.with(this).setCanceled(false).setMessage("账号验证中，请稍等").show();
 
         Map<String, Object> params = new HashMap<>();
-        params.put("sno", number);
-        params.put("password", password);
+        params.put("sno", firstOpen ? number : GlobalUtil.user.getSno());
+        params.put("password", firstOpen ? password : GlobalUtil.user.getPassword());
         HttpUtil.post.haveResponse(GlobalUtil.URLS.QUERY.LOGIN, params, new HttpUtil.HttpUtilCallBack<String>() {
             @Override
             public void onResponse(Response response, String result) {
@@ -189,14 +192,10 @@ public class LoginActivity extends AppCompatActivity {
                 if (state != null && state.equals("OK")) {
                     XToast.success(firstOpen ? "登录成功" : String.format("欢迎回来 %s", GlobalUtil.user.getName()));
                     SharedPreferences.Editor editor = sharedPreferences.edit();
-                    editor.putString(GlobalUtil.KEYS.LOGIN_ACTIVITY.USER_NUMBER, number);
-                    editor.putString(GlobalUtil.KEYS.LOGIN_ACTIVITY.USER_PASSWORD, password);
-                    editor.putString(GlobalUtil.KEYS.LOGIN_ACTIVITY.AUTO_LOGIN, checkBoxAutoLogin.isChecked() ? "1" : "0");
+                    editor.putBoolean(GlobalUtil.KEYS.LOGIN_ACTIVITY.AUTO_LOGIN, checkBoxAutoLogin.isChecked());
+                    editor.putBoolean(GlobalUtil.KEYS.LOGIN_ACTIVITY.REMEMBER_PASSWORD, checkBoxRememberPassword.isChecked());
                     if (checkBoxAutoLogin.isChecked()) {
                         editor.putString(GlobalUtil.KEYS.LOGIN_ACTIVITY.USER_JSON_STRING, result);
-                        editor.putString(GlobalUtil.KEYS.LOGIN_ACTIVITY.REMEMBER_PASSWORD, "1");
-                    } else {
-                        editor.putString(GlobalUtil.KEYS.LOGIN_ACTIVITY.REMEMBER_PASSWORD, checkBoxRememberPassword.isChecked() ? "1" : "0");
                     }
                     editor.apply();
                     finish();

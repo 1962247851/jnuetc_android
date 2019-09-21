@@ -4,7 +4,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.util.Log;
 import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,7 +13,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -65,13 +63,17 @@ public class NewTaskFragment extends Fragment {
         super.onActivityCreated(savedInstanceState);
         mainViewModel = ViewModelProviders.of(getActivity()).get(MainViewModel.class);
 
-        mainViewModel.getCurrentState().observe(this, new Observer<Integer>() {
-            @Override
-            public void onChanged(Integer integer) {
-                if (taskAdapter.isSelectMode()) {
-                    taskAdapter.cancelSelect();
-                }
-                taskAdapter.setEnableSelect(GlobalUtil.user.getRoot() == 1);
+        mainViewModel.getCurrentState().observe(this, integer -> {
+            if (taskAdapter.isSelectMode()) {
+                taskAdapter.cancelSelect();
+            }
+            taskAdapter.setEnableSelect(GlobalUtil.user.getRoot() == 1);
+        });
+
+        mainViewModel.getDrawerOpen().observe(getActivity(), aBoolean -> {
+            if (aBoolean && taskAdapter.isSelectMode()) {
+                taskAdapter.clearSelect();
+                taskAdapter.cancelSelect();
             }
         });
 
@@ -195,14 +197,14 @@ public class NewTaskFragment extends Fragment {
                             AlertDialog dialog = new AlertDialog.Builder(getContext()).create();
                             dialog.setTitle("注意");
                             dialog.setMessage("删除数据仅限无用的报修单，删除后无法还原，请谨慎操作");
-                            dialog.setButton(android.app.AlertDialog.BUTTON_POSITIVE, "取消", new DialogInterface.OnClickListener() {
+                            dialog.setButton(AlertDialog.BUTTON_POSITIVE, "取消", new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialogInterface, int i1) {
 
                                 }
                             });
 
-                            dialog.setButton(android.app.AlertDialog.BUTTON_NEGATIVE, "删除", new DialogInterface.OnClickListener() {
+                            dialog.setButton(AlertDialog.BUTTON_NEGATIVE, "删除", new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialogInterface, int i1) {
                                     XLoadingDialog.with(getContext()).setCanceled(false).setMessage("请求处理中,请稍后").show();

@@ -1,10 +1,11 @@
 package jn.mjz.aiot.jnuetc.Util;
 
 
-import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.ParcelFileDescriptor;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 import org.apache.poi.hssf.usermodel.HSSFCell;
 import org.apache.poi.hssf.usermodel.HSSFRow;
@@ -24,9 +25,9 @@ public class FileUtil {
     // Unique request code.
     public static final int WRITE_REQUEST_CODE = 43;
 
-    public static void ExportDatasToExcel(Activity activity, Uri uri, IOnExportListener onExportListener) {
+    public static void ExportDatasToExcel(AppCompatActivity activity, Uri uri, IOnExportListener onExportListener) {
         // 设置第一行名
-        String[] title = {"报修序号", "报修时间", "状态", "报修人", "学院", "年级", "电话", "QQ", "园区", "南北区", "设备型号", "问题详情", "维修人", "接单时间", "维修时间", "用户水平评估", "服务内容", "维修反馈及问题详情"};
+        String[] title = {"报修序号", "报修时间", "状态", "报修人", "学院", "年级", "电话", "QQ", "园区", "南北区", "设备型号", "问题详情", "维修人", "接单时间", "维修时间", "对用户电脑水平评估", "服务内容", "故障描述及解决过程"};
         HSSFWorkbook workbook = new HSSFWorkbook();
 
         HSSFSheet sheet = workbook.createSheet();
@@ -115,7 +116,7 @@ public class FileUtil {
     }
 
 
-    public static void createFile(Activity activity, String mimeType, String fileName) {
+    public static void createFile(AppCompatActivity activity, String mimeType, String fileName) {
         Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
 
         // Filter to only show results that can be "opened", such as
@@ -128,7 +129,7 @@ public class FileUtil {
         activity.startActivityForResult(intent, WRITE_REQUEST_CODE);
     }
 
-    public static FileOutputStream getFOSFromUri(Activity activity, Uri uri) {
+    public static FileOutputStream getFOSFromUri(AppCompatActivity activity, Uri uri) {
         ParcelFileDescriptor pfd = null;
         try {
             pfd = activity.getContentResolver().

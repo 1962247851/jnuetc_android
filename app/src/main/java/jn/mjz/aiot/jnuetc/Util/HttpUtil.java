@@ -1,11 +1,12 @@
 package jn.mjz.aiot.jnuetc.Util;
 
 
-import android.app.Activity;
 import android.net.Uri;
 import android.os.Environment;
 import android.os.ParcelFileDescriptor;
 import android.util.Log;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 import com.youth.xframe.XFrame;
 import com.youth.xframe.utils.http.XHttp;
@@ -147,7 +148,7 @@ public class HttpUtil {
             });
         }
 
-        public static void downloadFile(Activity activity, Uri uri, String url, Map<String, Object> params, IFileDownloadListener fileDownloadListener) {
+        public static void downloadFile(AppCompatActivity activity, Uri uri, String url, Map<String, Object> params, IFileDownloadListener fileDownloadListener) {
             initClient();
             Request request = new Request.Builder().url(url + getUrlParamsByMap(params)).build();
             client.newCall(request).enqueue(new Callback() {

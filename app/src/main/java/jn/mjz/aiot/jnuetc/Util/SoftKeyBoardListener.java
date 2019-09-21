@@ -1,9 +1,10 @@
 package jn.mjz.aiot.jnuetc.Util;
 
-import android.app.Activity;
 import android.graphics.Rect;
 import android.util.Log;
 import android.view.View;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 public class SoftKeyBoardListener {
     private static final String TAG = "SoftKeyBoardListener";
@@ -13,7 +14,7 @@ public class SoftKeyBoardListener {
 
     private int rootViewVisibleHeight;
 
-    private SoftKeyBoardListener(Activity paramActivity) {
+    private SoftKeyBoardListener(AppCompatActivity paramActivity) {
         this.rootView = paramActivity.getWindow().getDecorView();
         this.rootView.getViewTreeObserver().addOnGlobalLayoutListener(() -> {
             Rect rect = new Rect();
@@ -41,7 +42,7 @@ public class SoftKeyBoardListener {
         });
     }
 
-    public static void setListener(Activity paramActivity, OnSoftKeyBoardChangeListener paramOnSoftKeyBoardChangeListener) {
+    public static void setListener(AppCompatActivity paramActivity, OnSoftKeyBoardChangeListener paramOnSoftKeyBoardChangeListener) {
         (new SoftKeyBoardListener(paramActivity)).setOnSoftKeyBoardChangeListener(paramOnSoftKeyBoardChangeListener);
     }
 

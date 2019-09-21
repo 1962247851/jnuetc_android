@@ -63,6 +63,7 @@ public class Data {
 
     private String repairMessage;
 
+    private String photo;
 
     @Keep
     public Data() {
@@ -70,13 +71,13 @@ public class Data {
     }
 
 
-    @Generated(hash = 850390961)
+    @Generated(hash = 813129418)
     public Data(Long id, @NotNull String uuid, long date, short state,
             @NotNull String name, @NotNull String college, @NotNull String grade,
             String tel, String qq, @NotNull String local, short district,
             @NotNull String model, @NotNull String message, String repairer,
             long orderDate, long repairDate, String mark, String service,
-            String repairMessage) {
+            String repairMessage, String photo) {
         this.id = id;
         this.uuid = uuid;
         this.date = date;
@@ -96,12 +97,8 @@ public class Data {
         this.mark = mark;
         this.service = service;
         this.repairMessage = repairMessage;
+        this.photo = photo;
     }
-
-
-
-
-    
 
 
     @Override
@@ -312,6 +309,16 @@ public class Data {
 
     public void setOrderDate(long orderDate) {
         this.orderDate = orderDate;
+    }
+
+
+    public String getPhoto() {
+        return this.photo;
+    }
+
+
+    public void setPhoto(String photo) {
+        this.photo = photo;
     }
 
 

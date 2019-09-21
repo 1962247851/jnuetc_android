@@ -3,6 +3,7 @@ package jn.mjz.aiot.jnuetc.View.Activity;
 import android.Manifest;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
@@ -16,13 +17,23 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.lifecycle.ViewModelProviders;
 
+import com.bm.library.Info;
+import com.bm.library.PhotoView;
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.DataSource;
+import com.bumptech.glide.load.engine.GlideException;
+import com.bumptech.glide.request.RequestListener;
+import com.bumptech.glide.request.target.Target;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
+import com.youth.xframe.utils.XAppUtils;
+import com.youth.xframe.utils.XNetworkUtils;
 import com.youth.xframe.utils.permission.XPermission;
 import com.youth.xframe.utils.statusbar.XStatusBar;
 import com.youth.xframe.widget.XLoadingDialog;
@@ -48,6 +59,7 @@ public class DetailsActivity extends AppCompatActivity implements View.OnClickLi
     private static final String TAG = "DetailsActivity";
     private Data data;
     private MainViewModel mainViewModel;
+    private Info mRectF;
 
     @BindView(R.id.toolbar_details)
     Toolbar toolbar;
@@ -68,10 +80,20 @@ public class DetailsActivity extends AppCompatActivity implements View.OnClickLi
     TextView textViewTel;
     @BindView(R.id.textView_details_qq)
     TextView textViewQQ;
+    @BindView(R.id.textView_details_college)
+    TextView textViewCollege;
+    @BindView(R.id.textView_details_grade)
+    TextView textViewGrade;
     @BindView(R.id.textView_details_model)
     TextView textViewModel;
     @BindView(R.id.textView_details_message)
     TextView textViewMessage;
+    @BindView(R.id.textView_details_photo)
+    TextView textViewPhoto;
+    @BindView(R.id.photoView_details_1)
+    PhotoView imageViewPhoto1;
+    @BindView(R.id.photoView_details_2)
+    PhotoView imageViewPhoto2;
 
     @BindView(R.id.textView_details_feedback)
     TextView textViewFeedback;
@@ -92,6 +114,8 @@ public class DetailsActivity extends AppCompatActivity implements View.OnClickLi
 
     @BindView(R.id.linearLayout_details_feedback)
     LinearLayout linearLayoutFeedback;
+    @BindView(R.id.linearLayout_details_photo)
+    LinearLayout linearLayoutPhoto;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -119,8 +143,65 @@ public class DetailsActivity extends AppCompatActivity implements View.OnClickLi
         textViewName.setText(data.getName());
         textViewTel.setText(String.valueOf(data.getTel()));
         textViewQQ.setText(String.valueOf(data.getQq()));
+        textViewCollege.setText(data.getCollege());
+        textViewGrade.setText(data.getGrade());
         textViewModel.setText(data.getModel());
         textViewMessage.setText(data.getMessage());
+
+        String photo = data.getPhoto();
+        if (photo != null && !photo.isEmpty()) {
+            textViewPhoto.setText("图片加载中");
+            linearLayoutPhoto.setVisibility(View.VISIBLE);
+            String[] photos = photo.split("。");
+            Glide.with(DetailsActivity.this)
+                    .load(GlobalUtil.URLS.FILE.DOWNLOAD + "?url=/opt/dataDP&fileName=" + data.getUuid() + photos[0])
+                    .listener(new RequestListener<Drawable>() {
+                        @Override
+                        public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
+                            XToast.error("图片加载失败，请稍后重试");
+                            linearLayoutPhoto.setVisibility(View.GONE);
+                            return true;
+                        }
+
+                        @Override
+                        public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) {
+                            linearLayoutPhoto.setVisibility(View.GONE);
+                            imageViewPhoto1.setImageDrawable(resource);
+                            imageViewPhoto2.setImageDrawable(resource);
+                            imageViewPhoto1.disenable();
+                            imageViewPhoto1.setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View view) {
+                                    imageViewPhoto1.setVisibility(View.GONE);
+                                    imageViewPhoto2.setVisibility(View.VISIBLE);
+                                    //获取img1的信息
+                                    mRectF = imageViewPhoto1.getInfo();
+                                    //让img2从img1的位置变换到他本身的位置
+                                    imageViewPhoto2.animaFrom(mRectF);
+                                }
+                            });
+                            return true;
+                        }
+                    }).into(imageViewPhoto1);
+        } else {
+            imageViewPhoto1.setVisibility(View.GONE);
+        }
+
+        // 需要启动缩放需要手动开启
+        imageViewPhoto2.enable();
+        imageViewPhoto2.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // 让img2从自身位置变换到原来img1图片的位置大小
+                imageViewPhoto2.animaTo(mRectF, new Runnable() {
+                    @Override
+                    public void run() {
+                        imageViewPhoto2.setVisibility(View.GONE);
+                        imageViewPhoto1.setVisibility(View.VISIBLE);
+                    }
+                });
+            }
+        });
 
         switch (data.getState()) {
             case 0://未处理，只可以接单
@@ -131,7 +212,6 @@ public class DetailsActivity extends AppCompatActivity implements View.OnClickLi
                     linearLayoutFeedback.setVisibility(View.VISIBLE);
                     textInputEditTextRepairer.setEnabled(true);
                     textInputEditTextRepairer.setText(data.getRepairer());
-
                 }
                 break;
             case 2://已维修，除了管理员外，所有内容均不可修改
@@ -171,6 +251,37 @@ public class DetailsActivity extends AppCompatActivity implements View.OnClickLi
 
         XStatusBar.setColorNoTranslucent(this, getResources().getColor(R.color.colorPrimary));
 
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (imageViewPhoto2.getVisibility() == View.VISIBLE) {
+            imageViewPhoto2.animaTo(mRectF, new Runnable() {
+                @Override
+                public void run() {
+                    imageViewPhoto2.setVisibility(View.GONE);
+                    imageViewPhoto1.setVisibility(View.VISIBLE);
+                }
+            });
+        } else {
+            super.onBackPressed();
+        }
+    }
+
+    private void setSystemUIVisible(boolean show) {
+        if (show) {
+            int uiFlags = View.SYSTEM_UI_FLAG_LAYOUT_STABLE;
+            uiFlags |= 0x00001000;
+            getWindow().getDecorView().setSystemUiVisibility(uiFlags);
+        } else {
+            int uiFlags = View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                    | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                    | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                    | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                    | View.SYSTEM_UI_FLAG_FULLSCREEN;
+            uiFlags |= 0x00001000;
+            getWindow().getDecorView().setSystemUiVisibility(uiFlags);
+        }
     }
 
     @Override

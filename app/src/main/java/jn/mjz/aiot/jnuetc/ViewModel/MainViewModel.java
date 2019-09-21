@@ -32,6 +32,7 @@ public class MainViewModel extends ViewModel {
     public DataDao dataDao = MyApplication.getDaoSession().getDataDao();
     private SharedPreferences sharedPreferences = SharedPreferencesUtil.getSharedPreferences(GlobalUtil.KEYS.NEW.FILE_NAME_DRAWER);
 
+    public MutableLiveData<Boolean> drawerOpen;
     //保存当前所在的界面，变化时会刷新sharePreferences
     private MutableLiveData<Integer> currentState;
     //暂时存放筛选配置的变量，用于从本地数据库筛选数据,会跟随currentState变化
@@ -118,8 +119,7 @@ public class MainViewModel extends ViewModel {
                     SharedPreferences sharedPreferences = SharedPreferencesUtil.getSharedPreferences(GlobalUtil.KEYS.LOGIN_ACTIVITY.FILE_NAME);
                     SharedPreferences.Editor editor = sharedPreferences.edit();
                     editor.putString(GlobalUtil.KEYS.LOGIN_ACTIVITY.USER_JSON_STRING, "needLogin");
-                    editor.putString(GlobalUtil.KEYS.LOGIN_ACTIVITY.USER_NUMBER, "");
-                    editor.putString(GlobalUtil.KEYS.LOGIN_ACTIVITY.REMEMBER_PASSWORD, "");
+                    editor.putBoolean(GlobalUtil.KEYS.LOGIN_ACTIVITY.REMEMBER_PASSWORD, false);
                     editor.apply();
                     callBack.onFailure(null);
                 }
@@ -704,6 +704,14 @@ public class MainViewModel extends ViewModel {
             currentState.setValue(0);
         }
         return currentState;
+    }
+
+    public MutableLiveData<Boolean> getDrawerOpen() {
+        if (drawerOpen == null) {
+            drawerOpen = new MutableLiveData<>();
+            drawerOpen.setValue(false);
+        }
+        return drawerOpen;
     }
 
     public MutableLiveData<List<Data>> getDataList1() {

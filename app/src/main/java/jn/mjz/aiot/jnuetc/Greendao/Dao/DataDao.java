@@ -43,6 +43,7 @@ public class DataDao extends AbstractDao<Data, Long> {
         public final static Property Mark = new Property(16, String.class, "mark", false, "MARK");
         public final static Property Service = new Property(17, String.class, "service", false, "SERVICE");
         public final static Property RepairMessage = new Property(18, String.class, "repairMessage", false, "REPAIR_MESSAGE");
+        public final static Property Photo = new Property(19, String.class, "photo", false, "PHOTO");
     }
 
 
@@ -76,7 +77,8 @@ public class DataDao extends AbstractDao<Data, Long> {
                 "\"REPAIR_DATE\" INTEGER NOT NULL ," + // 15: repairDate
                 "\"MARK\" TEXT," + // 16: mark
                 "\"SERVICE\" TEXT," + // 17: service
-                "\"REPAIR_MESSAGE\" TEXT);"); // 18: repairMessage
+                "\"REPAIR_MESSAGE\" TEXT," + // 18: repairMessage
+                "\"PHOTO\" TEXT);"); // 19: photo
         // Add Indexes
         db.execSQL("CREATE UNIQUE INDEX " + constraint + "IDX_DATA_UUID ON \"DATA\"" +
                 " (\"UUID\" ASC);");
@@ -138,6 +140,11 @@ public class DataDao extends AbstractDao<Data, Long> {
         if (repairMessage != null) {
             stmt.bindString(19, repairMessage);
         }
+ 
+        String photo = entity.getPhoto();
+        if (photo != null) {
+            stmt.bindString(20, photo);
+        }
     }
 
     @Override
@@ -190,6 +197,11 @@ public class DataDao extends AbstractDao<Data, Long> {
         if (repairMessage != null) {
             stmt.bindString(19, repairMessage);
         }
+ 
+        String photo = entity.getPhoto();
+        if (photo != null) {
+            stmt.bindString(20, photo);
+        }
     }
 
     @Override
@@ -218,7 +230,8 @@ public class DataDao extends AbstractDao<Data, Long> {
             cursor.getLong(offset + 15), // repairDate
             cursor.isNull(offset + 16) ? null : cursor.getString(offset + 16), // mark
             cursor.isNull(offset + 17) ? null : cursor.getString(offset + 17), // service
-            cursor.isNull(offset + 18) ? null : cursor.getString(offset + 18) // repairMessage
+            cursor.isNull(offset + 18) ? null : cursor.getString(offset + 18), // repairMessage
+            cursor.isNull(offset + 19) ? null : cursor.getString(offset + 19) // photo
         );
         return entity;
     }
@@ -244,6 +257,7 @@ public class DataDao extends AbstractDao<Data, Long> {
         entity.setMark(cursor.isNull(offset + 16) ? null : cursor.getString(offset + 16));
         entity.setService(cursor.isNull(offset + 17) ? null : cursor.getString(offset + 17));
         entity.setRepairMessage(cursor.isNull(offset + 18) ? null : cursor.getString(offset + 18));
+        entity.setPhoto(cursor.isNull(offset + 19) ? null : cursor.getString(offset + 19));
      }
     
     @Override

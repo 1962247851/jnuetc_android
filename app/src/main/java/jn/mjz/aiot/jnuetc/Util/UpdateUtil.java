@@ -1,14 +1,14 @@
 package jn.mjz.aiot.jnuetc.Util;
 
-import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
-import android.util.Log;
 import android.view.View;
+
+import androidx.appcompat.app.AlertDialog;
 
 import com.google.android.material.snackbar.Snackbar;
 import com.google.gson.JsonArray;
@@ -103,7 +103,7 @@ public class UpdateUtil {
                     float localVersion = Float.parseFloat(UpdateUtil.getLocalVersionName(XFrame.getContext()));
                     if (newVersion > localVersion) {
                         updateListener.HaveNewVersion(DateUtil.getDateAndTime(jsonObject.get("date").getAsLong(), " "), jsonObject.get("url").getAsString(), jsonObject.get("message").getAsString(), newVersion);
-                    } else if (newVersion == localVersion) {
+                    } else {
                         updateListener.NoUpdate();
                     }
                 } else {

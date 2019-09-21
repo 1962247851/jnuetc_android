@@ -108,6 +108,7 @@ public class AboutActivity extends AppCompatActivity implements View.OnClickList
                         .setTitle("历史更新日志")
                         .setPositiveButton("确定", (dialogInterface, i) -> {
                         })
+                        .setNeutralButton("历史版本下载", (dialogInterface, i) -> startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.lanzous.com/b866881"))))
                         .show();
                 XLoadingDialog.with(AboutActivity.this).dismiss();
             }
@@ -124,31 +125,6 @@ public class AboutActivity extends AppCompatActivity implements View.OnClickList
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.textView_about_version:
-
-//                XPermission.requestPermissions(this, 66, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, new XPermission.OnPermissionListener() {
-//                    @Override
-//                    public void onPermissionGranted() {
-//                        createNewFile("image/png", "jnuetc");
-//                    }
-//
-//                    @Override
-//                    public void onPermissionDenied() {
-//
-//                    }
-//                });
-
-//                XPermission.requestPermissions(this, READ_REQUEST_CODE, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, new XPermission.OnPermissionListener() {
-//                    @Override
-//                    public void onPermissionGranted() {
-//                        performFileSearch("image/*");
-//                    }
-//
-//                    @Override
-//                    public void onPermissionDenied() {
-//
-//                    }
-//                });
-
                 UpdateUtil.checkForUpdate(false, AboutActivity.this, view);
                 break;
             case R.id.textView_about_github:
@@ -157,52 +133,6 @@ public class AboutActivity extends AppCompatActivity implements View.OnClickList
         }
     }
 
-//    @Override
-//    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-//        Log.e(TAG, "onActivityResult: requestCode = " + requestCode);
-//        Log.e(TAG, "onActivityResult: resultCode = " + resultCode);
-//        Log.e(TAG, "onActivityResult: data = " + data);
-//        Log.e(TAG, "onActivityResult: data.getData() = " + data.getData());
-//        switch (requestCode) {
-//            case 66:
-//                Map<String, Object> params = new HashMap<>();
-//                params.put("url", "/opt/userDP");
-//                params.put("version", "1");
-//                HttpUtil.get.downloadFile(this, data.getData(), GlobalUtil.URLS.FILE.DOWNLOAD, params, new HttpUtil.IFileDownloadListener() {
-//                    @Override
-//                    public void onStart() {
-//                        Log.e(TAG, "onStart: ");
-//                    }
-//
-//                    @Override
-//                    public void onDownloading(int progress) {
-//                        Log.e(TAG, "onDownloading: " + progress);
-//                    }
-//
-//                    @Override
-//                    public void onFinish() {
-//                        Log.e(TAG, "onFinish: ");
-////                Log.e(TAG, "onFinish: " + file.exists());
-////                Log.e(TAG, "onFinish: " + file.length());
-////                Log.e(TAG, "onFinish: " + file.getAbsolutePath());
-//                    }
-//
-//                    @Override
-//                    public void onError(String errorMessage) {
-//                        Log.e(TAG, "onError: " + errorMessage);
-//                    }
-//                });
-//                break;
-//            case READ_REQUEST_CODE:
-//
-//                break;
-//        }
-//    }
-
-//    @Override
-//    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-//        XPermission.onRequestPermissionsResult(requestCode, permissions, grantResults);
-//    }
 
     public void performFileSearch(String mimeType) {
 
@@ -224,22 +154,4 @@ public class AboutActivity extends AppCompatActivity implements View.OnClickList
         startActivityForResult(intent, READ_REQUEST_CODE);
     }
 
-    public void createNewFile(String mimeType, String fileName) {
-        // Here are some examples of how you might call this method.
-        // The first parameter is the MIME type, and the second parameter is the name
-        // of the file you are creating:
-        //
-        // createFile("text/plain", "foobar.txt");
-        // createFile("image/png", "mypicture.png");
-        Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
-
-        // Filter to only show results that can be "opened", such as
-        // a file (as opposed to a list of contacts or timezones).
-        intent.addCategory(Intent.CATEGORY_OPENABLE);
-
-        // Create a file with the requested MIME type.
-        intent.setType(mimeType);
-        intent.putExtra(Intent.EXTRA_TITLE, fileName);
-        startActivityForResult(intent, 6);
-    }
 }
