@@ -1,11 +1,13 @@
 package jn.mjz.aiot.jnuetc.Util;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.view.KeyEvent;
 import android.view.View;
 
 import androidx.appcompat.app.AlertDialog;
@@ -51,23 +53,44 @@ public class UpdateUtil {
                             .append("\n");
                 }
                 stringBuilder.deleteCharAt(stringBuilder.length() - 1);
-                builder.setMessage("更新时间：" + date + "\n\n" + stringBuilder.toString())
-                        .setTitle("发现新版本" + newVersion)
-                        .setNeutralButton("不再提醒该版本", (dialogInterface, i) -> {
-                            editor.putBoolean(String.valueOf(newVersion), false);
-                            editor.apply();
-                            XToast.success("屏蔽成功");
+                builder.setCancelable(false)
+                        .setOnKeyListener(new DialogInterface.OnKeyListener() {
+                            @Override
+                            public boolean onKey(DialogInterface dialogInterface, int i, KeyEvent keyEvent) {
+                                return keyEvent.getKeyCode() == KeyEvent.KEYCODE_BACK;
+                            }
                         })
-                        .setPositiveButton("前往下载", (dialogInterface, i) -> context.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url))));
+                        .setMessage("更新时间：" + date + "\n\n" + stringBuilder.toString())
+                        .setTitle("发现新版本" + newVersion)
+//                        .setNeutralButton("不再提醒该版本", (dialogInterface, i) -> {
+//                            editor.putBoolean(String.valueOf(newVersion), false);
+//                            editor.apply();
+//                            XToast.success("屏蔽成功");
+//                        })
+                        .setPositiveButton("前往下载", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                context.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
+                            }
+                        });
 
+                AlertDialog alertDialog = builder.create();
+                alertDialog.setCanceledOnTouchOutside(false);
                 if (sharedPreferences.getBoolean(String.valueOf(newVersion), true)) {
-                    builder.show();
+                    alertDialog.show();
+                    alertDialog.getButton(DialogInterface.BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            context.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
+                        }
+                    });
+
                 } else if (!firstOpen) {
                     Snackbar.make(snackBarView, "发现新版本（已屏蔽）", LENGTH_SHORT)
                             .setAction("取消屏蔽", view -> {
                                 editor.putBoolean(String.valueOf(newVersion), true);
                                 editor.apply();
-                                builder.show();
+                                alertDialog.show();
                             })
                             .show();
                 }

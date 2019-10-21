@@ -15,7 +15,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -37,6 +36,8 @@ public class HttpUtil {
     private static OkHttpClient client;
 
     public static class post {
+
+        private static final String TAG = "HttpUtil";
 
         public static void haveResponse(String url, Map<String, Object> params, HttpUtilCallBack<String> callback) {
             initClient();
@@ -84,20 +85,9 @@ public class HttpUtil {
                     Object value = params.get(key);
                     if (value instanceof File) {
                         File file = (File) value;
+                        Log.e(TAG, "uploadHaveResponse: "+file.length() );
                         builder.addFormDataPart(key, file.getName(),
-                                RequestBody.create(MediaType.parse("application/octet-stream"), file));//"application/octet-stream"
-                    }
-                    if (value instanceof ArrayList) {
-                        ArrayList<Object> lists = (ArrayList) value;
-                        for (Object obj : lists) {
-                            if (obj instanceof File) {
-                                File file = (File) obj;
-                                builder.addFormDataPart(key, file.getName(),
-                                        RequestBody.create(MediaType.parse("application/octet-stream"), file));
-                            } else {
-                                builder.addFormDataPart(key, value.toString());
-                            }
-                        }
+                                RequestBody.create(MediaType.parse("application/octet-stream"),file));//"application/octet-stream"
                     } else {
                         builder.addFormDataPart(key, value.toString());
                     }

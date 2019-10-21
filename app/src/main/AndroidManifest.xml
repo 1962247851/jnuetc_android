@@ -2,6 +2,22 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="jn.mjz.aiot.jnuetc">
 
+    <!-- 这里com.xiaomi.mipushdemo改成app的包名 -->
+    <permission
+        android:name="jn.mjz.aiot.jnuetc.permission.MIPUSH_RECEIVE"
+        android:protectionLevel="signature" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.GET_TASKS" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.CALL_PHONE" />
+
+    <uses-permission android:name="jn.mjz.aiot.jnuetc.permission.MIPUSH_RECEIVE" />
+
     <application
         android:name=".Application.MyApplication"
         android:allowBackup="true"
@@ -12,6 +28,11 @@
         android:roundIcon="@drawable/logo"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+        <activity
+            android:screenOrientation="portrait"
+            android:name=".View.Activity.SettingsActivity"
+            android:label="@string/title_activity_settings">
+        </activity>
         <activity
             android:name=".View.Activity.AboutActivity"
             android:screenOrientation="portrait" />
@@ -53,7 +74,6 @@
                 <action android:name="com.xiaomi.mipush.ERROR" />
             </intent-filter>
         </receiver>
-
         <receiver
             android:name="com.xiaomi.push.service.receivers.NetworkStatusReceiver"
             android:exported="true">
@@ -89,20 +109,5 @@
             android:name="com.xiaomi.mipush.sdk.MessageHandleService"
             android:enabled="true" />
     </application>
-    <permission
-        android:name="jn.mjz.aiot.jnuetc.permission.MIPUSH_RECEIVE"
-        android:protectionLevel="signature" />
-    <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
-    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
-    <uses-permission android:name="android.permission.GET_TASKS" />
-
-    <uses-permission android:name="android.permission.VIBRATE" /> <!-- 这里com.xiaomi.mipushdemo改成app的包名 -->
-    <uses-permission android:name="android.permission.CALL_PHONE" />
-
-    <uses-permission android:name="jn.mjz.aiot.jnuetc.permission.MIPUSH_RECEIVE" />
 
 </manifest>

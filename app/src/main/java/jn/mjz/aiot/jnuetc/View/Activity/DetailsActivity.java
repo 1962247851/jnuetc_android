@@ -3,7 +3,6 @@ package jn.mjz.aiot.jnuetc.View.Activity;
 import android.Manifest;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
@@ -17,23 +16,18 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.lifecycle.ViewModelProviders;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.viewpager.widget.ViewPager;
 
 import com.bm.library.Info;
-import com.bm.library.PhotoView;
-import com.bumptech.glide.Glide;
-import com.bumptech.glide.load.DataSource;
-import com.bumptech.glide.load.engine.GlideException;
-import com.bumptech.glide.request.RequestListener;
-import com.bumptech.glide.request.target.Target;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 import com.youth.xframe.utils.XAppUtils;
-import com.youth.xframe.utils.XNetworkUtils;
 import com.youth.xframe.utils.permission.XPermission;
 import com.youth.xframe.utils.statusbar.XStatusBar;
 import com.youth.xframe.widget.XLoadingDialog;
@@ -51,6 +45,8 @@ import jn.mjz.aiot.jnuetc.Util.DateUtil;
 import jn.mjz.aiot.jnuetc.Util.GlobalUtil;
 import jn.mjz.aiot.jnuetc.Util.GsonUtil;
 import jn.mjz.aiot.jnuetc.Util.HttpUtil;
+import jn.mjz.aiot.jnuetc.View.Adapter.RecyclerView.PhotoAdapter;
+import jn.mjz.aiot.jnuetc.View.Adapter.ViewPager.PhotoViewAdapter;
 import jn.mjz.aiot.jnuetc.ViewModel.MainViewModel;
 import okhttp3.Response;
 
@@ -59,7 +55,14 @@ public class DetailsActivity extends AppCompatActivity implements View.OnClickLi
     private static final String TAG = "DetailsActivity";
     private Data data;
     private MainViewModel mainViewModel;
-    private Info mRectF;
+    private PhotoViewAdapter photoViewAdapter;
+    private PhotoViewAdapter.IPhotoViewPagerListener iPhotoViewPagerListener;
+    private PhotoAdapter photoAdapter;
+
+    @BindView(R.id.viewPager_details)
+    ViewPager viewPager;
+    @BindView(R.id.recyclerView_details_photo)
+    RecyclerView recyclerViewPhoto;
 
     @BindView(R.id.toolbar_details)
     Toolbar toolbar;
@@ -88,12 +91,6 @@ public class DetailsActivity extends AppCompatActivity implements View.OnClickLi
     TextView textViewModel;
     @BindView(R.id.textView_details_message)
     TextView textViewMessage;
-    @BindView(R.id.textView_details_photo)
-    TextView textViewPhoto;
-    @BindView(R.id.photoView_details_1)
-    PhotoView imageViewPhoto1;
-    @BindView(R.id.photoView_details_2)
-    PhotoView imageViewPhoto2;
 
     @BindView(R.id.textView_details_feedback)
     TextView textViewFeedback;
@@ -114,8 +111,6 @@ public class DetailsActivity extends AppCompatActivity implements View.OnClickLi
 
     @BindView(R.id.linearLayout_details_feedback)
     LinearLayout linearLayoutFeedback;
-    @BindView(R.id.linearLayout_details_photo)
-    LinearLayout linearLayoutPhoto;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -125,12 +120,7 @@ public class DetailsActivity extends AppCompatActivity implements View.OnClickLi
         mainViewModel = ViewModelProviders.of(this).get(MainViewModel.class);
         data = GsonUtil.getInstance().fromJson(getIntent().getStringExtra("data"), Data.class);
 
-        buttonFeedback.setOnClickListener(this);
-        buttonConfirm.setOnClickListener(this);
-        textViewQQ.setOnClickListener(this);
-        textViewTel.setOnClickListener(this);
-
-        textViewQQ.setOnClickListener(this);
+        InitListener();
 
         ArrayAdapter<String> adapterMark = new ArrayAdapter<>(this, R.layout.support_simple_spinner_dropdown_item, GlobalUtil.MARKS);
         spinnerMark.setAdapter(adapterMark);
@@ -150,65 +140,48 @@ public class DetailsActivity extends AppCompatActivity implements View.OnClickLi
 
         String photo = data.getPhoto();
         if (photo != null && !photo.isEmpty()) {
-            textViewPhoto.setText("图片加载中");
-            linearLayoutPhoto.setVisibility(View.VISIBLE);
             String[] photos = photo.split("。");
-            Glide.with(DetailsActivity.this)
-                    .load(GlobalUtil.URLS.FILE.DOWNLOAD + "?url=/opt/dataDP&fileName=" + data.getUuid() + photos[0])
-                    .listener(new RequestListener<Drawable>() {
-                        @Override
-                        public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
-                            XToast.error("图片加载失败，请稍后重试");
-                            linearLayoutPhoto.setVisibility(View.GONE);
-                            return true;
-                        }
+            String[] photoUrls = new String[photos.length];
+            for (int i = 0; i < photos.length; i++) {
+                photoUrls[i] = String.format("%s?url=/opt/dataDP&fileName=%s%s", GlobalUtil.URLS.FILE.DOWNLOAD, data.getUuid(), photos[i]);
+            }
 
-                        @Override
-                        public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) {
-                            linearLayoutPhoto.setVisibility(View.GONE);
-                            imageViewPhoto1.setImageDrawable(resource);
-                            imageViewPhoto2.setImageDrawable(resource);
-                            imageViewPhoto1.disenable();
-                            imageViewPhoto1.setOnClickListener(new View.OnClickListener() {
-                                @Override
-                                public void onClick(View view) {
-                                    imageViewPhoto1.setVisibility(View.GONE);
-                                    imageViewPhoto2.setVisibility(View.VISIBLE);
-                                    //获取img1的信息
-                                    mRectF = imageViewPhoto1.getInfo();
-                                    //让img2从img1的位置变换到他本身的位置
-                                    imageViewPhoto2.animaFrom(mRectF);
-                                }
-                            });
-                            return true;
-                        }
-                    }).into(imageViewPhoto1);
+            photoAdapter = new PhotoAdapter(this, photoUrls, new PhotoAdapter.IPhotoRecyclerViewListener() {
+                @Override
+                public void OnPhotoClick(int position, Info info) {
+                    // TODO: 2019/9/23 展示ViewPager，要有动画
+                    viewPager.setCurrentItem(position, false);
+                    viewPager.setVisibility(View.VISIBLE);
+//                    photoViewAdapter.setmRectF(info);
+                }
+            });
+
+            recyclerViewPhoto.setLayoutManager(new GridLayoutManager(this, 3));
+            recyclerViewPhoto.setAdapter(photoAdapter);
+
+            iPhotoViewPagerListener = new PhotoViewAdapter.IPhotoViewPagerListener() {
+                @Override
+                public void OnDismiss() {
+                    viewPager.setVisibility(View.GONE);
+                }
+            };
+
+            photoViewAdapter = new PhotoViewAdapter(photoUrls, DetailsActivity.this, iPhotoViewPagerListener);
+
+            viewPager.setAdapter(photoViewAdapter);
+            viewPager.setOffscreenPageLimit(photoViewAdapter.getCount());
+
         } else {
-            imageViewPhoto1.setVisibility(View.GONE);
+            recyclerViewPhoto.setVisibility(View.GONE);
         }
 
-        // 需要启动缩放需要手动开启
-        imageViewPhoto2.enable();
-        imageViewPhoto2.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // 让img2从自身位置变换到原来img1图片的位置大小
-                imageViewPhoto2.animaTo(mRectF, new Runnable() {
-                    @Override
-                    public void run() {
-                        imageViewPhoto2.setVisibility(View.GONE);
-                        imageViewPhoto1.setVisibility(View.VISIBLE);
-                    }
-                });
-            }
-        });
 
         switch (data.getState()) {
             case 0://未处理，只可以接单
                 buttonConfirm.setVisibility(View.VISIBLE);
                 break;
             case 1://处理中，只有自己参与的单子才可以可填写反馈，否则也只能查看
-                if (data.getRepairer() != null && data.getRepairer().contains(GlobalUtil.user.getName())) {
+                if (data.getRepairer() != null && data.getRepairer().contains(MainViewModel.user.getName())) {
                     linearLayoutFeedback.setVisibility(View.VISIBLE);
                     textInputEditTextRepairer.setEnabled(true);
                     textInputEditTextRepairer.setText(data.getRepairer());
@@ -253,19 +226,34 @@ public class DetailsActivity extends AppCompatActivity implements View.OnClickLi
 
     }
 
+    private void InitListener() {
+        buttonFeedback.setOnClickListener(this);
+        buttonConfirm.setOnClickListener(this);
+        textViewQQ.setOnClickListener(this);
+        textViewTel.setOnClickListener(this);
+        textViewQQ.setOnClickListener(this);
+    }
+
     @Override
     public void onBackPressed() {
-        if (imageViewPhoto2.getVisibility() == View.VISIBLE) {
-            imageViewPhoto2.animaTo(mRectF, new Runnable() {
-                @Override
-                public void run() {
-                    imageViewPhoto2.setVisibility(View.GONE);
-                    imageViewPhoto1.setVisibility(View.VISIBLE);
-                }
-            });
+
+        if (viewPager.getVisibility() == View.VISIBLE) {
+            viewPager.setVisibility(View.GONE);
         } else {
             super.onBackPressed();
         }
+
+//        if (imageViewPhoto2.getVisibility() == View.VISIBLE) {
+//            imageViewPhoto2.animaTo(mRectF, new Runnable() {
+//                @Override
+//                public void run() {
+//                    imageViewPhoto2.setVisibility(View.GONE);
+//                    imageViewPhoto1.setVisibility(View.VISIBLE);
+//                }
+//            });
+//        } else {
+//            super.onBackPressed();
+//        }
     }
 
     private void setSystemUIVisible(boolean show) {
@@ -294,10 +282,11 @@ public class DetailsActivity extends AppCompatActivity implements View.OnClickLi
                 order(data);
                 break;
             case R.id.textView_details_qq:
-                String url = "mqqwpa://im/chat?chat_type=wpa&uin=" + data.getQq();
-                try {
-                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
-                } catch (Exception e) {
+                MainViewModel.copyToClipboard(DetailsActivity.this, data.getQq());
+                if (XAppUtils.isInstallApp("com.tencent.mobileqq")) {
+                    XAppUtils.startApp("com.tencent.mobileqq");
+                    XToast.success(String.format("QQ：%s已复制到剪切板", data.getQq()));
+                } else {
                     XToast.error("未安装手Q或安装的版本不支持");
                 }
                 break;
@@ -336,7 +325,7 @@ public class DetailsActivity extends AppCompatActivity implements View.OnClickLi
             @Override
             public void onResponse(Response response, List<String> result) {
                 XLoadingDialog.with(DetailsActivity.this).dismiss();
-                result.remove(GlobalUtil.user.getName());
+                result.remove(MainViewModel.user.getName());
                 String[] names = new String[result.size()];
                 result.toArray(names);
                 boolean[] checkItems = new boolean[result.size()];
@@ -363,7 +352,7 @@ public class DetailsActivity extends AppCompatActivity implements View.OnClickLi
                                 } else {
                                     names.deleteCharAt(names.length() - 1);
                                     String repairer = names.toString();
-                                    if (!repairer.isEmpty() && !repairer.contains(GlobalUtil.user.getName())) {
+                                    if (!repairer.isEmpty() && !repairer.contains(MainViewModel.user.getName())) {
                                         data.setState((short) 1);
                                         data.setRepairer(repairer);
                                         data.setOrderDate(data.getOrderDate());
@@ -375,8 +364,7 @@ public class DetailsActivity extends AppCompatActivity implements View.OnClickLi
                                 }
                             }
                         })
-                        .setNegativeButton("取消", null)
-                        .setNeutralButton("我再想想", null)
+                        .setNeutralButton("取消", null)
                         .show();
             }
 
@@ -418,7 +406,7 @@ public class DetailsActivity extends AppCompatActivity implements View.OnClickLi
             public void onResponse(Response response, Data result) {
                 XLoadingDialog.with(DetailsActivity.this).cancel();
                 if (result.getState() == 0) {
-                    String[] items = {"接单成功后自动打开QQ会话"};
+                    String[] items = {"接单成功后自动复制QQ号并且打开QQ"};
                     boolean[] booleans = {true};
                     AlertDialog.Builder builder = new AlertDialog.Builder(DetailsActivity.this);
                     builder.setTitle(data.getLocal() + " - " + data.getId())
@@ -428,7 +416,7 @@ public class DetailsActivity extends AppCompatActivity implements View.OnClickLi
                             .setNegativeButton("取消", (dialogInterface, i) -> XLoadingDialog.with(DetailsActivity.this).cancel())
                             .setPositiveButton("确定", (dialogInterface, i) -> {
                                 XLoadingDialog.with(DetailsActivity.this).setMessage("请求处理中，请稍后").setCanceled(false).show();
-                                result.setRepairer(GlobalUtil.user.getName());
+                                result.setRepairer(MainViewModel.user.getName());
                                 result.setState((short) 1);
                                 mainViewModel.feedback(result, new HttpUtil.HttpUtilCallBack<Data>() {
                                     @Override
@@ -444,10 +432,11 @@ public class DetailsActivity extends AppCompatActivity implements View.OnClickLi
                                         intent.putExtra("position", getIntent().getIntExtra("position", -1));
                                         setResult(0, intent);
                                         if (booleans[0]) {
-                                            String url = "mqqwpa://im/chat?chat_type=wpa&uin=" + result.getQq();
-                                            try {
-                                                startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
-                                            } catch (Exception e) {
+                                            MainViewModel.copyToClipboard(DetailsActivity.this, result.getQq());
+                                            if (XAppUtils.isInstallApp("com.tencent.mobileqq")) {
+                                                XAppUtils.startApp("com.tencent.mobileqq");
+                                                XToast.success(String.format("QQ：%s已复制到剪切板", data.getQq()));
+                                            } else {
                                                 XToast.error("未安装手Q或安装的版本不支持");
                                             }
                                         }
@@ -493,7 +482,7 @@ public class DetailsActivity extends AppCompatActivity implements View.OnClickLi
 
         if (data.getRepairer().isEmpty() || data.getRepairMessage().isEmpty()) {
             XToast.error("字段不能为空");
-        } else if (!data.getRepairer().contains(GlobalUtil.user.getName())) {
+        } else if (!data.getRepairer().contains(MainViewModel.user.getName())) {
             AlertDialog dialog = new AlertDialog.Builder(DetailsActivity.this).create();
             dialog.setMessage("维修人未含本人，确定提交反馈？");
             dialog.setTitle("注意");
@@ -547,7 +536,7 @@ public class DetailsActivity extends AppCompatActivity implements View.OnClickLi
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.tool_bar_details, menu);
         if (data.getState() == 1) {
-            if (data.getRepairer() != null && data.getRepairer().contains(GlobalUtil.user.getName())) {
+            if (data.getRepairer() != null && data.getRepairer().contains(MainViewModel.user.getName())) {
                 menu.findItem(R.id.menu_details_make_over).setVisible(true);
             }
         }

@@ -14,6 +14,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.card.MaterialCardView;
 import com.lcodecore.extextview.ExpandTextView;
+import com.youth.xframe.XFrame;
 
 import java.util.List;
 
@@ -22,7 +23,7 @@ import butterknife.ButterKnife;
 import jn.mjz.aiot.jnuetc.Greendao.Entity.Data;
 import jn.mjz.aiot.jnuetc.R;
 import jn.mjz.aiot.jnuetc.Util.DateUtil;
-import jn.mjz.aiot.jnuetc.Util.GlobalUtil;
+import jn.mjz.aiot.jnuetc.ViewModel.MainViewModel;
 
 public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder> {
 
@@ -201,10 +202,12 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
                 holder.relativeLayoutState.setBackgroundResource(R.drawable.background_task_view_state_new_left);
                 holder.textViewConfirm.setEnabled(true);
                 holder.textViewState.setText("未处理");
+                holder.textViewConfirm.setText("接单");
+                holder.textViewConfirm.setTextColor(XFrame.getColor(R.color.colorPrimary));
                 break;
             case 1:
                 holder.relativeLayoutState.setBackgroundResource(R.drawable.background_task_view_state_processing_left);
-                if (!repairer.contains(GlobalUtil.user.getName())) {
+                if (!repairer.contains(MainViewModel.user.getName())) {
                     holder.textViewState.setText(String.format("%s 处理中", repairer));
                 } else {
                     holder.textViewState.setText("");
@@ -214,7 +217,7 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
                 break;
             case 2:
                 holder.relativeLayoutState.setBackgroundResource(R.drawable.background_task_view_state_done_left);
-                if (repairer.contains(GlobalUtil.user.getName())) {
+                if (repairer.contains(MainViewModel.user.getName())) {
                     holder.textViewState.setText("");
                 } else {
                     holder.textViewState.setText(String.format("%s 已维修", repairer));

@@ -49,49 +49,57 @@ public class SecondPagerAdapter extends PagerAdapter {
     @NonNull
     public Object instantiateItem(@NonNull ViewGroup container, int position) {
         if (position == 0) {
-            RelativeLayout relativeLayout = new RelativeLayout(context);
-            TextView textViewNoData = new TextView(context);
-            textViewNoData.setText(R.string.NoData);
-            textViewNoData.setTextSize(20);
-            textViewNoData.setGravity(Gravity.CENTER);
+            if (container.getChildAt(position) == null) {
+                RelativeLayout relativeLayout = new RelativeLayout(context);
+                TextView textViewNoData = new TextView(context);
+                textViewNoData.setText(R.string.NoData);
+                textViewNoData.setTextSize(20);
+                textViewNoData.setGravity(Gravity.CENTER);
 
-            recyclerView2 = new RecyclerView(context);
-            recyclerView2.setBackground(context.getDrawable(R.color.white));
-            recyclerView2.setLayoutManager(new LinearLayoutManager(context));
-            recyclerView2.setAdapter(taskAdapter2);
-            relativeLayout.addView(textViewNoData);
-            relativeLayout.addView(recyclerView2);
+                recyclerView2 = new RecyclerView(context);
+                recyclerView2.setBackground(context.getDrawable(R.color.white));
+                recyclerView2.setLayoutManager(new LinearLayoutManager(context));
+                recyclerView2.setAdapter(taskAdapter2);
+                relativeLayout.addView(textViewNoData);
+                relativeLayout.addView(recyclerView2);
 
-            RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams) textViewNoData.getLayoutParams();
-            layoutParams.height = RelativeLayout.LayoutParams.MATCH_PARENT;
-            layoutParams.width = RelativeLayout.LayoutParams.MATCH_PARENT;
-            textViewNoData.setLayoutParams(layoutParams);
-            recyclerView2.setLayoutParams(layoutParams);
+                RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams) textViewNoData.getLayoutParams();
+                layoutParams.height = RelativeLayout.LayoutParams.MATCH_PARENT;
+                layoutParams.width = RelativeLayout.LayoutParams.MATCH_PARENT;
+                textViewNoData.setLayoutParams(layoutParams);
+                recyclerView2.setLayoutParams(layoutParams);
 
-            container.addView(relativeLayout);
-            return relativeLayout;
+                container.addView(relativeLayout);
+                return relativeLayout;
+            } else {
+                return container.getChildAt(position);
+            }
         } else {
-            RelativeLayout relativeLayout = new RelativeLayout(context);
-            TextView textViewNoData = new TextView(context);
-            textViewNoData.setText(R.string.NoData);
-            textViewNoData.setTextSize(20);
-            textViewNoData.setGravity(Gravity.CENTER);
+            if (container.getChildAt(position) == null) {
+                RelativeLayout relativeLayout = new RelativeLayout(context);
+                TextView textViewNoData = new TextView(context);
+                textViewNoData.setText(R.string.NoData);
+                textViewNoData.setTextSize(20);
+                textViewNoData.setGravity(Gravity.CENTER);
 
-            recyclerView3 = new RecyclerView(context);
-            recyclerView3.setBackground(context.getDrawable(R.color.white));
-            recyclerView3.setLayoutManager(new LinearLayoutManager(context));
-            recyclerView3.setAdapter(taskAdapter3);
-            relativeLayout.addView(textViewNoData);
-            relativeLayout.addView(recyclerView3);
+                recyclerView3 = new RecyclerView(context);
+                recyclerView3.setBackground(context.getDrawable(R.color.white));
+                recyclerView3.setLayoutManager(new LinearLayoutManager(context));
+                recyclerView3.setAdapter(taskAdapter3);
+                relativeLayout.addView(textViewNoData);
+                relativeLayout.addView(recyclerView3);
 
-            RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams) textViewNoData.getLayoutParams();
-            layoutParams.height = RelativeLayout.LayoutParams.MATCH_PARENT;
-            layoutParams.width = RelativeLayout.LayoutParams.MATCH_PARENT;
-            textViewNoData.setLayoutParams(layoutParams);
-            recyclerView3.setLayoutParams(layoutParams);
+                RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams) textViewNoData.getLayoutParams();
+                layoutParams.height = RelativeLayout.LayoutParams.MATCH_PARENT;
+                layoutParams.width = RelativeLayout.LayoutParams.MATCH_PARENT;
+                textViewNoData.setLayoutParams(layoutParams);
+                recyclerView3.setLayoutParams(layoutParams);
 
-            container.addView(relativeLayout);
-            return relativeLayout;
+                container.addView(relativeLayout);
+                return relativeLayout;
+            } else {
+                return container.getChildAt(position);
+            }
         }
     }
 
@@ -106,19 +114,19 @@ public class SecondPagerAdapter extends PagerAdapter {
         }
     }
 
-    public boolean isSelectMode2(){
+    public boolean isSelectMode2() {
         return taskAdapter2.isSelectMode();
     }
 
-    public boolean isSelectMode3(){
+    public boolean isSelectMode3() {
         return taskAdapter3.isSelectMode();
     }
 
-    public void cancelSelect2(){
+    public void cancelSelect2() {
         taskAdapter2.cancelSelect();
     }
 
-    public void cancelSelect3(){
+    public void cancelSelect3() {
         taskAdapter3.cancelSelect();
     }
 

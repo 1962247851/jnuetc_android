@@ -1,7 +1,6 @@
 package jn.mjz.aiot.jnuetc.View.Fragment;
 
 
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.SparseBooleanArray;
@@ -18,22 +17,26 @@ import androidx.viewpager.widget.ViewPager;
 
 import com.google.android.material.tabs.TabLayout;
 import com.scwang.smartrefresh.layout.SmartRefreshLayout;
+import com.youth.xframe.utils.XEmptyUtils;
 import com.youth.xframe.widget.XLoadingDialog;
 import com.youth.xframe.widget.XToast;
+
+import org.greenrobot.greendao.query.QueryBuilder;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
+import jn.mjz.aiot.jnuetc.Application.MyApplication;
 import jn.mjz.aiot.jnuetc.Greendao.Dao.DataDao;
 import jn.mjz.aiot.jnuetc.Greendao.Entity.Data;
 import jn.mjz.aiot.jnuetc.Greendao.Entity.User;
 import jn.mjz.aiot.jnuetc.R;
-import jn.mjz.aiot.jnuetc.Util.GlobalUtil;
 import jn.mjz.aiot.jnuetc.Util.HttpUtil;
 import jn.mjz.aiot.jnuetc.View.Activity.DetailsActivity;
 import jn.mjz.aiot.jnuetc.View.Adapter.RecyclerView.TaskAdapter;
@@ -92,7 +95,6 @@ public class SecondFragment extends Fragment {
         titles.add("处理中");
         titles.add("已维修");
 
-
         TaskAdapter.ITaskListener iTaskListener2 = new TaskAdapter.ITaskListener() {
             @Override
             public void OnItemClick(int position, Data data) {
@@ -118,60 +120,63 @@ public class SecondFragment extends Fragment {
                 mainViewModel.updateUserInfo(new HttpUtil.HttpUtilCallBack<User>() {
                     @Override
                     public void onResponse(Response response, User result) {
-                        if (result.getRoot() == 1) {
+                        if (result.getRoot() != 0 && result.getRoot() != 1) {
+
+                            List<Integer> ids = new ArrayList<>();
+                            List<Data> needToDelete = new ArrayList<>();
+
+                            for (int i = 0; i < sparseBooleanArray.size(); i++) {
+                                int key = sparseBooleanArray.keyAt(i);
+                                if (sparseBooleanArray.get(key)) {
+                                    String id = dataLists2.get(key).getId().toString();
+                                    ids.add(Integer.valueOf(id));
+                                    needToDelete.add(MyApplication.getDaoSession().getDataDao().queryBuilder().where(DataDao.Properties.Id.eq(id)).build().unique());
+                                }
+                            }
+
+                            StringBuilder builder = new StringBuilder();
+                            for (Data data : needToDelete) {
+                                builder.append(data.getLocal());
+                                builder.append(" - ");
+                                builder.append(data.getId());
+                                builder.append("\n");
+                            }
+
                             AlertDialog dialog = new AlertDialog.Builder(getContext()).create();
                             dialog.setTitle("注意");
-                            dialog.setMessage("删除数据仅限无用的报修单，删除后无法还原，请谨慎操作");
-                            dialog.setButton(AlertDialog.BUTTON_POSITIVE, "取消", new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialogInterface, int i1) {
+                            dialog.setMessage("删除数据仅限无用的报修单，删除后无法还原，请谨慎操作。确认删除以下报修单？\n" + builder.toString());
+                            dialog.setButton(AlertDialog.BUTTON_POSITIVE, "取消", (dialogInterface, i1) -> {
 
-                                }
                             });
 
-                            dialog.setButton(AlertDialog.BUTTON_NEGATIVE, "删除", new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialogInterface, int i1) {
-                                    XLoadingDialog.with(getContext()).setCanceled(false).setMessage("请求处理中,请稍后").show();
-                                    List<Integer> ids = new ArrayList<>();
+                            dialog.setButton(AlertDialog.BUTTON_NEGATIVE, "删除", (dialogInterface, i1) -> {
+                                XLoadingDialog.with(getContext()).setCanceled(false).setMessage("请求处理中,请稍后").show();
 
-                                    for (int i = 0; i < sparseBooleanArray.size(); i++) {
-                                        int key = sparseBooleanArray.keyAt(i);
-                                        if (sparseBooleanArray.get(key)) {
-                                            ids.add(Integer.valueOf(dataLists2.get(key).getId().toString()));
-                                        }
+                                mainViewModel.deleteMany(ids, new HttpUtil.HttpUtilCallBack<Boolean>() {
+                                    @Override
+                                    public void onResponse(Response response12, Boolean result12) {
+
+                                        taskAdapter2.clearSelect();
+                                        taskAdapter2.cancelSelect();
+                                        iSecondListener.OnCancelSelect();
+
+                                        mainViewModel.dataDao.deleteInTx(needToDelete);
+
+                                        mainViewModel.queryDataListBySetting(null);
+
+                                        dialog.dismiss();
+                                        XToast.success("删除成功");
+                                        XLoadingDialog.with(getContext()).cancel();
+
                                     }
 
-                                    mainViewModel.deleteMany(ids, new HttpUtil.HttpUtilCallBack<Boolean>() {
-                                        @Override
-                                        public void onResponse(Response response, Boolean result) {
-
-                                            taskAdapter2.clearSelect();
-                                            taskAdapter2.cancelSelect();
-                                            iSecondListener.OnCancelSelect();
-
-                                            List<Data> needToDelete = mainViewModel.dataDao.queryBuilder()
-                                                    .where(DataDao.Properties.Id.in(ids))
-                                                    .build()
-                                                    .list();
-                                            mainViewModel.dataDao.deleteInTx(needToDelete);
-
-                                            mainViewModel.queryDataListBySetting(null);
-
-                                            dialog.dismiss();
-                                            XToast.success("删除成功");
-                                            XLoadingDialog.with(getContext()).cancel();
-
-                                        }
-
-                                        @Override
-                                        public void onFailure(IOException e) {
-                                            XLoadingDialog.with(getContext()).cancel();
-                                            XToast.error("删除失败");
-                                            dialog.cancel();
-                                        }
-                                    });
-                                }
+                                    @Override
+                                    public void onFailure(IOException e) {
+                                        XLoadingDialog.with(getContext()).cancel();
+                                        XToast.error("删除失败");
+                                        dialog.cancel();
+                                    }
+                                });
                             });
 
                             dialog.show();
@@ -228,60 +233,63 @@ public class SecondFragment extends Fragment {
                 mainViewModel.updateUserInfo(new HttpUtil.HttpUtilCallBack<User>() {
                     @Override
                     public void onResponse(Response response, User result) {
-                        if (result.getRoot() == 1) {
+                        if (result.getRoot() != 0 && result.getRoot() != 1) {
+
+                            List<Integer> ids = new ArrayList<>();
+                            List<Data> needToDelete = new ArrayList<>();
+
+                            for (int i = 0; i < sparseBooleanArray.size(); i++) {
+                                int key = sparseBooleanArray.keyAt(i);
+                                if (sparseBooleanArray.get(key)) {
+                                    String id = dataLists3.get(key).getId().toString();
+                                    ids.add(Integer.valueOf(id));
+                                    needToDelete.add(MyApplication.getDaoSession().getDataDao().queryBuilder().where(DataDao.Properties.Id.eq(id)).build().unique());
+                                }
+                            }
+
+                            StringBuilder builder = new StringBuilder();
+                            for (Data data : needToDelete) {
+                                builder.append(data.getLocal());
+                                builder.append(" - ");
+                                builder.append(data.getId());
+                                builder.append("\n");
+                            }
+
                             AlertDialog dialog = new AlertDialog.Builder(getContext()).create();
                             dialog.setTitle("注意");
-                            dialog.setMessage("删除数据仅限无用的报修单，删除后无法还原，请谨慎操作");
-                            dialog.setButton(AlertDialog.BUTTON_POSITIVE, "取消", new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialogInterface, int i1) {
+                            dialog.setMessage("删除数据仅限无用的报修单，删除后无法还原，请谨慎操作。确认删除以下报修单？\n" + builder.toString());
+                            dialog.setButton(AlertDialog.BUTTON_POSITIVE, "取消", (dialogInterface, i1) -> {
 
-                                }
                             });
 
-                            dialog.setButton(AlertDialog.BUTTON_NEGATIVE, "删除", new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialogInterface, int i1) {
-                                    XLoadingDialog.with(getContext()).setCanceled(false).setMessage("请求处理中,请稍后").show();
-                                    List<Integer> ids = new ArrayList<>();
+                            dialog.setButton(AlertDialog.BUTTON_NEGATIVE, "删除", (dialogInterface, i1) -> {
+                                XLoadingDialog.with(getContext()).setCanceled(false).setMessage("请求处理中,请稍后").show();
 
-                                    for (int i = 0; i < sparseBooleanArray.size(); i++) {
-                                        int key = sparseBooleanArray.keyAt(i);
-                                        if (sparseBooleanArray.get(key)) {
-                                            ids.add(Integer.valueOf(dataLists3.get(key).getId().toString()));
-                                        }
+                                mainViewModel.deleteMany(ids, new HttpUtil.HttpUtilCallBack<Boolean>() {
+                                    @Override
+                                    public void onResponse(Response response1, Boolean result1) {
+
+                                        taskAdapter3.clearSelect();
+                                        taskAdapter3.cancelSelect();
+                                        iSecondListener.OnCancelSelect();
+
+                                        mainViewModel.dataDao.deleteInTx(needToDelete);
+
+                                        mainViewModel.queryDataListBySetting(null);
+
+                                        dialog.dismiss();
+                                        XToast.success("删除成功");
+                                        XLoadingDialog.with(getContext()).cancel();
+
                                     }
 
-                                    mainViewModel.deleteMany(ids, new HttpUtil.HttpUtilCallBack<Boolean>() {
-                                        @Override
-                                        public void onResponse(Response response, Boolean result) {
-
-                                            taskAdapter3.clearSelect();
-                                            taskAdapter3.cancelSelect();
-                                            iSecondListener.OnCancelSelect();
-
-                                            List<Data> needToDelete = mainViewModel.dataDao.queryBuilder()
-                                                    .where(DataDao.Properties.Id.in(ids))
-                                                    .build()
-                                                    .list();
-                                            mainViewModel.dataDao.deleteInTx(needToDelete);
-
-                                            mainViewModel.queryDataListBySetting(null);
-
-                                            dialog.dismiss();
-                                            XToast.success("删除成功");
-                                            XLoadingDialog.with(getContext()).cancel();
-
-                                        }
-
-                                        @Override
-                                        public void onFailure(IOException e) {
-                                            XLoadingDialog.with(getContext()).cancel();
-                                            XToast.error("删除失败");
-                                            dialog.cancel();
-                                        }
-                                    });
-                                }
+                                    @Override
+                                    public void onFailure(IOException e) {
+                                        XLoadingDialog.with(getContext()).cancel();
+                                        XToast.error("删除失败");
+                                        dialog.cancel();
+                                    }
+                                });
                             });
 
                             dialog.show();
@@ -313,8 +321,8 @@ public class SecondFragment extends Fragment {
         };
 
         mainViewModel.getCurrentState().observe(this, integer -> {
-            taskAdapter2.setEnableSelect(GlobalUtil.user.getRoot() == 1);
-            taskAdapter3.setEnableSelect(GlobalUtil.user.getRoot() == 1);
+            taskAdapter2.setEnableSelect(MainViewModel.user.getRoot() != 0 && MainViewModel.user.getRoot() != 1);
+            taskAdapter3.setEnableSelect(MainViewModel.user.getRoot() != 0 && MainViewModel.user.getRoot() != 1);
             if (integer == 1) {
                 if (pagerAdapter.isSelectMode3()) {
                     pagerAdapter.cancelSelect3();
@@ -332,8 +340,8 @@ public class SecondFragment extends Fragment {
             }
         });
 
-        taskAdapter2 = new TaskAdapter(GlobalUtil.user.getRoot() == 1, dataLists2, getContext(), iTaskListener2);
-        taskAdapter3 = new TaskAdapter(GlobalUtil.user.getRoot() == 1, dataLists3, getContext(), iTaskListener3);
+        taskAdapter2 = new TaskAdapter(MainViewModel.user.getRoot() != 0 && MainViewModel.user.getRoot() != 1, dataLists2, getContext(), iTaskListener2);
+        taskAdapter3 = new TaskAdapter(MainViewModel.user.getRoot() != 0 && MainViewModel.user.getRoot() != 1, dataLists3, getContext(), iTaskListener3);
 
         pagerAdapter = new SecondPagerAdapter(getContext(), titles, taskAdapter2, taskAdapter3);
         viewPager.setAdapter(pagerAdapter);
@@ -362,10 +370,10 @@ public class SecondFragment extends Fragment {
 
         mainViewModel.getDrawerOpen().observe(getActivity(), aBoolean -> {
             if (aBoolean) {
-                if (taskAdapter2.isSelectMode()){
+                if (taskAdapter2.isSelectMode()) {
                     taskAdapter2.clearSelect();
                     taskAdapter2.cancelSelect();
-                }else {
+                } else {
                     taskAdapter3.clearSelect();
                     taskAdapter3.cancelSelect();
                 }
@@ -373,20 +381,26 @@ public class SecondFragment extends Fragment {
         });
 
         mainViewModel.getDataList2().observe(getActivity(), data -> {
-//            Log.e(TAG, "onChanged2: " + data);
             taskAdapter2.notifyItemRangeRemoved(0, taskAdapter2.getItemCount());
             dataLists2.clear();
             dataLists2.addAll(data);
             taskAdapter2.notifyItemRangeInserted(0, data.size());
             pagerAdapter.IsNoData2();
+            TabLayout.Tab tabAt = tabLayout.getTabAt(0);
+            if (tabAt != null) {
+                tabAt.setText(taskAdapter2.getItemCount() != 0 ? String.format(Locale.getDefault(), "处理中（%d）", data.size()) : "处理中");
+            }
         });
         mainViewModel.getDataList3().observe(getActivity(), data -> {
-//            Log.e(TAG, "onChanged3: " + data);
             taskAdapter3.notifyItemRangeRemoved(0, taskAdapter3.getItemCount());
             dataLists3.clear();
             dataLists3.addAll(data);
             taskAdapter3.notifyItemRangeInserted(0, data.size());
             pagerAdapter.IsNoData3();
+            TabLayout.Tab tabAt = tabLayout.getTabAt(1);
+            if (tabAt != null) {
+                tabAt.setText(taskAdapter3.getItemCount() != 0 ? String.format(Locale.getDefault(), "已维修（%d）", data.size()) : "已维修");
+            }
         });
     }
 

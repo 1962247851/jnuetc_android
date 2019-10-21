@@ -2,28 +2,40 @@ package jn.mjz.aiot.jnuetc.Util;
 
 
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.ParcelFileDescriptor;
+import android.util.Log;
 
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.youth.xframe.utils.http.HttpCallBack;
 
 import org.apache.poi.hssf.usermodel.HSSFCell;
 import org.apache.poi.hssf.usermodel.HSSFRow;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import jn.mjz.aiot.jnuetc.Application.MyApplication;
 import jn.mjz.aiot.jnuetc.Greendao.Dao.DataDao;
 import jn.mjz.aiot.jnuetc.Greendao.Entity.Data;
+import jn.mjz.aiot.jnuetc.ViewModel.MainViewModel;
+import okhttp3.Response;
 
 public class FileUtil {
     // Unique request code.
     public static final int WRITE_REQUEST_CODE = 43;
+    public static final int READ_REQUEST_CODE = 44;
+    public static final int PIC_PICTURE = 45;
+    private static final String TAG = "FileUtil";
 
     public static void ExportDatasToExcel(AppCompatActivity activity, Uri uri, IOnExportListener onExportListener) {
         // 设置第一行名
@@ -115,6 +127,24 @@ public class FileUtil {
         }
     }
 
+    public static void UploadTipDp(String tipDpName, File tipDp, HttpCallBack<Boolean> callBack) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("tipDpName", tipDpName);
+        params.put("sno", MainViewModel.user.getSno());
+        params.put("tipDp", tipDp);
+        Log.e(TAG, "UploadTipDp: "+tipDp.length() );
+        HttpUtil.post.uploadHaveResponse(GlobalUtil.URLS.FILE.UPLOAD_TIP_DP, params, new HttpUtil.HttpUtilCallBack() {
+            @Override
+            public void onResponse(Response response, Object result) {
+                Log.e(TAG, "onResponse: " + result);
+            }
+
+            @Override
+            public void onFailure(IOException e) {
+                Log.e(TAG, "onFailure: " + e.getMessage());
+            }
+        });
+    }
 
     public static void createFile(AppCompatActivity activity, String mimeType, String fileName) {
         Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
@@ -129,6 +159,27 @@ public class FileUtil {
         activity.startActivityForResult(intent, WRITE_REQUEST_CODE);
     }
 
+    /**
+     * Fires an intent to spin up the "file chooser" UI and select an image.
+     */
+    public static void selectFile(AppCompatActivity activity, String mimeType) {
+        // ACTION_OPEN_DOCUMENT is the intent to choose a file via the system's file
+        // browser.
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+
+        // Filter to only show results that can be "opened", such as a
+        // file (as opposed to a list of contacts or timezones)
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+
+        // Filter to show only images, using the image MIME data type.
+        // If one wanted to search for ogg vorbis files, the type would be "audio/ogg".
+        // To search for all documents available via installed storage providers,
+        // it would be "*/*".
+        intent.setType(mimeType);
+
+        activity.startActivityForResult(intent, READ_REQUEST_CODE);
+    }
+
     public static FileOutputStream getFOSFromUri(AppCompatActivity activity, Uri uri) {
         ParcelFileDescriptor pfd = null;
         try {
@@ -138,6 +189,13 @@ public class FileUtil {
             e.printStackTrace();
         }
         return new FileOutputStream(pfd.getFileDescriptor());
+    }
+
+    //跳转相册
+    public static void toPicture(AppCompatActivity activity) {
+        Intent intent = new Intent(Intent.ACTION_PICK);  //跳转到 ACTION_IMAGE_CAPTURE
+        intent.setType("image/*");
+        activity.startActivityForResult(intent, PIC_PICTURE);
     }
 
     public interface IOnExportListener {

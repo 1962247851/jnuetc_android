@@ -1,8 +1,13 @@
 package jn.mjz.aiot.jnuetc.View.Activity;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
@@ -13,14 +18,17 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.documentfile.provider.DocumentFile;
 import androidx.lifecycle.ViewModelProviders;
 
 import com.google.android.material.textfield.TextInputEditText;
+import com.youth.xframe.utils.http.HttpCallBack;
 import com.youth.xframe.utils.permission.XPermission;
 import com.youth.xframe.utils.statusbar.XStatusBar;
 import com.youth.xframe.widget.XLoadingDialog;
 import com.youth.xframe.widget.XToast;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -51,6 +59,8 @@ public class AdminActivity extends AppCompatActivity implements View.OnClickList
     Button buttonInsert;
     @BindView(R.id.button_admin_export)
     Button buttonExport;
+    @BindView(R.id.button_admin_upload_DP)
+    Button buttonUpload;
 
     @BindView(R.id.tidt_admin_code)
     TextInputEditText textInputEditTextCode;
@@ -72,6 +82,7 @@ public class AdminActivity extends AppCompatActivity implements View.OnClickList
     private void InitListener() {
         buttonInsert.setOnClickListener(this);
         buttonExport.setOnClickListener(this);
+        buttonUpload.setOnClickListener(this);
     }
 
     private void FirstOpen() {
@@ -79,7 +90,7 @@ public class AdminActivity extends AppCompatActivity implements View.OnClickList
         mainViewModel.updateUserInfo(new HttpUtil.HttpUtilCallBack<User>() {
             @Override
             public void onResponse(Response response, User result) {
-                if (!(result.getRoot() == 1)) {
+                if ((result.getRoot() == 0)) {
                     XToast.info("您已不是管理员");
                     finish();
                 } else {
@@ -90,7 +101,7 @@ public class AdminActivity extends AppCompatActivity implements View.OnClickList
                                 @Override
                                 public void onResponse(Response response, User result) {
                                     XLoadingDialog.with(AdminActivity.this).dismiss();
-                                    if (result.getRoot() == 1) {
+                                    if (result.getRoot() != 0) {
                                         if (b) {
                                             startService();
                                         } else {
@@ -138,7 +149,7 @@ public class AdminActivity extends AppCompatActivity implements View.OnClickList
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         XStatusBar.setColorNoTranslucent(this, getResources().getColor(R.color.colorPrimary));
 
-        if (GlobalUtil.user.getName().equals("苗锦洲")) {
+        if (MainViewModel.user.getRoot() == 3) {
             relativeLayoutCode.setVisibility(View.VISIBLE);
         }
     }
@@ -171,6 +182,20 @@ public class AdminActivity extends AppCompatActivity implements View.OnClickList
                     }
                 });
                 break;
+            case R.id.button_admin_upload_DP:
+                XPermission.requestPermissions(AdminActivity.this, FileUtil.READ_REQUEST_CODE, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, new XPermission.OnPermissionListener() {
+                    @Override
+                    public void onPermissionGranted() {
+                        FileUtil.toPicture(AdminActivity.this);
+                    }
+
+                    @Override
+                    public void onPermissionDenied() {
+                        XToast.error("未获取读写权限");
+                    }
+                });
+
+                break;
         }
     }
 
@@ -191,6 +216,33 @@ public class AdminActivity extends AppCompatActivity implements View.OnClickList
                     XLoadingDialog.with(AdminActivity.this).dismiss();
                 }
             });
+        } else if (requestCode == FileUtil.PIC_PICTURE && resultCode == Activity.RESULT_OK && data != null) {
+            try {
+                // TODO: 2019/10/20 上传图片
+                Uri uri = data.getData();
+                Log.e(TAG, "onActivityResult: " + uri.getPath());
+                String[] split = uri.getPath().split("/");
+                String fileName = split[split.length - 1];
+                final File file = new File(uri.getPath());
+                Log.e(TAG, "onActivityResult: " + file.getName());
+                Log.e(TAG, "onActivityResult: " + file.length());
+                Bitmap bitmap = BitmapFactory.decodeStream(getContentResolver().openInputStream(uri));
+                FileUtil.UploadTipDp(fileName, file, new HttpCallBack<Boolean>() {
+                    @Override
+                    public void onSuccess(Boolean aBoolean) {
+
+                    }
+
+                    @Override
+                    public void onFailed(String error) {
+
+                    }
+                });
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        } else {
+            super.onActivityResult(requestCode, resultCode, data);
         }
     }
 

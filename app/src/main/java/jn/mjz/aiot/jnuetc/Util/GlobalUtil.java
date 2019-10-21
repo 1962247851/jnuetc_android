@@ -1,12 +1,11 @@
 package jn.mjz.aiot.jnuetc.Util;
 
-import jn.mjz.aiot.jnuetc.Greendao.Entity.User;
 import jn.mjz.aiot.jnuetc.R;
 
 public class GlobalUtil {
     private static GlobalUtil instance;
+//        private static final String HOST = "http://www.mjz-aiot.top:8080/RepairDev/";
     private static final String HOST = "http://www.mjz-aiot.top:8080/Repair/";
-    public static User user;
 
     public static final String[] titlesN = {"杏园", "桃园", "桔园", "桂园", "梅园", "榴园", "李园", "竹园"};
     public static final String[] titlesS = {"澈苑", "溪苑", "清苑", "涓苑", "润苑", "浩苑", "瀚苑", "鸿苑"};
@@ -37,7 +36,6 @@ public class GlobalUtil {
             public static final String FILE_NAME_DRAWER = "drawerSettings3";
         }
 
-
     }
 
 
@@ -45,6 +43,7 @@ public class GlobalUtil {
 
         public static final class FILE {
             public static final String DOWNLOAD = HOST + "Download";
+            public static final String UPLOAD_TIP_DP = HOST + "UploadTipDp";
         }
 
 
@@ -66,12 +65,14 @@ public class GlobalUtil {
             public static final String HAVE_ROOT = HOST + "HaveRoot";
             public static final String CHECK_FOR_UPDATE = HOST + "CheckUpdate";
             public static final String CHECK_HISTORY = HOST + "CheckHistory";
+            public static final String SELECT_ALL_TIP_DP = HOST + "selectAllTipDp";
 
         }
 
         public static final class INSERT {
             public static final String INSERT = HOST + "Insert";
             public static final String INSERT_CODE = HOST + "InsertNewCode";
+            public static final String INSERT_TIP_DP = HOST + "insertTipDp";
         }
 
         public static final class DELETE {

@@ -1,5 +1,8 @@
 package jn.mjz.aiot.jnuetc.ViewModel;
 
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.Context;
 import android.content.SharedPreferences;
 
 import androidx.annotation.NonNull;
@@ -30,6 +33,7 @@ public class MainViewModel extends ViewModel {
 
     private static final String TAG = "MainViewModel";
     public DataDao dataDao = MyApplication.getDaoSession().getDataDao();
+    public static User user = null;
     private SharedPreferences sharedPreferences = SharedPreferencesUtil.getSharedPreferences(GlobalUtil.KEYS.NEW.FILE_NAME_DRAWER);
 
     public MutableLiveData<Boolean> drawerOpen;
@@ -54,8 +58,8 @@ public class MainViewModel extends ViewModel {
      */
     public void updateUserInfo(HttpUtil.HttpUtilCallBack<User> callBack) {
         Map<String, Object> params = new HashMap<>();
-        params.put("sno", GlobalUtil.user.getSno());
-        params.put("password", GlobalUtil.user.getPassword());
+        params.put("sno", user.getSno());
+        params.put("password", user.getPassword());
         HttpUtil.post.haveResponse(GlobalUtil.URLS.QUERY.LOGIN, params, new HttpUtil.HttpUtilCallBack<String>() {
             @Override
             public void onResponse(Response response, String result) {
@@ -68,9 +72,9 @@ public class MainViewModel extends ViewModel {
 
                     editor = SharedPreferencesUtil.getSharedPreferences(GlobalUtil.KEYS.NEW.FILE_NAME_DRAWER).edit();
 
-                    if (GlobalUtil.user.getRoot() == 0) {
-                        if (user.getRoot() == 1) {//升级为管理员
-                            if (GlobalUtil.user.getGroup() == 0) {//原来是北区，把所有南区全选
+                    if (MainViewModel.user.getRoot() == 0) {
+                        if (user.getRoot() != 0) {//升级为管理员
+                            if (MainViewModel.user.getGroup() == 0) {//原来是北区，把所有南区全选
                                 MiPushClient.subscribe(XFrame.getContext(), "1", null);
                                 for (String local : GlobalUtil.titlesS) {
                                     editor.putBoolean(local, true);
@@ -90,7 +94,7 @@ public class MainViewModel extends ViewModel {
                         }
                     } else {
                         if (user.getRoot() == 0) {//降级
-                            if (GlobalUtil.user.getGroup() == 0) {//原来是北区，把所有南区取消选中
+                            if (MainViewModel.user.getGroup() == 0) {//原来是北区，把所有南区取消选中
                                 MiPushClient.unsubscribe(XFrame.getContext(), "1", null);
                                 for (String local : GlobalUtil.titlesS) {
                                     editor.putBoolean(local, false);
@@ -112,8 +116,7 @@ public class MainViewModel extends ViewModel {
                             loadAllSettings(null);
                         }
                     }
-
-                    GlobalUtil.user = user;
+                    MainViewModel.user = user;
                     callBack.onResponse(response, user);
                 } else {
                     SharedPreferences sharedPreferences = SharedPreferencesUtil.getSharedPreferences(GlobalUtil.KEYS.LOGIN_ACTIVITY.FILE_NAME);
@@ -130,7 +133,6 @@ public class MainViewModel extends ViewModel {
                 callBack.onFailure(e);
             }
         });
-//        Log.e(TAG, "updateUserInfo: 所有订阅" + MiPushClient.getAllTopic(XFrame.getContext()));
     }
 
     /**
@@ -526,9 +528,9 @@ public class MainViewModel extends ViewModel {
 
             for (int i = 0; i < 8; i++) {
                 String localN = GlobalUtil.titlesN[i];
-                mapN.put(localN, sharedPreferences.getBoolean(localN, state != 0 || GlobalUtil.user.getRoot() == 1 || GlobalUtil.user.getGroup() == 0));
+                mapN.put(localN, sharedPreferences.getBoolean(localN, state != 0 || user.getRoot() != 0 || user.getGroup() == 0));
                 String localS = GlobalUtil.titlesS[i];
-                mapS.put(localS, sharedPreferences.getBoolean(localS, state != 0 || GlobalUtil.user.getRoot() == 1 || GlobalUtil.user.getGroup() == 1));
+                mapS.put(localS, sharedPreferences.getBoolean(localS, state != 0 || user.getRoot() != 0 || user.getGroup() == 1));
             }
 
         }
@@ -604,7 +606,7 @@ public class MainViewModel extends ViewModel {
                     .list();
             List<Data> dataList = new ArrayList<>(selectedDatas);
             for (Data d : selectedDatas) {
-                if (d.getRepairer().contains(GlobalUtil.user.getName())) {//不需要的
+                if (d.getRepairer().contains(user.getName())) {//不需要的
                     dataList.remove(d);
                 }
             }
@@ -614,7 +616,7 @@ public class MainViewModel extends ViewModel {
             selectedDatas = dataDao.queryBuilder()
                     .where(DataDao.Properties.Local.in(selectedLocals)
                             , DataDao.Properties.State.eq(1)
-                            , DataDao.Properties.Repairer.notEq(GlobalUtil.user.getName()))
+                            , DataDao.Properties.Repairer.notEq(user.getName()))
                     .orderCustom(DataDao.Properties.Date, getTimeOrder().getValue() != null && getTimeOrder().getValue() ? "asc" : "desc")
                     .build()
                     .list();
@@ -651,18 +653,23 @@ public class MainViewModel extends ViewModel {
         if (state == 1) {
             dataList = dataDao.queryBuilder().where(
                     DataDao.Properties.State.eq(1)
-                    , DataDao.Properties.Repairer.like("%" + GlobalUtil.user.getName() + "%"))
+                    , DataDao.Properties.Repairer.like("%" + user.getName() + "%"))
                     .orderAsc(DataDao.Properties.Date)
                     .build().list();
             getDataList4().setValue(dataList);
         } else if (state == 2) {
             dataList = dataDao.queryBuilder().where(
                     DataDao.Properties.State.eq(2)
-                    , DataDao.Properties.Repairer.like("%" + GlobalUtil.user.getName() + "%"))
+                    , DataDao.Properties.Repairer.like("%" + user.getName() + "%"))
                     .orderDesc(DataDao.Properties.RepairDate)
                     .build().list();
             getDataList5().setValue(dataList);
         }
+    }
+
+    public static void copyToClipboard(Context context, String text) {
+        ClipboardManager systemService = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
+        systemService.setPrimaryClip(ClipData.newPlainText("text", text));
     }
 
     public MutableLiveData<Boolean> getTimeOrder() {
@@ -678,7 +685,7 @@ public class MainViewModel extends ViewModel {
             selectedLocalsN = new MutableLiveData<>();
             Map<String, Boolean> map = new HashMap<>();
             for (String s : GlobalUtil.titlesN) {
-                map.put(s, GlobalUtil.user.getRoot() == 1 || GlobalUtil.user.getGroup() == 0);
+                map.put(s, user.getRoot() != 0 || user.getGroup() == 0);
             }
             selectedLocalsN.setValue(map);
         }
@@ -690,7 +697,7 @@ public class MainViewModel extends ViewModel {
             selectedLocalsS = new MutableLiveData<>();
             Map<String, Boolean> map = new HashMap<>();
             for (String s : GlobalUtil.titlesS) {
-                map.put(s, GlobalUtil.user.getRoot() == 1 || GlobalUtil.user.getGroup() == 1);
+                map.put(s, user.getRoot() != 0 || user.getGroup() == 1);
             }
             selectedLocalsS.setValue(map);
 

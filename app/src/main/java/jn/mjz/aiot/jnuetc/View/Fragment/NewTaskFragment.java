@@ -1,8 +1,6 @@
 package jn.mjz.aiot.jnuetc.View.Fragment;
 
-import android.content.DialogInterface;
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
 import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
@@ -18,6 +16,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.scwang.smartrefresh.layout.SmartRefreshLayout;
+import com.youth.xframe.utils.XAppUtils;
 import com.youth.xframe.widget.XLoadingDialog;
 import com.youth.xframe.widget.XToast;
 
@@ -28,11 +27,11 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
+import jn.mjz.aiot.jnuetc.Application.MyApplication;
 import jn.mjz.aiot.jnuetc.Greendao.Dao.DataDao;
 import jn.mjz.aiot.jnuetc.Greendao.Entity.Data;
 import jn.mjz.aiot.jnuetc.Greendao.Entity.User;
 import jn.mjz.aiot.jnuetc.R;
-import jn.mjz.aiot.jnuetc.Util.GlobalUtil;
 import jn.mjz.aiot.jnuetc.Util.GsonUtil;
 import jn.mjz.aiot.jnuetc.Util.HttpUtil;
 import jn.mjz.aiot.jnuetc.View.Activity.DetailsActivity;
@@ -67,7 +66,7 @@ public class NewTaskFragment extends Fragment {
             if (taskAdapter.isSelectMode()) {
                 taskAdapter.cancelSelect();
             }
-            taskAdapter.setEnableSelect(GlobalUtil.user.getRoot() == 1);
+            taskAdapter.setEnableSelect(MainViewModel.user.getRoot() != 0 && MainViewModel.user.getRoot() != 1);
         });
 
         mainViewModel.getDrawerOpen().observe(getActivity(), aBoolean -> {
@@ -166,26 +165,23 @@ public class NewTaskFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         unbinder = ButterKnife.bind(this, view);
-        taskAdapter = new TaskAdapter(GlobalUtil.user.getRoot() == 1, dataLis1, getContext(), new TaskAdapter.ITaskListener() {
+        taskAdapter = new TaskAdapter(MainViewModel.user.getRoot() != 0 && MainViewModel.user.getRoot() != 1, dataLis1, getContext(), new TaskAdapter.ITaskListener() {
             @Override
             public void OnItemClick(int position, Data data) {
                 Intent intent = new Intent(getContext(), DetailsActivity.class);
                 intent.putExtra("data", data.toString());
                 intent.putExtra("position", position);
                 startActivityForResult(intent, 0);
-//                Log.d(TAG, "OnItemClick: " + data);
             }
 
             @Override
             public void OnStartSelect(int count) {
                 iNewTaskListener.OnStartSelect(count, dataLis1.size());
-//                Log.e(TAG, "OnStartSelect: " + count);
             }
 
             @Override
             public void OnSelect(int count) {
                 iNewTaskListener.OnSelect(count, dataLis1.size());
-//                Log.e(TAG, "OnSelect: " + count);
             }
 
             @Override
@@ -193,65 +189,65 @@ public class NewTaskFragment extends Fragment {
                 mainViewModel.updateUserInfo(new HttpUtil.HttpUtilCallBack<User>() {
                     @Override
                     public void onResponse(Response response, User result) {
-                        if (result.getRoot() == 1) {
+                        //判断是否具有删单权限
+                        if (result.getRoot() != 0 && result.getRoot() != 1) {
+
+                            List<Integer> ids = new ArrayList<>();
+                            List<Data> needToDelete = new ArrayList<>();
+
+                            for (int i = 0; i < sparseBooleanArray.size(); i++) {
+                                int key = sparseBooleanArray.keyAt(i);
+                                if (sparseBooleanArray.get(key)) {
+                                    ids.add(Integer.valueOf(dataLis1.get(key).getId().toString()));
+                                    needToDelete.add(MyApplication.getDaoSession().getDataDao().queryBuilder().where(DataDao.Properties.Id.eq(dataLis1.get(key).getId())).build().unique());
+                                }
+                            }
+
+                            StringBuilder builder = new StringBuilder();
+                            for (Data data : needToDelete) {
+                                builder.append(data.getLocal());
+                                builder.append(" - ");
+                                builder.append(data.getId());
+                                builder.append("\n");
+                            }
                             AlertDialog dialog = new AlertDialog.Builder(getContext()).create();
                             dialog.setTitle("注意");
-                            dialog.setMessage("删除数据仅限无用的报修单，删除后无法还原，请谨慎操作");
-                            dialog.setButton(AlertDialog.BUTTON_POSITIVE, "取消", new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialogInterface, int i1) {
-
-                                }
+                            dialog.setMessage("删除数据仅限无用的报修单，删除后无法还原，请谨慎操作。确认删除以下报修单？\n" + builder.toString());
+                            dialog.setButton(AlertDialog.BUTTON_POSITIVE, "取消", (dialogInterface, i1) -> {
                             });
 
-                            dialog.setButton(AlertDialog.BUTTON_NEGATIVE, "删除", new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialogInterface, int i1) {
-                                    XLoadingDialog.with(getContext()).setCanceled(false).setMessage("请求处理中,请稍后").show();
-                                    List<Integer> ids = new ArrayList<>();
+                            dialog.setButton(AlertDialog.BUTTON_NEGATIVE, "删除", (dialogInterface, i1) -> {
+                                XLoadingDialog.with(getContext()).setCanceled(false).setMessage("请求处理中,请稍后").show();
 
-                                    for (int i = 0; i < sparseBooleanArray.size(); i++) {
-                                        int key = sparseBooleanArray.keyAt(i);
-                                        if (sparseBooleanArray.get(key)) {
-                                            ids.add(Integer.valueOf(dataLis1.get(key).getId().toString()));
-                                        }
+                                mainViewModel.deleteMany(ids, new HttpUtil.HttpUtilCallBack<Boolean>() {
+                                    @Override
+                                    public void onResponse(Response response12, Boolean result1) {
+
+                                        taskAdapter.clearSelect();
+                                        taskAdapter.cancelSelect();
+                                        iNewTaskListener.OnCancelSelect();
+
+                                        mainViewModel.dataDao.deleteInTx(needToDelete);
+
+                                        mainViewModel.queryDataListBySetting(null);
+
+                                        dialog.dismiss();
+                                        XToast.success("删除成功");
+                                        XLoadingDialog.with(getContext()).cancel();
+
                                     }
 
-                                    mainViewModel.deleteMany(ids, new HttpUtil.HttpUtilCallBack<Boolean>() {
-                                        @Override
-                                        public void onResponse(Response response, Boolean result) {
-
-                                            taskAdapter.clearSelect();
-                                            taskAdapter.cancelSelect();
-                                            iNewTaskListener.OnCancelSelect();
-
-                                            List<Data> needToDelete = mainViewModel.dataDao.queryBuilder()
-                                                    .where(DataDao.Properties.Id.in(ids))
-                                                    .build()
-                                                    .list();
-                                            mainViewModel.dataDao.deleteInTx(needToDelete);
-
-                                            mainViewModel.queryDataListBySetting(null);
-
-                                            dialog.dismiss();
-                                            XToast.success("删除成功");
-                                            XLoadingDialog.with(getContext()).cancel();
-
-                                        }
-
-                                        @Override
-                                        public void onFailure(IOException e) {
-                                            XLoadingDialog.with(getContext()).cancel();
-                                            XToast.error("删除失败");
-                                            dialog.cancel();
-                                        }
-                                    });
-                                }
+                                    @Override
+                                    public void onFailure(IOException e) {
+                                        XLoadingDialog.with(getContext()).cancel();
+                                        XToast.error("删除失败");
+                                        dialog.cancel();
+                                    }
+                                });
                             });
-
                             dialog.show();
                         } else {
-                            XToast.info("您已不是管理员");
+                            XToast.info("您已不具有删除报修单权限");
                             mainViewModel.loadAllSettings(0);
                             mainViewModel.queryDataListBySetting(0);
                             mainViewModel.loadAllSettings(null);
@@ -282,7 +278,7 @@ public class NewTaskFragment extends Fragment {
                     public void onResponse(Response response, Data result) {
                         XLoadingDialog.with(getContext()).cancel();
                         if (result.getState() == 0) {
-                            String[] items = {"接单成功后自动打开QQ会话"};
+                            String[] items = {"接单成功后自动复制QQ号并且打开QQ"};
                             boolean[] booleans = {true};
                             AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
                             builder.setTitle(data.getLocal() + " - " + data.getId())
@@ -292,7 +288,7 @@ public class NewTaskFragment extends Fragment {
                                     .setNegativeButton("取消", (dialogInterface, i) -> XLoadingDialog.with(getContext()).cancel())
                                     .setPositiveButton("接单", (dialogInterface, i) -> {
                                         XLoadingDialog.with(getContext()).setMessage("请求处理中，请稍后").setCanceled(false).show();
-                                        result.setRepairer(GlobalUtil.user.getName());
+                                        result.setRepairer(MainViewModel.user.getName());
                                         result.setState((short) 1);
                                         mainViewModel.feedback(result, new HttpUtil.HttpUtilCallBack<Data>() {
                                             @Override
@@ -309,13 +305,11 @@ public class NewTaskFragment extends Fragment {
                                                 mainViewModel.getDataList1().setValue(dataLis1);
 
                                                 if (booleans[0]) {
-                                                    String url = "mqqwpa://im/chat?chat_type=wpa&uin=" + result.getQq();
-                                                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-//                                                        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-//                                                        intent.setAction(Intent.ACTION_VIEW);
-                                                    try {
-                                                        startActivity(intent);
-                                                    } catch (Exception e) {
+                                                    MainViewModel.copyToClipboard(getContext(), result.getQq());
+                                                    if (XAppUtils.isInstallApp("com.tencent.mobileqq")) {
+                                                        XAppUtils.startApp("com.tencent.mobileqq");
+                                                        XToast.success(String.format("QQ：%s已复制到剪切板", data.getQq()));
+                                                    } else {
                                                         XToast.error("未安装手Q或安装的版本不支持");
                                                     }
                                                 }

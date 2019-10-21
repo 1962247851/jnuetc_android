@@ -11,10 +11,12 @@ import android.text.TextWatcher;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.LinearLayout;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.bumptech.glide.Glide;
 import com.rengwuxian.materialedittext.MaterialEditText;
 import com.youth.xframe.utils.permission.XPermission;
 import com.youth.xframe.widget.XLoadingDialog;
@@ -30,6 +32,7 @@ import jn.mjz.aiot.jnuetc.Util.GlobalUtil;
 import jn.mjz.aiot.jnuetc.Util.GsonUtil;
 import jn.mjz.aiot.jnuetc.Util.HttpUtil;
 import jn.mjz.aiot.jnuetc.Util.SharedPreferencesUtil;
+import jn.mjz.aiot.jnuetc.ViewModel.MainViewModel;
 import okhttp3.Response;
 
 public class LoginActivity extends AppCompatActivity {
@@ -43,6 +46,7 @@ public class LoginActivity extends AppCompatActivity {
     private Button buttonLogin, buttonForgetPassword;
     private SharedPreferences sharedPreferences;
     private CheckBox checkBoxRememberPassword, checkBoxAutoLogin;
+    private LinearLayout linearLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,15 +60,35 @@ public class LoginActivity extends AppCompatActivity {
         sharedPreferences = SharedPreferencesUtil.getSharedPreferences(GlobalUtil.KEYS.LOGIN_ACTIVITY.FILE_NAME);
         String userJson = sharedPreferences.getString(GlobalUtil.KEYS.LOGIN_ACTIVITY.USER_JSON_STRING, "needLogin");
         if (!userJson.equals("needLogin")) {
-            GlobalUtil.user = GsonUtil.getInstance().fromJson(userJson, User.class);
+            MainViewModel.user = GsonUtil.getInstance().fromJson(userJson, User.class);
         }
         InitView();
         InitListener();
-        if (GlobalUtil.user != null && autoLogin) {
-            materialEditTextNumber.setText(String.valueOf(GlobalUtil.user.getSno()));
-            materialEditTextPassword.setText(String.valueOf(GlobalUtil.user.getPassword()));
+        if (MainViewModel.user != null && autoLogin) {
+            materialEditTextNumber.setText(String.valueOf(MainViewModel.user.getSno()));
+            materialEditTextPassword.setText(String.valueOf(MainViewModel.user.getPassword()));
             login(false);
+        }else {
+            linearLayout.setVisibility(View.GONE);
         }
+//        else {
+//            checkBoxRememberPassword.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+//                @Override
+//                public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+//                    if (!b) {
+//                        checkBoxRememberPassword.setChecked(false);
+//                    }
+//                }
+//            });
+//            checkBoxAutoLogin.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+//                @Override
+//                public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+//                    if (b) {
+//                        checkBoxRememberPassword.setChecked(true);
+//                    }
+//                }
+//            });
+//        }
     }
 
     private void InitListener() {
@@ -132,7 +156,7 @@ public class LoginActivity extends AppCompatActivity {
         checkBoxAutoLogin = findViewById(R.id.checkBox_login_auto_login);
         buttonLogin = findViewById(R.id.button_login_login);
         buttonForgetPassword = findViewById(R.id.button_login_forget);
-
+        linearLayout = findViewById(R.id.linearLayout_login_logo_welcome);
 
         rememberPassword = sharedPreferences.getBoolean(GlobalUtil.KEYS.LOGIN_ACTIVITY.REMEMBER_PASSWORD, false);
         autoLogin = sharedPreferences.getBoolean(GlobalUtil.KEYS.LOGIN_ACTIVITY.AUTO_LOGIN, false);
@@ -140,8 +164,8 @@ public class LoginActivity extends AppCompatActivity {
         checkBoxRememberPassword.setChecked(rememberPassword);
         checkBoxAutoLogin.setChecked(autoLogin);
         if (rememberPassword) {
-            number = GlobalUtil.user.getSno();
-            password = GlobalUtil.user.getPassword();
+            number = MainViewModel.user.getSno();
+            password = MainViewModel.user.getPassword();
             materialEditTextNumber.setText(number);
             materialEditTextPassword.setText(password);
             isNumberAvailable = true;
@@ -181,16 +205,16 @@ public class LoginActivity extends AppCompatActivity {
         XLoadingDialog.with(this).setCanceled(false).setMessage("账号验证中，请稍等").show();
 
         Map<String, Object> params = new HashMap<>();
-        params.put("sno", firstOpen ? number : GlobalUtil.user.getSno());
-        params.put("password", firstOpen ? password : GlobalUtil.user.getPassword());
+        params.put("sno", firstOpen ? number : MainViewModel.user.getSno());
+        params.put("password", firstOpen ? password : MainViewModel.user.getPassword());
         HttpUtil.post.haveResponse(GlobalUtil.URLS.QUERY.LOGIN, params, new HttpUtil.HttpUtilCallBack<String>() {
             @Override
             public void onResponse(Response response, String result) {
-                GlobalUtil.user = GsonUtil.getInstance().fromJson(result, User.class);
+                MainViewModel.user = GsonUtil.getInstance().fromJson(result, User.class);
                 XLoadingDialog.with(LoginActivity.this).dismiss();
                 String state = response.headers().get("state");
                 if (state != null && state.equals("OK")) {
-                    XToast.success(firstOpen ? "登录成功" : String.format("欢迎回来 %s", GlobalUtil.user.getName()));
+                    XToast.success(firstOpen ? "登录成功" : String.format("欢迎回来 %s", MainViewModel.user.getName()));
                     SharedPreferences.Editor editor = sharedPreferences.edit();
                     editor.putBoolean(GlobalUtil.KEYS.LOGIN_ACTIVITY.AUTO_LOGIN, checkBoxAutoLogin.isChecked());
                     editor.putBoolean(GlobalUtil.KEYS.LOGIN_ACTIVITY.REMEMBER_PASSWORD, checkBoxRememberPassword.isChecked());
@@ -198,17 +222,19 @@ public class LoginActivity extends AppCompatActivity {
                         editor.putString(GlobalUtil.KEYS.LOGIN_ACTIVITY.USER_JSON_STRING, result);
                     }
                     editor.apply();
-                    finish();
                     Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                     startActivity(intent);
+                    finish();
                 } else {
                     XToast.error("登录失败");
+                    linearLayout.setVisibility(View.GONE);
                 }
             }
 
             @Override
             public void onFailure(IOException e) {
                 XToast.error("登录失败");
+                linearLayout.setVisibility(View.GONE);
                 XLoadingDialog.with(LoginActivity.this).dismiss();
             }
         });

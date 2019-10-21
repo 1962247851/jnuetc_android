@@ -27,11 +27,11 @@ import butterknife.Unbinder;
 import jn.mjz.aiot.jnuetc.Greendao.Entity.Data;
 import jn.mjz.aiot.jnuetc.Greendao.Entity.User;
 import jn.mjz.aiot.jnuetc.R;
-import jn.mjz.aiot.jnuetc.Util.GlobalUtil;
 import jn.mjz.aiot.jnuetc.Util.GsonUtil;
 import jn.mjz.aiot.jnuetc.Util.HttpUtil;
 import jn.mjz.aiot.jnuetc.View.Activity.AdminActivity;
 import jn.mjz.aiot.jnuetc.View.Activity.HistoryActivity;
+import jn.mjz.aiot.jnuetc.View.Activity.SettingsActivity;
 import jn.mjz.aiot.jnuetc.ViewModel.MainViewModel;
 import okhttp3.Response;
 
@@ -51,6 +51,8 @@ public class MyselfFragment extends Fragment implements View.OnClickListener {
     TextView textViewDone;
     @BindView(R.id.tv_fragment_myself_admin)
     TextView textViewAdmin;
+    @BindView(R.id.tv_fragment_myself_setting)
+    TextView textViewSetting;
     @BindView(R.id.srl_myself)
     SwipeRefreshLayout swipeRefreshLayout;
 
@@ -63,7 +65,7 @@ public class MyselfFragment extends Fragment implements View.OnClickListener {
             @Override
             public void onChanged(Integer integer) {
                 if (integer == 3) {
-                    textViewAdmin.setVisibility(GlobalUtil.user.getRoot() == 1 ? View.VISIBLE : View.GONE);
+                    textViewAdmin.setVisibility(MainViewModel.user.getRoot() != 0 ? View.VISIBLE : View.GONE);
                 }
             }
         });
@@ -75,7 +77,7 @@ public class MyselfFragment extends Fragment implements View.OnClickListener {
                 mainViewModel.updateUserInfo(new HttpUtil.HttpUtilCallBack<User>() {
                     @Override
                     public void onResponse(Response response, User result) {
-                        textViewAdmin.setVisibility(result.getRoot() == 1 ? View.VISIBLE : View.GONE);
+                        textViewAdmin.setVisibility(result.getRoot() != 0 ? View.VISIBLE : View.GONE);
                         swipeRefreshLayout.setRefreshing(false);
                     }
 
@@ -93,24 +95,25 @@ public class MyselfFragment extends Fragment implements View.OnClickListener {
             }
         });
         mainViewModel.getDataList4().observe(this, data -> {
-//            Log.e(TAG, "onChanged4: " + data);
             dataList4.clear();
             dataList4.addAll(data);
-            if (textViewProcessing != null) {
+            if (textViewProcessing != null && dataList4.size() != 0) {
                 textViewProcessing.setText(String.format(Locale.getDefault(), "处理中 %d", dataList4.size()));
+            } else {
+                textViewProcessing.setText("暂无处理中的报修单");
             }
         });
         mainViewModel.getDataList5().observe(this, data -> {
-//            Log.e(TAG, "onChanged5: " + data);
             dataList5.clear();
             dataList5.addAll(data);
-            if (textViewDone != null) {
+            if (textViewDone != null && dataList5.size() != 0) {
                 textViewDone.setText(String.format(Locale.getDefault(), "已维修 %d", dataList5.size()));
+            } else {
+                textViewDone.setText("暂无已维修的报修单");
             }
         });
 
-        getChildFragmentManager().beginTransaction().add(R.id.frameLayout_myself_timer, new TimerFragment("与你相识的第", GlobalUtil.user.getRegDate())).commit();
-
+        getChildFragmentManager().beginTransaction().add(R.id.frameLayout_myself_timer, new TimerFragment("与你相识的第", MainViewModel.user.getRegDate())).commit();
 
     }
 
@@ -142,6 +145,10 @@ public class MyselfFragment extends Fragment implements View.OnClickListener {
                     startActivity(intent2);
                 }
                 break;
+            case R.id.tv_fragment_myself_setting:
+                Intent intent3 = new Intent(getContext(), SettingsActivity.class);
+                startActivity(intent3);
+                break;
         }
     }
 
@@ -160,7 +167,7 @@ public class MyselfFragment extends Fragment implements View.OnClickListener {
                         if (data2.getId().equals(data1.getId())) {
                             dataList4.remove(data2);
                             if (data1.getState() == 2) {//反馈（有自己名字、没有自己名字）
-                                if (data1.getRepairer().contains(GlobalUtil.user.getName())) {//反馈成功，有自己名字
+                                if (data1.getRepairer().contains(MainViewModel.user.getName())) {//反馈成功，有自己名字
                                     dataList5.add(0, data1);
                                 } else {//反馈成功，没有自己名字
                                     SecondFragment.notifyDataList3Inserted(data1);
@@ -179,6 +186,9 @@ public class MyselfFragment extends Fragment implements View.OnClickListener {
                 mainViewModel.getDataList5().setValue(dataList5Temp);
             }
         }
+    }
+
+    public MyselfFragment() {
     }
 
     public MyselfFragment(IMyselfFragmentListener iMyselfFragmentListener) {
@@ -208,6 +218,7 @@ public class MyselfFragment extends Fragment implements View.OnClickListener {
         textViewProcessing.setOnClickListener(this);
         textViewDone.setOnClickListener(this);
         textViewAdmin.setOnClickListener(this);
+        textViewSetting.setOnClickListener(this);
 
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
@@ -226,7 +237,7 @@ public class MyselfFragment extends Fragment implements View.OnClickListener {
                 mainViewModel.updateUserInfo(new HttpUtil.HttpUtilCallBack<User>() {
                     @Override
                     public void onResponse(Response response, User result) {
-                        textViewAdmin.setVisibility(result.getRoot() == 1 ? View.VISIBLE : View.GONE);
+                        textViewAdmin.setVisibility(result.getRoot() != 0 ? View.VISIBLE : View.GONE);
                         swipeRefreshLayout.setRefreshing(false);
                         XToast.success("数据更新成功");
                     }

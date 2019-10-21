@@ -23,7 +23,7 @@ import jn.mjz.aiot.jnuetc.Util.GsonUtil;
 
 public class TimerFragment extends Fragment {
 
-    private static final String TAG = "MyselfFragment";
+    public static final String TAG = "TimerFragment";
     private Unbinder unbinder;
     private Time time;
     private String title;

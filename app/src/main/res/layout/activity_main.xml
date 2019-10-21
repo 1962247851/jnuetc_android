@@ -29,23 +29,71 @@
 
             </com.google.android.material.appbar.AppBarLayout>
 
-            <jn.mjz.aiot.jnuetc.View.CustomView.ScrollViewPager
-                android:id="@+id/scrollViewPager_main"
+            <RelativeLayout
+                android:layout_marginTop="?actionBarSize"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_marginTop="?actionBarSize" />
+                android:layout_height="match_parent">
 
-            <me.sugarkawhi.bottomnavigationbar.BottomNavigationBar
-                android:id="@+id/navigationBar_main"
+                <jn.mjz.aiot.jnuetc.View.CustomView.ScrollViewPager
+                    android:id="@+id/scrollViewPager_main"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent" />
+
+                <me.sugarkawhi.bottomnavigationbar.BottomNavigationBar
+                    android:id="@+id/navigationBar_main"
+                    android:layout_width="match_parent"
+                    android:layout_height="?actionBarSize"
+                    android:layout_alignParentBottom="true"
+                    android:background="@color/XFrame_white"
+                    android:elevation="8dp"
+                    app:bnb_anim="true"
+                    app:bnb_layoutId="@layout/bnb_item_badge"
+                    app:bnb_selectedColor="@color/colorPrimary"
+                    app:bnb_unSelectedColor="@color/SubText" />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:elevation="10dp"
+                    android:background="@color/WindowBackgroundColor"
+                    android:visibility="gone"
+                    android:id="@+id/recyclerView_main_search"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"/>
+
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:id="@+id/relativeLayout_main_welcome"
+                android:elevation="10dp"
+                android:background="@color/WindowBackgroundColor"
                 android:layout_width="match_parent"
-                android:layout_height="?actionBarSize"
-                android:layout_alignParentBottom="true"
-                android:background="@color/XFrame_white"
-                android:elevation="8dp"
-                app:bnb_anim="true"
-                app:bnb_layoutId="@layout/bnb_item_badge"
-                app:bnb_selectedColor="@color/colorPrimary"
-                app:bnb_unSelectedColor="@color/SubText" />
+                android:layout_height="match_parent">
+
+                <ProgressBar
+                    android:layout_centerInParent="true"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
+
+                <ImageView
+                    android:focusable="true"
+                    android:clickable="true"
+                    android:id="@+id/imageView_main_welcome"
+                    android:scaleType="centerCrop"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"/>
+
+                <Button
+                    android:padding="5dp"
+                    android:layout_marginTop="34dp"
+                    android:layout_marginEnd="10dp"
+                    android:text="跳过"
+                    android:layout_alignParentTop="true"
+                    android:textSize="18sp"
+                    android:layout_alignParentEnd="true"
+                    android:id="@+id/button_main_skip"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
+
+            </RelativeLayout>
 
         </RelativeLayout>
 
@@ -70,7 +118,6 @@
                 android:focusable="true"
                 android:visibility="gone" />
         </LinearLayout>
-
 
     </androidx.drawerlayout.widget.DrawerLayout>
 

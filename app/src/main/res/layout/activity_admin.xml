@@ -79,13 +79,18 @@
                     android:textSize="20sp" />
 
             </com.google.android.material.textfield.TextInputLayout>
+
         </RelativeLayout>
 
-
+        <Button
+            android:visibility="gone"
+            android:textColor="@color/white"
+            android:background="@drawable/button_confirm"
+            android:id="@+id/button_admin_upload_DP"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="上传电脑技巧图片" />
 
     </LinearLayout>
-
-
-
 
 </LinearLayout>
