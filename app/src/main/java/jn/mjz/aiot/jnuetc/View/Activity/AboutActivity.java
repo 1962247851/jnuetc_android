@@ -108,7 +108,6 @@ public class AboutActivity extends AppCompatActivity implements View.OnClickList
                         .setTitle("历史更新日志")
                         .setPositiveButton("确定", (dialogInterface, i) -> {
                         })
-                        .setNeutralButton("历史版本下载", (dialogInterface, i) -> startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.lanzous.com/b866881"))))
                         .show();
                 XLoadingDialog.with(AboutActivity.this).dismiss();
             }

@@ -1,7 +1,9 @@
 package jn.mjz.aiot.jnuetc.View.Fragment;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,7 +12,6 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
@@ -31,6 +32,7 @@ import jn.mjz.aiot.jnuetc.Util.GsonUtil;
 import jn.mjz.aiot.jnuetc.Util.HttpUtil;
 import jn.mjz.aiot.jnuetc.View.Activity.AdminActivity;
 import jn.mjz.aiot.jnuetc.View.Activity.HistoryActivity;
+import jn.mjz.aiot.jnuetc.View.Activity.MainActivity;
 import jn.mjz.aiot.jnuetc.View.Activity.SettingsActivity;
 import jn.mjz.aiot.jnuetc.ViewModel.MainViewModel;
 import okhttp3.Response;
@@ -61,12 +63,9 @@ public class MyselfFragment extends Fragment implements View.OnClickListener {
         super.onActivityCreated(savedInstanceState);
 
         mainViewModel = ViewModelProviders.of(getActivity()).get(MainViewModel.class);
-        mainViewModel.getCurrentState().observe(this, new Observer<Integer>() {
-            @Override
-            public void onChanged(Integer integer) {
-                if (integer == 3) {
-                    textViewAdmin.setVisibility(MainViewModel.user.getRoot() != 0 ? View.VISIBLE : View.GONE);
-                }
+        mainViewModel.getCurrentState().observe(this, integer -> {
+            if (integer == 3) {
+                textViewAdmin.setVisibility(MainViewModel.user.getRoot() != 0 ? View.VISIBLE : View.GONE);
             }
         });
         mainViewModel.queryAll(new HttpUtil.HttpUtilCallBack<List<Data>>() {
@@ -112,9 +111,12 @@ public class MyselfFragment extends Fragment implements View.OnClickListener {
                 textViewDone.setText("暂无已维修的报修单");
             }
         });
-
-        getChildFragmentManager().beginTransaction().add(R.id.frameLayout_myself_timer, new TimerFragment("与你相识的第", MainViewModel.user.getRegDate())).commit();
-
+        if (MainActivity.setting.getBoolean("show_reg_time", true)) {
+            TimerFragment timerFragment = new TimerFragment("与你相识的第", MainViewModel.user.getRegDate());
+            if (getChildFragmentManager().findFragmentByTag(TimerFragment.TAG) == null) {
+                getChildFragmentManager().beginTransaction().add(R.id.frameLayout_myself_timer, timerFragment).commit();
+            }
+        }
     }
 
     @Override
@@ -220,12 +222,13 @@ public class MyselfFragment extends Fragment implements View.OnClickListener {
         textViewAdmin.setOnClickListener(this);
         textViewSetting.setOnClickListener(this);
 
-        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-            @Override
-            public void onRefresh() {
-                updateData();
-            }
-        });
+        swipeRefreshLayout.setOnRefreshListener(this::updateData);
+    }
+
+
+    @Override
+    public void onResume() {
+        super.onResume();
     }
 
     private void updateData() {

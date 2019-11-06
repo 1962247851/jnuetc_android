@@ -37,6 +37,18 @@
             android:text="@string/nav_header_subtitle" />
     </LinearLayout>
 
+    <TextView
+        android:ellipsize="end"
+        android:maxLines="8"
+        android:id="@+id/textView_main_state"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:padding="10dp"
+        android:text="未处理"
+        android:textColor="@color/MainText"
+        android:textStyle="bold" />
+
     <LinearLayout
         android:id="@+id/linearLayout_main_header"
         android:layout_width="match_parent"

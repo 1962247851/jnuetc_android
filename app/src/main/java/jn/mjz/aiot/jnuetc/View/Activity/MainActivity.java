@@ -15,7 +15,6 @@ import android.os.Process;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.util.SparseBooleanArray;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -157,7 +156,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private CheckableAdapter checkableAdapterNorth;
     private CheckableAdapter checkableAdapterSouth;
-    private SharedPreferences setting = SharedPreferencesUtil.getSettingPreferences();
+    public static SharedPreferences setting = SharedPreferencesUtil.getSettingPreferences();
 
     int cnt = Integer.parseInt(setting.getString("show_time", "5"));
     MyHandler myHandler = new MyHandler();
@@ -168,7 +167,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             if (msg.what == 0) {
                 myHandler.postDelayed(() -> {
                     textViewSkip.setText(String.format(Locale.getDefault(), "跳过%d", cnt));
-                    if (--cnt > 0) {
+                    if (--cnt >= 0) {
                         myHandler.sendEmptyMessage(0);
                     } else {
                         if (!animation.hasStarted()) {
@@ -352,16 +351,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mainViewModel.getCurrentState().observe(this, integer -> {
             if (integer != 3) {
                 drawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
-//                navigationView.getHeaderView(0).findViewById(R.id.linearLayout_main_header).setVisibility(View.VISIBLE);
-//                frameLayout.setVisibility(View.GONE);
+                navigationView.getHeaderView(0).findViewById(R.id.linearLayout_main_header).setVisibility(View.VISIBLE);
+                frameLayout.setVisibility(View.GONE);
                 mainViewModel.loadAllSettings(integer);
                 updateDrawer();
             } else {
-//                navigationView.getHeaderView(0).findViewById(R.id.linearLayout_main_header).setVisibility(View.GONE);
-//                frameLayout.setVisibility(View.VISIBLE);
-                drawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
+                if (setting.getBoolean("lock", true)) {
+                    navigationView.getHeaderView(0).findViewById(R.id.linearLayout_main_header).setVisibility(View.GONE);
+                    frameLayout.setVisibility(View.VISIBLE);
+                    drawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
+                    updateDrawer();
+                } else {
+                    drawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
+                }
             }
-
         });
 
         drawer.addDrawerListener(new DrawerLayout.SimpleDrawerListener() {
@@ -558,8 +561,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         bottomNavigationBar.setEntities(entities);
         TimerFragment timerFragment = new TimerFragment("与你相识的第", MainViewModel.user.getRegDate());
         if (getSupportFragmentManager().findFragmentByTag(TimerFragment.TAG) == null) {
-            getSupportFragmentManager().beginTransaction().add(R.id.frameLayout_main_header, timerFragment, TimerFragment.TAG).commitAllowingStateLoss();
-        } else {
             getSupportFragmentManager().beginTransaction().add(R.id.frameLayout_main_header, timerFragment, TimerFragment.TAG).commitAllowingStateLoss();
         }
         RecyclerView recyclerViewNorth = navigationView.getHeaderView(0).findViewById(R.id.recyclerView_main_north);
@@ -922,12 +923,32 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         textViewSelectAllSouth.setText(mainViewModel.isSelectAll(mainViewModel.getSelectedLocalsS().getValue()) ? "取消全选" : "全选");
         LinearLayout linearLayoutNorth = navigationView.getHeaderView(0).findViewById(R.id.linearLayout_main_north);
         LinearLayout linearLayoutSouth = navigationView.getHeaderView(0).findViewById(R.id.linearLayout_main_south);
-        if (MainViewModel.user.getRoot() == 0) {
-            if (MainViewModel.user.getGroup() == 0) {
-                linearLayoutSouth.setVisibility(View.GONE);
-                linearLayoutNorth.setVisibility(View.VISIBLE);
+        TextView textView = navigationView.getHeaderView(0).findViewById(R.id.textView_main_state);
+        switch (mainViewModel.getCurrentState().getValue()){
+            case 0:
+                textView.setText("未处理");
+                break;
+            case 1:
+                textView.setText("处理中");
+                break;
+            case 2:
+                textView.setText("已维修");
+                break;
+                default:
+                    String showText = setting.getString("show_text","永远相信美好的事情即将发生");
+                    textView.setText(showText);
+        }
+        if (mainViewModel.getCurrentState().getValue() == 0) {
+            if (MainViewModel.user.getRoot() == 0) {
+                if (MainViewModel.user.getGroup() == 0) {
+                    linearLayoutSouth.setVisibility(View.GONE);
+                    linearLayoutNorth.setVisibility(View.VISIBLE);
+                } else {
+                    linearLayoutNorth.setVisibility(View.GONE);
+                    linearLayoutSouth.setVisibility(View.VISIBLE);
+                }
             } else {
-                linearLayoutNorth.setVisibility(View.GONE);
+                linearLayoutNorth.setVisibility(View.VISIBLE);
                 linearLayoutSouth.setVisibility(View.VISIBLE);
             }
         } else {

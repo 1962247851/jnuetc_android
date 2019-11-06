@@ -179,6 +179,13 @@ public class MainViewModel extends ViewModel {
                     List<Data> resultList = GsonUtil.parseJsonArray2ObejctList(result, Data.class);
                     dataDao.deleteAll();
                     dataDao.insertInTx(resultList);
+                    if (user.getRoot() == 0) {
+                        List<Data> needToDelete = dataDao.queryBuilder().where(
+                                DataDao.Properties.District.notEq(user.getGroup()),
+                                DataDao.Properties.State.eq(0)
+                        ).build().list();
+                        dataDao.deleteInTx(needToDelete);
+                    }
                     callBack.onResponse(response, resultList);
                 } else {
                     callBack.onFailure(null);

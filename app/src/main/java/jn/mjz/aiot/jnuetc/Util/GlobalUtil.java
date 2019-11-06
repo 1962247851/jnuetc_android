@@ -4,8 +4,8 @@ import jn.mjz.aiot.jnuetc.R;
 
 public class GlobalUtil {
     private static GlobalUtil instance;
-//        private static final String HOST = "http://www.mjz-aiot.top:8080/RepairDev/";
-    private static final String HOST = "http://www.mjz-aiot.top:8080/Repair/";
+//        private static final String HOST = "https://www.jiangnan-dzjsb.club/RepairDev/";
+    private static final String HOST = "https://www.jiangnan-dzjsb.club/Repair/";
 
     public static final String[] titlesN = {"杏园", "桃园", "桔园", "桂园", "梅园", "榴园", "李园", "竹园"};
     public static final String[] titlesS = {"澈苑", "溪苑", "清苑", "涓苑", "润苑", "浩苑", "瀚苑", "鸿苑"};

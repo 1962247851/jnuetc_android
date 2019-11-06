@@ -63,7 +63,6 @@
             app:summaryOn="先展示一张图片，再进入主界面（可手动跳过）"
             app:title="开屏图片" />
 
-
         <ListPreference
             app:iconSpaceReserved="false"
             app:dependency="welcome"
@@ -73,6 +72,34 @@
             app:key="show_time"
             app:title="图片显示时间"
             app:useSimpleSummaryProvider="true" />
+
+
+        <PreferenceCategory app:iconSpaceReserved="false" app:title="显示设置">
+
+            <SwitchPreferenceCompat
+                app:iconSpaceReserved="false"
+                app:defaultValue="true"
+                app:key="show_reg_time"
+                app:summaryOn="在我的界面会显示一个计时器"
+                app:title="显示注册时间" />
+
+            <SwitchPreferenceCompat
+                app:iconSpaceReserved="false"
+                app:defaultValue="true"
+                app:key="lock"
+                app:summaryOn="在我的界面也可以打开侧滑栏"
+                app:summaryOff="在我的界面锁定侧滑栏"
+                app:title="左侧滑栏设置" />
+
+            <EditTextPreference
+                app:title="侧栏展示文字"
+                app:dependency="lock"
+                app:useSimpleSummaryProvider="true"
+                app:iconSpaceReserved="false"
+                app:defaultValue="永远相信美好的事情即将发生"
+                app:key="show_text" />
+
+        </PreferenceCategory>
 
     </PreferenceCategory>
 
