@@ -9,7 +9,7 @@ android {
         minSdkVersion 21
         targetSdkVersion 29
         versionCode 1
-        versionName "2.6"
+        versionName "2.8"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         dataBinding {
             enabled false
@@ -23,7 +23,7 @@ android {
     }
     greendao {
         schemaVersion 2 //数据库版本号，数据库升级使用
-        daoPackage 'jn.mjz.aiot.jnuetc.Greendao.Dao' //代表GreenDao自动生成的有关数据库操作工具类所要存放的包名
+        daoPackage 'jn.mjz.aiot.jnuetc.greendao.Dao' //代表GreenDao自动生成的有关数据库操作工具类所要存放的包名
 //        targetGenDir 'src/main/java' //路径
     }
     // ButterKnife requires Java 8.

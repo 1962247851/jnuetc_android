@@ -3,10 +3,17 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
+        android:id="@+id/menu_details_modify"
+        android:icon="@drawable/ic_modify_white"
+        android:title="@string/Modify"
         android:visible="false"
+        app:showAsAction="always" />
+
+    <item
         android:id="@+id/menu_details_make_over"
         android:icon="@drawable/ic_swap_hor_white"
         android:title="@string/MakeOver"
+        android:visible="false"
         app:showAsAction="always" />
 
 </menu>

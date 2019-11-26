@@ -33,6 +33,15 @@
             android:text="报修开关"
             android:textSize="20sp" />
 
+        <Switch
+            android:visibility="gone"
+            android:id="@+id/switch_admin_dayDP"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:checked="true"
+            android:text="每日一图开关"
+            android:textSize="20sp" />
+
         <Button
             android:textColor="@color/white"
             android:background="@drawable/button_confirm"

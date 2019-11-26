@@ -39,5 +39,9 @@
     <string name="Submit">提交</string>
     <string name="Order">接单</string>
     <string name="title_activity_settings">设置</string>
+    <string name="Modify">修改</string>
+    <string name="nav_header_host">报修入口https://www.jiangnan-dzjsb.club（点击打开并复制）</string>
+    <string name="Skip">跳过</string>
+    <string name="Photo">故障图片</string>
 
 </resources>

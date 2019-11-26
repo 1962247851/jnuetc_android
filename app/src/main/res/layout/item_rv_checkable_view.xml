@@ -11,5 +11,6 @@
         android:checkMark="?android:attr/listChoiceIndicatorMultiple"
         android:gravity="center_vertical"
         android:padding="15dp"
-        android:text="@string/Location" />
+        android:text="@string/Location"
+        android:textColor="@color/colorBlack" />
 </LinearLayout>

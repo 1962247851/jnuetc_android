@@ -19,6 +19,18 @@
             android:text="@string/ForgetPassword"
             android:textColor="@color/white" />
 
+
+        <CheckBox
+            android:layout_alignTop="@id/button_login_login"
+            android:layout_alignBottom="@id/button_login_login"
+            android:layout_centerHorizontal="true"
+            android:layout_below="@id/materialEditText_login_password"
+            android:id="@+id/checkBox_login_auto_login"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:checked="true"
+            android:text="自动登录" />
+
         <Button
             android:id="@+id/button_login_login"
             android:layout_width="wrap_content"
@@ -38,25 +50,18 @@
             app:srcCompat="@drawable/logo" />
 
         <LinearLayout
+            android:layout_below="@id/button_login_login"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_alignParentBottom="true"
-            android:gravity="center">
-
+            android:gravity="end">
 
             <CheckBox
+                android:visibility="gone"
                 android:id="@+id/checkBox_login_remember_password"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:checked="true"
                 android:text="记住密码" />
-
-            <CheckBox
-                android:id="@+id/checkBox_login_auto_login"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:checked="true"
-                android:text="自动登录" />
 
         </LinearLayout>
 
@@ -88,11 +93,11 @@
     </RelativeLayout>
 
     <LinearLayout
-        android:visibility="visible"
         android:id="@+id/linearLayout_login_logo_welcome"
-        android:background="@color/white"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:background="@color/white"
+        android:visibility="visible">
 
         <ImageView
             android:layout_width="match_parent"

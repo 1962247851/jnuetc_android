@@ -53,51 +53,62 @@
 
 <PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <PreferenceCategory app:iconSpaceReserved="false" app:title="启动设置">
+    <PreferenceCategory
+        app:iconSpaceReserved="false"
+        app:title="启动设置">
 
         <SwitchPreferenceCompat
-            app:iconSpaceReserved="false"
             app:defaultValue="true"
+            app:iconSpaceReserved="false"
             app:key="welcome"
             app:summaryOff="直接进入主界面"
-            app:summaryOn="先展示一张图片，再进入主界面（可手动跳过）"
+            app:summaryOn="如果服务端有图片，则先展示一张图片，再进入主界面（可手动跳过）"
             app:title="开屏图片" />
 
         <ListPreference
-            app:iconSpaceReserved="false"
-            app:dependency="welcome"
             app:defaultValue="5"
+            app:dependency="welcome"
             app:entries="@array/reply_entries"
             app:entryValues="@array/reply_values"
+            app:iconSpaceReserved="false"
             app:key="show_time"
             app:title="图片显示时间"
             app:useSimpleSummaryProvider="true" />
 
 
-        <PreferenceCategory app:iconSpaceReserved="false" app:title="显示设置">
+        <PreferenceCategory
+            app:iconSpaceReserved="false"
+            app:title="显示设置">
 
             <SwitchPreferenceCompat
-                app:iconSpaceReserved="false"
                 app:defaultValue="true"
+                app:iconSpaceReserved="false"
                 app:key="show_reg_time"
                 app:summaryOn="在我的界面会显示一个计时器"
                 app:title="显示注册时间" />
 
             <SwitchPreferenceCompat
-                app:iconSpaceReserved="false"
                 app:defaultValue="true"
+                app:iconSpaceReserved="false"
                 app:key="lock"
-                app:summaryOn="在我的界面也可以打开侧滑栏"
                 app:summaryOff="在我的界面锁定侧滑栏"
+                app:summaryOn="在我的界面也可以打开侧滑栏"
                 app:title="左侧滑栏设置" />
 
             <EditTextPreference
-                app:title="侧栏展示文字"
-                app:dependency="lock"
-                app:useSimpleSummaryProvider="true"
-                app:iconSpaceReserved="false"
                 app:defaultValue="永远相信美好的事情即将发生"
-                app:key="show_text" />
+                app:dependency="lock"
+                app:iconSpaceReserved="false"
+                app:key="show_text"
+                app:title="侧栏展示文字"
+                app:useSimpleSummaryProvider="true" />
+
+            <SwitchPreference
+                app:defaultValue="true"
+                app:iconSpaceReserved="false"
+                app:key="show_host"
+                app:title="侧滑栏显示报修入口"
+                app:useSimpleSummaryProvider="true" />
 
         </PreferenceCategory>
 
