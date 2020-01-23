@@ -1,5 +1,6 @@
 package jn.mjz.aiot.jnuetc.view.activity;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.SparseBooleanArray;
@@ -11,15 +12,14 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.youth.xframe.XFrame;
 import com.youth.xframe.utils.statusbar.XStatusBar;
 import com.youth.xframe.widget.XLoadingDialog;
 import com.youth.xframe.widget.XToast;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -27,24 +27,29 @@ import java.util.Locale;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import jn.mjz.aiot.jnuetc.R;
-import jn.mjz.aiot.jnuetc.application.MyApplication;
+import jn.mjz.aiot.jnuetc.application.App;
 import jn.mjz.aiot.jnuetc.greendao.Dao.DataDao;
 import jn.mjz.aiot.jnuetc.greendao.entity.Data;
 import jn.mjz.aiot.jnuetc.greendao.entity.User;
 import jn.mjz.aiot.jnuetc.util.GsonUtil;
 import jn.mjz.aiot.jnuetc.util.HttpUtil;
-import jn.mjz.aiot.jnuetc.view.adapter.RecyclerView.TaskAdapter;
+import jn.mjz.aiot.jnuetc.view.adapter.recycler.TaskAdapter;
+import jn.mjz.aiot.jnuetc.view.adapter.recycler.WrapContentLinearLayoutManager;
 import jn.mjz.aiot.jnuetc.viewmodel.MainViewModel;
-import okhttp3.Response;
 
+/**
+ * @author 19622
+ */
 public class HistoryActivity extends AppCompatActivity implements View.OnClickListener {
 
     private static final String TAG = "HistoryActivity";
     private List<Data> dataList = new ArrayList<>();
-    private TaskAdapter adapter;
+    private TaskAdapter taskAdapter;
     private List<Data> needDelete = new ArrayList<>();
     private MainViewModel mainViewModel = MainActivity.mainViewModel;
     private int state;
+    private String title;
+    private boolean titleWithCount;
 
     @BindView(R.id.recyclerView_history)
     RecyclerView recyclerView;
@@ -61,63 +66,139 @@ public class HistoryActivity extends AppCompatActivity implements View.OnClickLi
 
         state = getIntent().getIntExtra("state", 0);
         String dataListJsonString = getIntent().getStringExtra("dataList");
-        dataList.addAll(GsonUtil.parseJsonArray2ObejctList(dataListJsonString, Data.class));
+        dataList.addAll(GsonUtil.parseJsonArray2ObjectList(dataListJsonString, Data.class));
 
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        XStatusBar.setColorNoTranslucent(this, getResources().getColor(R.color.colorPrimary));
+        XStatusBar.setColorNoTranslucent(this, XFrame.getColor(R.color.colorPrimary));
+        title = getIntent().getStringExtra("title");
+        titleWithCount = getIntent().getBooleanExtra("titleWithCount", true);
+        updateTitle(state, dataList.size());
 
-        getSupportActionBar().setTitle(state == 1 ? String.format(Locale.getDefault(), "处理中（%d）", dataList.size()) : String.format(Locale.getDefault(), "已维修（%d）", dataList.size()));
-
-        adapter = new TaskAdapter(MainViewModel.user.haveDeleteAccess(), dataList, this, new TaskAdapter.ITaskListener() {
+        taskAdapter = new TaskAdapter(MainViewModel.user.haveDeleteAccess(), dataList, this, new TaskAdapter.ITaskListener() {
             @Override
-            public void OnItemClick(int position, Data data) {
+            public void onItemClick(int position, Data data) {
                 Intent intent = new Intent(HistoryActivity.this, DetailsActivity.class);
-                intent.putExtra("data", data.toString());
+                intent.putExtra("id", data.getId());
                 intent.putExtra("position", position);
-                startActivityForResult(intent, 4);
+                startActivityForResult(intent, MainActivity.REQUEST_DATA_CHANGE);
             }
 
             @Override
-            public void OnStartSelect(int count) {
+            public void onStartSelect(int count) {
                 floatingActionButtonDelete.show();
                 getSupportActionBar().setTitle(String.format(Locale.getDefault(), "已选择%d/%d", count, dataList.size()));
             }
 
             @Override
-            public void OnSelect(int count) {
+            public void onSelect(int count) {
                 getSupportActionBar().setTitle(String.format(Locale.getDefault(), "已选择%d/%d", count, dataList.size()));
             }
 
             @Override
-            public void OnConfirmSelect(SparseBooleanArray sparseBooleanArray) {
+            public void onConfirmSelect(SparseBooleanArray sparseBooleanArray) {
                 deleteSelect(sparseBooleanArray);
             }
 
             @Override
-            public void OnCancelSelect() {
+            public void onCancelSelect() {
                 floatingActionButtonDelete.hide();
-                getSupportActionBar().setTitle(state == 1 ? String.format(Locale.getDefault(), "处理中（%d）", dataList.size()) : String.format(Locale.getDefault(), "已维修（%d）", dataList.size()));
+                updateTitle(state, dataList.size());
             }
 
 
             @Override
-            public void OnConfirmClick(int position, Data data) {
+            public void onConfirmClick(int position, Data data) {
+                XLoadingDialog.with(HistoryActivity.this).setMessage("请求处理中，请稍后").setCanceled(false).show();
+                MainViewModel.queryById(String.valueOf(data.getId()), new HttpUtil.HttpUtilCallBack<Data>() {
+                    @Override
+                    public void onResponse(Data result) {
+                        XLoadingDialog.with(HistoryActivity.this).cancel();
+                        if (result.getState() == 0) {
+                            String dataBackUpString = result.toString();
+                            String[] items = {"接单成功后自动复制QQ号并且打开QQ"};
+                            boolean[] booleans = {true};
+                            AlertDialog.Builder builder = new AlertDialog.Builder(HistoryActivity.this);
+                            builder.setTitle(data.getLocal() + " - " + data.getId())
+                                    .setCancelable(false)
+                                    .setMultiChoiceItems(items, booleans, (dialogInterface, i, b) -> {
+                                    })
+                                    .setNegativeButton("取消", (dialogInterface, i) -> XLoadingDialog.with(HistoryActivity.this).cancel())
+                                    .setPositiveButton("接单", (dialogInterface, i) -> {
+                                        XLoadingDialog.with(HistoryActivity.this).setMessage("请求处理中，请稍后").setCanceled(false).show();
+                                        result.setOrderDate(System.currentTimeMillis());
+                                        result.setRepairer(MainViewModel.user.getUserName());
+                                        result.setState((short) 1);
+                                        mainViewModel.modify(result, dataBackUpString, new HttpUtil.HttpUtilCallBack<Data>() {
+                                            @Override
+                                            public void onResponse(Data o) {
+
+                                                Data.update(o.getId(), new HttpUtil.HttpUtilCallBack<Data>() {
+                                                    @Override
+                                                    public void onResponse(Data result) {
+                                                        XToast.success("接单成功");
+
+                                                        App.getDaoSession().getDataDao().update(result);
+
+                                                        mainViewModel.queryDataListBySetting(0);
+                                                        mainViewModel.queryDataListAboutMyself(1);
+
+                                                        notidyOneDataChange(result, position);
+
+                                                        if (booleans[0]) {
+                                                            Data.openQq(result.getQq());
+                                                        }
+
+                                                        XLoadingDialog.with(HistoryActivity.this).cancel();
+                                                    }
+
+                                                    @Override
+                                                    public void onFailure(String error) {
+                                                        XToast.success("接单失败\n" + error);
+                                                    }
+                                                });
+                                            }
+
+                                            @Override
+                                            public void onFailure(String error) {
+                                                XLoadingDialog.with(HistoryActivity.this).cancel();
+                                                XToast.error("接单失败\n" + error);
+                                            }
+                                        });
+                                    })
+                                    .create()
+                                    .show();
+
+                        } else {
+                            XLoadingDialog.with(HistoryActivity.this).cancel();
+                            XToast.warning("唉呀，有人抢先了...\n该报修单已被 " + result.getRepairer() + " 处理");
+                            notidyOneDataChange(result, position);
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(String error) {
+                        XLoadingDialog.with(HistoryActivity.this).cancel();
+                        XToast.error("请求失败\n" + error);
+                    }
+                });
             }
         });
 
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        recyclerView.setAdapter(adapter);
-        InitListener();
+        recyclerView.setLayoutManager(new WrapContentLinearLayoutManager(this));
+        recyclerView.setAdapter(taskAdapter);
+        initListener();
+        App.initToolbar(toolbar, this);
     }
 
-
     private void deleteSelect(SparseBooleanArray sparseBooleanArray) {
+        XLoadingDialog.with(HistoryActivity.this).setCanceled(false).show();
         mainViewModel.updateUserInfo(new HttpUtil.HttpUtilCallBack<User>() {
             @Override
-            public void onResponse(Response response, User result) {
+            public void onResponse(User result) {
+                XLoadingDialog.with(XFrame.getContext()).cancel();
                 if (result.haveDeleteAccess()) {
-                    if (adapter.selectNone()) {
+                    if (taskAdapter.selectNone()) {
                         XToast.info("请至少选择一项");
                     } else {
 
@@ -129,7 +210,7 @@ public class HistoryActivity extends AppCompatActivity implements View.OnClickLi
                             if (sparseBooleanArray.get(key)) {
                                 String id = dataList.get(key).getId().toString();
                                 ids.add(Integer.valueOf(id));
-                                needToDelete.add(MyApplication.getDaoSession().getDataDao().queryBuilder().where(DataDao.Properties.Id.eq(id)).build().unique());
+                                needToDelete.add(App.getDaoSession().getDataDao().queryBuilder().where(DataDao.Properties.Id.eq(id)).build().unique());
                             }
                         }
 
@@ -153,33 +234,32 @@ public class HistoryActivity extends AppCompatActivity implements View.OnClickLi
 
                             mainViewModel.deleteMany(ids, new HttpUtil.HttpUtilCallBack<Boolean>() {
                                 @Override
-                                public void onResponse(Response response1, Boolean result1) {
-
-                                    mainViewModel.dataDao.deleteInTx(needToDelete);
-
-                                    mainViewModel.queryDataListAboutMyself(state);
-
-                                    for (int id : ids) {
-                                        for (int i = 0; i < dataList.size(); i++) {
-                                            if (dataList.get(i).getId() == id) {
-                                                dataList.remove(i);
-                                                adapter.notifyItemRemoved(i);
-                                                adapter.notifyItemRangeChanged(i, adapter.getItemCount() - i);
-                                                break;
+                                public void onResponse(Boolean result1) {
+                                    XLoadingDialog.with(HistoryActivity.this).cancel();
+                                    if (result1) {
+                                        mainViewModel.queryDataListAboutMyself(state);
+                                        for (int id : ids) {
+                                            for (int i = 0; i < dataList.size(); i++) {
+                                                if (dataList.get(i).getId() == id) {
+                                                    dataList.remove(i);
+                                                    taskAdapter.notifyItemRemoved(i);
+                                                    taskAdapter.notifyItemRangeChanged(i, taskAdapter.getItemCount() - i);
+                                                    break;
+                                                }
                                             }
                                         }
+                                        taskAdapter.clearSelect();
+                                        taskAdapter.cancelSelect();
+                                        dialog.dismiss();
+                                        XToast.success("删除成功");
+                                        if (taskAdapter.getItemCount() == 0) {
+                                            finish();
+                                        }
                                     }
-
-                                    adapter.clearSelect();
-                                    adapter.cancelSelect();
-
-                                    XLoadingDialog.with(HistoryActivity.this).cancel();
-                                    dialog.dismiss();
-                                    XToast.success("删除成功");
                                 }
 
                                 @Override
-                                public void onFailure(IOException e) {
+                                public void onFailure(String error) {
                                     XLoadingDialog.with(HistoryActivity.this).cancel();
                                     XToast.error("删除失败");
                                     dialog.cancel();
@@ -190,15 +270,16 @@ public class HistoryActivity extends AppCompatActivity implements View.OnClickLi
                         dialog.show();
                     }
                 } else {
+                    XLoadingDialog.with(XFrame.getContext()).cancel();
                     XToast.info("您已不是管理员");
-                    adapter.setEnableSelect(false);
-                    adapter.cancelSelect();
+                    taskAdapter.setEnableSelect(false);
+                    taskAdapter.cancelSelect();
                 }
             }
 
             @Override
-            public void onFailure(IOException e) {
-
+            public void onFailure(String error) {
+                XLoadingDialog.with(XFrame.getContext()).cancel();
             }
         });
 
@@ -206,6 +287,26 @@ public class HistoryActivity extends AppCompatActivity implements View.OnClickLi
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        //进入报修单详情
+        if (requestCode == MainActivity.REQUEST_DATA_CHANGE && resultCode == Activity.RESULT_OK && data != null) {
+            int position = data.getIntExtra("position", -1);
+            Data data1 = GsonUtil.getInstance().fromJson(data.getStringExtra("data"), Data.class);
+            if (position != -1 && data1 != null) {
+                //转让成功
+                boolean makeover = data.getBooleanExtra("makeover", false);
+                //接单成功
+                boolean order = data.getBooleanExtra("order", false);
+                //反馈成功
+                boolean feedback = data.getBooleanExtra("feedback", false);
+                //修改成功
+                boolean modify = data.getBooleanExtra("modify", false);
+                if (makeover || order || feedback || modify) {
+                    notidyOneDataChange(data1, position);
+                }
+            }
+        } else {
+            super.onActivityResult(requestCode, resultCode, data);
+        }
         if (data != null) {
             if (requestCode == 4 && resultCode == 0) {
                 String needDeleteData = data.getStringExtra("data");
@@ -216,28 +317,16 @@ public class HistoryActivity extends AppCompatActivity implements View.OnClickLi
                     Data dataToDelete = GsonUtil.getInstance().fromJson(needDeleteData, Data.class);
                     needDelete.add(dataToDelete);
                     dataList.remove(position);
-                    adapter.notifyItemRemoved(position);
-                    adapter.notifyItemRangeChanged(position, dataList.size() - position);
+                    taskAdapter.notifyItemRemoved(position);
+                    taskAdapter.notifyItemRangeChanged(position, dataList.size() - position);
                     if (dataList.isEmpty()) {
                         Intent intent = new Intent();
                         intent.putExtra("dataList", GsonUtil.getInstance().toJson(needDelete));
                         setResult(4, intent);
                         finish();
                     } else {
-                        getSupportActionBar().setTitle(String.format(Locale.getDefault(), "处理中（%d）", dataList.size()));
+                        updateTitle(state, dataList.size());
                     }
-                }
-            }
-            //修改后更新
-            if (resultCode == 1) {
-                boolean success = data.getBooleanExtra("modify", false);
-                if (success) {
-                    Data data1 = GsonUtil.getInstance().fromJson(data.getStringExtra("data"), Data.class);
-                    int position = data.getIntExtra("position", -1);
-                    dataList.remove(position);
-                    adapter.notifyItemRemoved(position);
-                    dataList.add(position, data1);
-                    adapter.notifyItemRangeChanged(position, dataList.size() - position);
                 }
             }
         } else {
@@ -247,8 +336,8 @@ public class HistoryActivity extends AppCompatActivity implements View.OnClickLi
 
     @Override
     public void onBackPressed() {
-        if (adapter.isSelectMode()) {
-            adapter.cancelSelect();
+        if (taskAdapter.isSelectMode()) {
+            taskAdapter.cancelSelect();
         } else if (!needDelete.isEmpty()) {
             Intent intent = new Intent();
             intent.putExtra("dataList", GsonUtil.getInstance().toJson(needDelete));
@@ -263,8 +352,8 @@ public class HistoryActivity extends AppCompatActivity implements View.OnClickLi
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         if (item.getItemId() == android.R.id.home) {
-            if (adapter.isSelectMode()) {
-                adapter.cancelSelect();
+            if (taskAdapter.isSelectMode()) {
+                taskAdapter.cancelSelect();
             } else {
                 if (!needDelete.isEmpty()) {
                     Intent intent = new Intent();
@@ -283,12 +372,50 @@ public class HistoryActivity extends AppCompatActivity implements View.OnClickLi
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.fab_history_delete:
-                adapter.finishSelect();
+                taskAdapter.finishSelect();
                 break;
+            default:
         }
     }
 
-    private void InitListener() {
+    private void initListener() {
         floatingActionButtonDelete.setOnClickListener(this);
     }
+
+    private void updateTitle(int state, int size) {
+        if (size == 0) {
+            finish();
+        } else {
+            String realTitle;
+            if (titleWithCount) {
+                //没传title
+                if (title == null) {
+                    switch (state) {
+                        case 1:
+                            title = "处理中";
+                            break;
+                        case 2:
+                            title = "已维修";
+                            break;
+                        default:
+                            //没传state
+                            title = "报修单列表";
+                    }
+                }
+                realTitle = String.format(Locale.getDefault(), "%s（%d单）", title, size);
+            } else {
+                realTitle = title;
+            }
+            getSupportActionBar().setTitle(realTitle);
+        }
+    }
+
+    private void notidyOneDataChange(Data data, int position) {
+        dataList.remove(position);
+        taskAdapter.notifyItemRemoved(position);
+        dataList.add(position, data);
+        taskAdapter.notifyItemInserted(position);
+        taskAdapter.notifyItemRangeChanged(position, dataList.size() - position);
+    }
+
 }

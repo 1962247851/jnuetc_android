@@ -13,6 +13,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
+import com.youth.xframe.XFrame;
 import com.youth.xframe.utils.XAppUtils;
 import com.youth.xframe.utils.statusbar.XStatusBar;
 import com.youth.xframe.widget.XLoadingDialog;
@@ -23,12 +24,16 @@ import java.util.Locale;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import jn.mjz.aiot.jnuetc.R;
+import jn.mjz.aiot.jnuetc.application.App;
+import jn.mjz.aiot.jnuetc.greendao.entity.Data;
+import jn.mjz.aiot.jnuetc.greendao.entity.Version;
 import jn.mjz.aiot.jnuetc.util.UpdateUtil;
 
+/**
+ * @author 19622
+ */
 public class AboutActivity extends AppCompatActivity implements View.OnClickListener {
 
-
-    private static final int READ_REQUEST_CODE = 42;
     private static final String TAG = "AboutActivity";
     @BindView(R.id.toolbar_about)
     Toolbar toolbar;
@@ -44,30 +49,36 @@ public class AboutActivity extends AppCompatActivity implements View.OnClickList
         ButterKnife.bind(this);
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        XStatusBar.setColorNoTranslucent(this, getResources().getColor(R.color.colorPrimary));
+        XStatusBar.setColorNoTranslucent(this, XFrame.getColor(R.color.colorPrimary));
 
         textViewVersion.setText(String.format("版本：%s", XAppUtils.getVersionName(this)));
 
         UpdateUtil.checkForUpdate(new UpdateUtil.IUpdateListener() {
             @Override
-            public void HaveNewVersion(String date, String url, String message, float newVersion) {
-                textViewVersion.setText(String.format(Locale.getDefault(), "版本：%s（有新版本%.1f）", XAppUtils.getVersionName(AboutActivity.this), newVersion));
+            public void haveNewVersion(Version version) {
+                textViewVersion.setText(String.format(Locale.getDefault(), "版本：%s（有新版本%s）", XAppUtils.getVersionName(AboutActivity.this), version.getVersion()));
             }
 
             @Override
-            public void NoUpdate() {
+            public void noUpdate() {
                 textViewVersion.setText(String.format("版本：%s（当前是最新版本）", XAppUtils.getVersionName(AboutActivity.this)));
             }
 
             @Override
-            public void Error() {
+            public void error() {
 
+            }
+
+            @Override
+            public void develop() {
+                textViewVersion.setText(String.format("版本：%s（当前是开发版本）", XAppUtils.getVersionName(AboutActivity.this)));
             }
         });
 
-
         textViewVersion.setOnClickListener(this);
         textViewGithub.setOnClickListener(this);
+
+        App.initToolbar(toolbar, this);
     }
 
     @Override
@@ -75,7 +86,6 @@ public class AboutActivity extends AppCompatActivity implements View.OnClickList
         getMenuInflater().inflate(R.menu.tool_bar_about, menu);
         return true;
     }
-
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
@@ -87,12 +97,7 @@ public class AboutActivity extends AppCompatActivity implements View.OnClickList
                 history();
                 return true;
             case R.id.menu_about_feedback:
-                String url = "mqqwpa://im/chat?chat_type=wpa&uin=1962247851";
-                try {
-                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
-                } catch (Exception e) {
-                    XToast.error("未安装手Q或安装的版本不支持");
-                }
+                Data.openQq("1962247851");
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -103,20 +108,20 @@ public class AboutActivity extends AppCompatActivity implements View.OnClickList
         XLoadingDialog.with(AboutActivity.this).setMessage("获取最新数据中，请稍后").setCanceled(false).show();
         UpdateUtil.checkHistory(new UpdateUtil.IHistoryListener() {
             @Override
-            public void Success(String historyString) {
+            public void success(String historyString) {
                 AlertDialog.Builder builder = new AlertDialog.Builder(AboutActivity.this);
                 builder.setMessage(historyString)
                         .setTitle("历史更新日志")
                         .setPositiveButton("确定", (dialogInterface, i) -> {
                         })
                         .show();
-                XLoadingDialog.with(AboutActivity.this).dismiss();
+                XLoadingDialog.with(AboutActivity.this).cancel();
             }
 
             @Override
-            public void Error() {
+            public void error() {
                 XToast.error("数据获取失败");
-                XLoadingDialog.with(AboutActivity.this).dismiss();
+                XLoadingDialog.with(AboutActivity.this).cancel();
             }
         });
     }
@@ -125,34 +130,13 @@ public class AboutActivity extends AppCompatActivity implements View.OnClickList
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.textView_about_version:
-                UpdateUtil.checkForUpdate(false, AboutActivity.this, view, null);
+                UpdateUtil.checkForUpdate(false, AboutActivity.this, null);
                 break;
             case R.id.textView_about_github:
                 startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(((TextView) view).getText().toString())));
                 break;
             default:
         }
-    }
-
-
-    public void performFileSearch(String mimeType) {
-
-        // ACTION_OPEN_DOCUMENT is the intent to choose a file via the system's file
-        // browser.
-        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
-
-        // Filter to only show results that can be "opened", such as a
-        // file (as opposed to a list of contacts or timezones)
-        intent.addCategory(Intent.CATEGORY_OPENABLE);
-
-        // Filter to show only images, using the image MIME data type.
-        // If one wanted to search for ogg vorbis files, the type would be "audio/ogg".
-        // To search for all documents available via installed storage providers,
-        // it would be "*/*".
-        intent.setType(mimeType);
-        intent.setType("image/*");
-
-        startActivityForResult(intent, READ_REQUEST_CODE);
     }
 
 }

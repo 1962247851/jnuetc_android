@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+        <variable
+            name="onRepairerClick"
+            type="android.view.View.OnClickListener" />
+
+        <variable
+            name="data"
+            type="jn.mjz.aiot.jnuetc.greendao.entity.Data" />
+
+        <variable
+            name="modifyMode"
+            type="Boolean" />
+
+        <variable
+            name="feedbackMode"
+            type="Boolean" />
+
+        <variable
+            name="onServiceSelectListener"
+            type="android.widget.AdapterView.OnItemSelectedListener" />
+
+        <variable
+            name="onMarkSelectListener"
+            type="android.widget.AdapterView.OnItemSelectedListener" />
+
+        <variable
+            name="repairMessageTextWatcher"
+            type="android.text.TextWatcher" />
+    </data>
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context=".view.fragment.FeedbackFragment">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="10dp">
+
+            <LinearLayout
+                android:id="@+id/linearLayout_feedback_time"
+                visibility="@{!feedbackMode}"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingStart="5dp"
+                    android:paddingEnd="5dp"
+                    android:text="@string/RepairData"
+                    android:textColor="@color/colorPrimary"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingStart="@dimen/textViewPaddingStart"
+                    android:paddingTop="@dimen/textViewPaddingTop"
+                    android:paddingEnd="@dimen/textViewPaddingEnd"
+                    android:paddingBottom="@dimen/textViewPaddingBottom"
+                    android:text="@{data.repairDateString}"
+                    android:textSize="18sp"
+                    tools:text="2020/01/20 20:19:00" />
+            </LinearLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/linearLayout_feedback_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColorHint="@color/colorPrimary"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/linearLayout_feedback_time">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    enable="@{modifyMode}"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:cursorVisible="false"
+                    android:focusable="false"
+                    android:focusableInTouchMode="false"
+                    android:hint="@string/Repairer"
+                    android:longClickable="false"
+                    android:maxLength="1000"
+                    android:onClick="@{feedbackMode || modifyMode ? onRepairerClick : null}"
+                    android:selectAllOnFocus="false"
+                    android:text="@{data.repairer}"
+                    android:textIsSelectable="true"
+                    android:textSize="20sp" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <TextView
+                android:id="@+id/textView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingStart="5dp"
+                android:paddingEnd="5dp"
+                android:text="@string/Service"
+                android:textColor="@color/colorPrimary"
+                android:textSize="12sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/linearLayout_feedback_name" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/textInputLayout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColorHint="@color/colorPrimary"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/spinner">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    enable="@{modifyMode}"
+                    textWatcher="@{repairMessageTextWatcher}"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:enabled="false"
+                    android:hint="@string/RepairMessage"
+                    android:maxLength="1000"
+                    android:text="@{data.repairMessage}"
+                    android:textIsSelectable="true"
+                    android:textSize="20sp" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <Spinner
+                android:id="@+id/spinner"
+                currentItem="@{data.service}"
+                enable="@{modifyMode}"
+                entries="@{data.services}"
+                onItemSelectedListener="@{onServiceSelectListener}"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:entries="@array/spinner_service_entries"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/textView" />
+
+            <TextView
+                android:id="@+id/textView2"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingStart="5dp"
+                android:paddingEnd="5dp"
+                android:text="@string/Mark"
+                android:textColor="@color/colorPrimary"
+                android:textSize="12sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/textInputLayout" />
+
+
+            <Spinner
+                currentItem="@{data.mark}"
+                enable="@{modifyMode}"
+                entries="@{data.marks}"
+                onItemSelectedListener="@{onMarkSelectListener}"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:entries="@array/spinner_mark_entries"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/textView2" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </androidx.core.widget.NestedScrollView>
+</layout>

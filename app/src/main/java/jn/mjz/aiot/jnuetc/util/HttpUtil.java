@@ -1,10 +1,8 @@
 package jn.mjz.aiot.jnuetc.util;
 
-
 import android.net.Uri;
 import android.os.Environment;
 import android.os.ParcelFileDescriptor;
-import android.util.Log;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -21,7 +19,6 @@ import java.util.concurrent.TimeUnit;
 import okhttp3.Cache;
 import okhttp3.Call;
 import okhttp3.Callback;
-import okhttp3.FormBody;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
@@ -31,27 +28,20 @@ import okhttp3.Response;
 
 import static okhttp3.internal.Util.EMPTY_REQUEST;
 
+/**
+ * @author 19622
+ */
 public class HttpUtil {
-    private static final int cacheSize = 10 * 1024 * 1024;
+    private static final int CACHE_SIZE = 10 * 1024 * 1024;
     private static OkHttpClient client;
 
-    public static class post {
+    public static class Post {
 
         private static final String TAG = "HttpUtil";
 
-        public static void haveResponse(String url, Map<String, Object> params, HttpUtilCallBack<String> callback) {
+        public static void postJson(String url, String jsonString, HttpUtilCallBack<String> callback) {
             initClient();
-
-            RequestBody body = EMPTY_REQUEST;
-            if (null != params && !params.isEmpty()) {
-                FormBody.Builder builder = new FormBody.Builder();
-                for (String key : params.keySet()) {
-                    Object value = params.get(key);
-                    builder.add(key, value.toString());
-                }
-                body = builder.build();
-            }
-
+            RequestBody body = RequestBody.create(MediaType.parse("application/json"), jsonString);
             Request request = new Request.Builder()
                     .url(url)
                     .post(body)
@@ -60,19 +50,51 @@ public class HttpUtil {
             client.newCall(request).enqueue(new Callback() {
                 @Override
                 public void onFailure(Call call, IOException e) {
-                    XHttp.handler.post(() -> callback.onFailure(e));
+                    XHttp.handler.post(() -> callback.onFailure(e.getMessage()));
                 }
 
                 @Override
                 public void onResponse(Call call, Response response) throws IOException {
                     if (response.isSuccessful()) {
                         String result = response.body().string();
-                        XHttp.handler.post(() -> callback.onResponse(response, result));
+                        XHttp.handler.post(() -> callback.onResponse(result));
                     } else {
-                        XHttp.handler.post(() -> callback.onResponse(response, null));
+                        XHttp.handler.post(() -> callback.onFailure(response.message()));
                     }
                 }
 
+            });
+        }
+
+        public static void uploadFile(String url, String fileName, String path, File file, HttpUtilCallBack<String> callback) {
+            initClient();
+
+            RequestBody requestBody = new MultipartBody.Builder()
+                    .setType(MultipartBody.FORM)
+                    .addFormDataPart("file", fileName,
+                            RequestBody.create(MediaType.parse("multipart/form-data"), file))
+                    .build();
+
+            Request request = new Request.Builder()
+                    .url(url + "?path=" + path + "&fileName=" + fileName)
+                    .post(requestBody)
+                    .build();
+
+            client.newCall(request).enqueue(new Callback() {
+                @Override
+                public void onFailure(Call call, IOException e) {
+                    XHttp.handler.post(() -> callback.onFailure(e.getMessage()));
+                }
+
+                @Override
+                public void onResponse(Call call, Response response) throws IOException {
+                    if (response.isSuccessful()) {
+                        String result = response.body().string();
+                        XHttp.handler.post(() -> callback.onResponse(result));
+                    } else {
+                        XHttp.handler.post(() -> callback.onFailure(response.message()));
+                    }
+                }
             });
         }
 
@@ -85,9 +107,9 @@ public class HttpUtil {
                     Object value = params.get(key);
                     if (value instanceof File) {
                         File file = (File) value;
-                        Log.e(TAG, "uploadHaveResponse: "+file.length() );
+//                        Log.e(TAG, "uploadHaveResponse: " + file.length());
                         builder.addFormDataPart(key, file.getName(),
-                                RequestBody.create(MediaType.parse("application/octet-stream"),file));//"application/octet-stream"
+                                RequestBody.create(MediaType.parse("application/octet-stream"), file));//"application/octet-stream"
                     } else {
                         builder.addFormDataPart(key, value.toString());
                     }
@@ -102,41 +124,21 @@ public class HttpUtil {
             client.newCall(request).enqueue(new Callback() {
                 @Override
                 public void onFailure(Call call, IOException e) {
-                    XHttp.handler.post(() -> callBack.onFailure(e));
+                    XHttp.handler.post(() -> callBack.onFailure(e.getMessage()));
                 }
 
                 @Override
                 public void onResponse(Call call, Response response) throws IOException {
                     if (response.isSuccessful()) {
                         String result = response.body().string();
-                        XHttp.handler.post(() -> callBack.onResponse(response, result));
+                        XHttp.handler.post(() -> callBack.onResponse(result));
                     }
                 }
             });
         }
     }
 
-    public static class get {
-        public static void haveResponse(String url, Map<String, Object> params, HttpUtilCallBack<String> callback) {
-            initClient();
-
-            Request request = new Request.Builder().url(url + getUrlParamsByMap(params)).build();
-            client.newCall(request).enqueue(new Callback() {
-                @Override
-                public void onFailure(Call call, IOException e) {
-                    callback.onFailure(e);
-                }
-
-                @Override
-                public void onResponse(Call call, Response response) throws IOException {
-                    if (response.isSuccessful()) {
-                        String result = response.body().string();
-                        XHttp.handler.post(() -> callback.onResponse(response, result));
-                    }
-
-                }
-            });
-        }
+    public static class Get {
 
         public static void downloadFile(AppCompatActivity activity, Uri uri, String url, Map<String, Object> params, IFileDownloadListener fileDownloadListener) {
             initClient();
@@ -144,7 +146,7 @@ public class HttpUtil {
             client.newCall(request).enqueue(new Callback() {
                 @Override
                 public void onFailure(Call call, IOException e) {
-                    fileDownloadListener.onError(e.getMessage());
+                    XHttp.handler.post(() -> fileDownloadListener.onError(e.getMessage()));
                 }
 
                 @Override
@@ -157,7 +159,7 @@ public class HttpUtil {
                         FileOutputStream fos = null;
                         //储存下载文件
                         if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
-                            Log.e("onResponse: ", "Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)");
+//                            Log.e("onResponse: ", "Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)");
                         }
 //                                File file = new File(activity.getExternalFilesDir(null), fileName);
 //                                File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), fileName);//Q用不了
@@ -172,7 +174,7 @@ public class HttpUtil {
 //                            }
                             is = response.body().byteStream();
                             long total = response.body().contentLength();
-                            Log.e("onResponse:", " contentLength = " + total);
+//                            Log.e("onResponse:", " contentLength = " + total);
 //                            fos = new FileOutputStream(file);
                             long sum = 0;
                             while ((len = is.read(buf)) != -1) {
@@ -204,7 +206,6 @@ public class HttpUtil {
 
 
         }
-
     }
 
     private static void initClient() {
@@ -214,7 +215,7 @@ public class HttpUtil {
                     .connectTimeout(10, TimeUnit.SECONDS)
                     .readTimeout(10, TimeUnit.SECONDS)
                     .writeTimeout(10, TimeUnit.SECONDS)
-                    .cache(new Cache(XFrame.getContext().getCacheDir(), cacheSize))
+                    .cache(new Cache(XFrame.getContext().getCacheDir(), CACHE_SIZE))
                     .build();
         }
     }
@@ -223,7 +224,7 @@ public class HttpUtil {
         if (map == null || map.isEmpty()) {
             return "";
         }
-        StringBuffer params = new StringBuffer("?");
+        StringBuilder params = new StringBuilder("?");
         for (Map.Entry<String, Object> entry : map.entrySet()) {
             params.append(entry.getKey());
             params.append("=");
@@ -235,12 +236,25 @@ public class HttpUtil {
     }
 
     public interface HttpUtilCallBack<T> {
-        void onResponse(Response response, T result);
+        /**
+         * onResponse
+         *
+         * @param result 结果
+         */
+        void onResponse(T result);
 
-        void onFailure(IOException e);
+        /**
+         * onFailure
+         *
+         * @param error 错误信息
+         */
+        void onFailure(String error);
     }
 
     public interface IFileDownloadListener {
+        /**
+         * 开始下载
+         */
         void onStart();
 
         void onDownloading(int progress);

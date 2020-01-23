@@ -1,416 +1,59 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/coordinatorLayout_details"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    tools:context=".view.activity.DetailsActivity">
 
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
-        <androidx.appcompat.widget.Toolbar
-            android:id="@+id/toolbar_details"
+        <com.google.android.material.appbar.CollapsingToolbarLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
-            app:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
-            app:title="报修单详情" />
+            android:minHeight="40dp"
+            android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+            app:layout_scrollFlags="scroll|snap|enterAlwaysCollapsed|exitUntilCollapsed">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <androidx.appcompat.widget.Toolbar
+                    android:id="@+id/toolbar_details"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:theme="@style/actionbar"
+                    app:menu="@menu/tool_bar_details"
+                    app:subtitleTextAppearance="@style/subTitleAppearance"
+                    app:title="@string/DataDetails" />
+
+                <com.google.android.material.tabs.TabLayout
+                    android:id="@+id/tabLayout_details"
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    app:layout_collapseMode="pin"
+                    app:tabGravity="fill"
+                    app:tabMaxWidth="0dp"
+                    app:tabMode="fixed" />
+            </LinearLayout>
+        </com.google.android.material.appbar.CollapsingToolbarLayout>
+
     </com.google.android.material.appbar.AppBarLayout>
 
-    <ScrollView
+    <jn.mjz.aiot.jnuetc.view.custom.ThemedSwipeRefreshLayout
+        android:id="@+id/srl_details"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior">
 
-        <LinearLayout
+        <jn.mjz.aiot.jnuetc.view.custom.ScrollViewPager
+            android:id="@+id/viewPager_details"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:layout_height="wrap_content" />
+    </jn.mjz.aiot.jnuetc.view.custom.ThemedSwipeRefreshLayout>
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:paddingStart="20dp"
-                android:paddingTop="10dp"
-                android:paddingEnd="20dp">
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:paddingStart="5dp"
-                    android:paddingEnd="5dp"
-                    android:text="@string/Location"
-                    android:textColor="@color/colorPrimary"
-                    android:textSize="12sp" />
-
-                <Spinner
-                    android:id="@+id/spinner_location"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content" />
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:paddingStart="5dp"
-                    android:paddingEnd="5dp"
-                    android:text="@string/Date"
-                    android:textColor="@color/colorPrimary"
-                    android:textSize="12sp" />
-
-                <TextView
-                    android:id="@+id/textView_details_date"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="5dp"
-                    android:layout_marginBottom="10dp"
-                    android:paddingStart="5dp"
-                    android:paddingTop="5dp"
-                    android:paddingEnd="5dp"
-                    android:paddingBottom="5dp"
-                    android:textSize="20sp" />
-
-                <com.google.android.material.textfield.TextInputLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:textColorHint="@color/colorPrimary">
-
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/tidt_details_name"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:enabled="false"
-                        android:hint="@string/Name"
-                        android:maxLength="50"
-                        android:textColor="@color/MainText"
-                        android:textIsSelectable="true"
-                        android:textSize="20sp" />
-
-                </com.google.android.material.textfield.TextInputLayout>
-
-                <RelativeLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
-
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentStart="true"
-                        android:layout_centerVertical="true"
-                        android:layout_toStartOf="@id/button_details_tel"
-                        android:textColorHint="@color/colorPrimary">
-
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/tidt_details_tel"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:enabled="false"
-                            android:hint="@string/Tel"
-                            android:inputType="number"
-                            android:maxLength="11"
-                            android:textColor="@color/MainText"
-                            android:textIsSelectable="true"
-                            android:textSize="20sp" />
-
-                    </com.google.android.material.textfield.TextInputLayout>
-
-                    <ImageButton
-                        android:id="@+id/button_details_tel"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentEnd="true"
-                        android:layout_centerVertical="true"
-                        android:background="?attr/selectableItemBackground"
-                        android:src="@drawable/ic_call_accent" />
-                </RelativeLayout>
-
-                <RelativeLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
-
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentStart="true"
-                        android:layout_centerVertical="true"
-                        android:layout_toStartOf="@id/button_details_qq"
-                        android:textColorHint="@color/colorPrimary">
-
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/tidt_details_qq"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:enabled="false"
-                            android:hint="@string/qq"
-                            android:inputType="number"
-                            android:maxLength="10"
-                            android:textColor="@color/MainText"
-                            android:textIsSelectable="true"
-                            android:textSize="20sp" />
-
-                    </com.google.android.material.textfield.TextInputLayout>
-
-                    <ImageButton
-                        android:id="@+id/button_details_qq"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentEnd="true"
-                        android:layout_centerVertical="true"
-                        android:background="?attr/selectableItemBackground"
-                        android:src="@drawable/ic_chat_accent" />
-
-                </RelativeLayout>
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:paddingStart="5dp"
-                    android:paddingEnd="5dp"
-                    android:text="@string/College"
-                    android:textColor="@color/colorPrimary"
-                    android:textSize="12sp" />
-
-                <Spinner
-                    android:id="@+id/spinner_details_college"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content" />
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:paddingStart="5dp"
-                    android:paddingEnd="5dp"
-                    android:text="@string/Grade"
-                    android:textColor="@color/colorPrimary"
-                    android:textSize="12sp" />
-
-                <Spinner
-                    android:id="@+id/spinner_details_grade"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content" />
-
-                <com.google.android.material.textfield.TextInputLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:textColorHint="@color/colorPrimary">
-
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/tidt_details_model"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:enabled="false"
-                        android:hint="@string/Model"
-                        android:maxLength="255"
-                        android:textColor="@color/MainText"
-                        android:textIsSelectable="true"
-                        android:textSize="20sp" />
-
-                </com.google.android.material.textfield.TextInputLayout>
-
-                <com.google.android.material.textfield.TextInputLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:textColorHint="@color/colorPrimary">
-
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/tidt_details_message"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:enabled="false"
-                        android:hint="@string/Message"
-                        android:textColor="@color/MainText"
-                        android:textIsSelectable="true"
-                        android:textSize="20sp" />
-
-                </com.google.android.material.textfield.TextInputLayout>
-
-                <TextView
-                    android:id="@+id/textView_details_title_photo"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:paddingStart="5dp"
-                    android:paddingEnd="5dp"
-                    android:text="@string/Photo"
-                    android:textColor="@color/colorPrimary"
-                    android:textSize="12sp" />
-
-                <androidx.core.widget.NestedScrollView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
-
-                    <androidx.recyclerview.widget.RecyclerView
-                        android:id="@+id/recyclerView_details_photo"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content" />
-                </androidx.core.widget.NestedScrollView>
-
-                <Button
-                    android:id="@+id/button_details_confirm"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/button_confirm"
-                    android:text="@string/Order"
-                    android:textColor="@color/white"
-                    android:visibility="gone" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/linearLayout_details_feedback"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:visibility="gone">
-
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:background="@color/SubText" />
-
-                <TextView
-                    android:id="@+id/textView_details_feedback"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:padding="10dp"
-                    android:text="填写反馈"
-                    android:textSize="20sp" />
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:paddingStart="20dp"
-                    android:paddingTop="5dp"
-                    android:paddingEnd="20dp"
-                    android:paddingBottom="20sp">
-
-
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:paddingBottom="10dp"
-                        android:textColorHint="@color/colorPrimary">
-
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/tidt_details_repairer"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:enabled="false"
-                            android:hint="@string/Repairer"
-                            android:maxLength="100"
-                            android:maxLines="2"
-                            android:textColor="@color/MainText"
-                            android:textIsSelectable="true"
-                            android:textSize="20sp" />
-
-                    </com.google.android.material.textfield.TextInputLayout>
-
-                    <TextView
-                        android:visibility="gone"
-                        android:id="@+id/textView_details_repairDate_title"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:paddingStart="5dp"
-                        android:paddingEnd="5dp"
-                        android:text="@string/RepairData"
-                        android:textColor="@color/colorPrimary"
-                        android:textSize="12sp" />
-
-                    <TextView
-                        android:visibility="gone"
-                        android:id="@+id/textView_details_repairDate"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="5dp"
-                        android:layout_marginBottom="10dp"
-                        android:paddingStart="5dp"
-                        android:paddingTop="5dp"
-                        android:paddingEnd="5dp"
-                        android:paddingBottom="5dp"
-                        android:textSize="20sp" />
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:paddingStart="5dp"
-                        android:paddingEnd="5dp"
-                        android:text="@string/Mark"
-                        android:textColor="@color/colorPrimary"
-                        android:textSize="12sp" />
-
-                    <Spinner
-                        android:id="@+id/spinner_mark"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content" />
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:paddingStart="5dp"
-                        android:paddingEnd="5dp"
-                        android:text="@string/Service"
-                        android:textColor="@color/colorPrimary"
-                        android:textSize="12sp" />
-
-                    <Spinner
-                        android:id="@+id/spinner_service"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content" />
-
-                    <RelativeLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:paddingBottom="10dp">
-
-                        <com.google.android.material.textfield.TextInputLayout
-                            android:id="@+id/til_details_repairMessage"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_alignParentStart="true"
-                            android:layout_toStartOf="@+id/button_details_feedback"
-                            android:textColorHint="@color/colorPrimary">
-
-                            <com.google.android.material.textfield.TextInputEditText
-                                android:id="@+id/tidt_details_repair_message"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:hint="@string/RepairMessage"
-                                android:textColor="@color/MainText"
-                                android:textIsSelectable="true"
-                                android:textSize="20sp" />
-
-                        </com.google.android.material.textfield.TextInputLayout>
-
-                        <Button
-                            android:id="@+id/button_details_feedback"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_alignBottom="@id/til_details_repairMessage"
-                            android:layout_alignParentEnd="true"
-                            android:background="@drawable/button_confirm"
-                            android:text="@string/Submit"
-                            android:textColor="@color/white" />
-                    </RelativeLayout>
-                </LinearLayout>
-            </LinearLayout>
-        </LinearLayout>
-
-    </ScrollView>
-
-    <androidx.viewpager.widget.ViewPager
-        android:id="@+id/viewPager_details"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="@color/colorBlack"
-        android:visibility="gone" />
-
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fab_details_modify_done"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="end|bottom"
-        android:layout_marginEnd="20dp"
-        android:layout_marginBottom="20dp"
-        android:src="@drawable/ic_done_white"
-        android:visibility="invisible" />
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

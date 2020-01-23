@@ -2,6 +2,9 @@ package jn.mjz.aiot.jnuetc.greendao.entity;
 
 import android.os.Handler;
 
+/**
+ * @author 19622
+ */
 public class Time {
     private int day = 0;
     private int hour = 0;
@@ -34,7 +37,7 @@ public class Time {
             public void run() {
                 if (!pause) {
                     addSecond();
-                    i.OnAdded(Time.this);
+                    i.onAdded(Time.this);
                     handler.postDelayed(this, 1000);
                 }
             }
@@ -106,6 +109,11 @@ public class Time {
 
 
     public interface IOnUpdateListener {
-        void OnAdded(Time time);
+        /**
+         * 增加
+         *
+         * @param time Time
+         */
+        void onAdded(Time time);
     }
 }

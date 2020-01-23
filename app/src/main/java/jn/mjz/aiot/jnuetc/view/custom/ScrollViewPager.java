@@ -8,6 +8,9 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.viewpager.widget.ViewPager;
 
+/**
+ * @author 19622
+ */
 public class ScrollViewPager extends ViewPager {
     private boolean isScroll = true;
 

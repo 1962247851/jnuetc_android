@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="160dp"
+    android:paddingStart="35dp"
+    android:paddingEnd="0dp">
+
+    <View
+        android:id="@+id/viewTop"
+        android:layout_width="2dp"
+        android:layout_height="30dp"
+        android:background="@color/colorGray"
+        app:layout_constraintBottom_toTopOf="@id/imageView_item_state"
+        app:layout_constraintEnd_toEndOf="@id/imageView_item_state"
+        app:layout_constraintStart_toStartOf="@id/imageView_item_state"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageView
+        android:id="@+id/imageView_item_state"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:background="@drawable/ic_more_gray"
+        app:layout_constraintBottom_toTopOf="@id/viewBottom"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/viewTop" />
+
+    <View
+        android:id="@+id/viewBottom"
+        android:layout_width="2dp"
+        android:layout_height="0dp"
+        android:background="@color/colorGray"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="@id/imageView_item_state"
+        app:layout_constraintStart_toStartOf="@id/imageView_item_state"
+        app:layout_constraintTop_toBottomOf="@id/imageView_item_state" />
+
+    <TextView
+        android:id="@+id/textView_item_state"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:textAppearance="@style/MainTextAppearance"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="@id/imageView_item_state"
+        app:layout_constraintStart_toEndOf="@id/imageView_item_state"
+        app:layout_constraintTop_toTopOf="@id/imageView_item_state"
+        tools:text="处理中" />
+
+
+    <TextView
+        android:id="@+id/textView_item_content"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        app:layout_constraintStart_toStartOf="@id/textView_item_state"
+        app:layout_constraintTop_toBottomOf="@id/textView_item_state"
+        tools:text="xxx已接单" />
+
+    <TextView
+        android:id="@+id/textView_item_time"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toStartOf="@id/textView_item_content"
+        app:layout_constraintTop_toBottomOf="@id/textView_item_content"
+        tools:text="2020/1/20 09:42:00" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

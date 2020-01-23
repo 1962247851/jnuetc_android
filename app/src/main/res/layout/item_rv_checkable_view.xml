@@ -9,8 +9,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:checkMark="?android:attr/listChoiceIndicatorMultiple"
+        android:checkMarkTint="@color/colorAccent"
         android:gravity="center_vertical"
         android:padding="15dp"
         android:text="@string/Location"
-        android:textColor="@color/colorBlack" />
+        android:textAppearance="@style/MainTextAppearance" />
 </LinearLayout>

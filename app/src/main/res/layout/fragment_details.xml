@@ -1,0 +1,409 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <data>
+
+        <variable
+            name="data"
+            type="jn.mjz.aiot.jnuetc.greendao.entity.Data" />
+
+        <variable
+            name="onLocalSelectListener"
+            type="android.widget.AdapterView.OnItemSelectedListener" />
+
+        <variable
+            name="onCollegeSelectListener"
+            type="android.widget.AdapterView.OnItemSelectedListener" />
+
+        <variable
+            name="onGradeSelectListener"
+            type="android.widget.AdapterView.OnItemSelectedListener" />
+
+        <variable
+            name="onItemClickListener"
+            type="com.bigkoo.convenientbanner.listener.OnItemClickListener" />
+
+        <variable
+            name="onClickListener"
+            type="android.view.View.OnClickListener" />
+
+        <variable
+            name="modelTextWatcher"
+            type="android.text.TextWatcher" />
+
+        <variable
+            name="messageTextWatcher"
+            type="android.text.TextWatcher" />
+
+        <variable
+            name="nameTextWatcher"
+            type="android.text.TextWatcher" />
+
+        <variable
+            name="telTextWatcher"
+            type="android.text.TextWatcher" />
+
+        <variable
+            name="qqTextWatcher"
+            type="android.text.TextWatcher" />
+
+        <variable
+            name="modifyMode"
+            type="Boolean" />
+    </data>
+
+    <androidx.core.widget.NestedScrollView xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context=".view.fragment.DetailsFragment">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <com.bigkoo.convenientbanner.ConvenientBanner
+                        onItemClickListener="@{onItemClickListener}"
+                        urls="@{data.photoUrlList}"
+                        visibility="@{data.photo != null}"
+                        android:layout_width="match_parent"
+                        android:layout_height="220dp"
+                        app:autoTurningTime="3000" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginEnd="8dp"
+                        android:orientation="vertical"
+                        android:paddingTop="15dp">
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:paddingStart="5dp"
+                            android:paddingEnd="5dp"
+                            android:text="@string/Date"
+                            android:textColor="@color/colorPrimary"
+                            android:textSize="12sp" />
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:paddingStart="@dimen/textViewPaddingStart"
+                            android:paddingTop="@dimen/textViewPaddingTop"
+                            android:paddingEnd="@dimen/textViewPaddingEnd"
+                            android:paddingBottom="@dimen/textViewPaddingBottom"
+                            android:text="@{data.dateString}"
+                            android:textSize="18sp" />
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:textColorHint="@color/colorPrimary">
+
+                            <com.google.android.material.textfield.TextInputEditText
+                                enable="@{modifyMode}"
+                                textWatcher="@{modelTextWatcher}"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:enabled="false"
+                                android:hint="@string/Model"
+                                android:maxLength="255"
+                                android:text="@{data.model}"
+                                android:textIsSelectable="true"
+                                android:textSize="20sp" />
+
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:textColorHint="@color/colorPrimary">
+
+                            <com.google.android.material.textfield.TextInputEditText
+                                enable="@{modifyMode}"
+                                textWatcher="@{messageTextWatcher}"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:enabled="false"
+                                android:hint="@string/Message"
+                                android:maxLength="500"
+                                android:text="@{data.message}"
+                                android:textIsSelectable="true"
+                                android:textSize="20sp" />
+
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="1dp"
+                            android:background="@color/colorGray" />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content">
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:orientation="vertical">
+
+                                <TextView
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:gravity="center"
+                                    android:padding="5dp"
+                                    android:text="报修单状态"
+                                    android:textSize="18sp" />
+
+                                <TextView
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:gravity="center"
+                                    android:padding="5dp"
+                                    android:text="@{data.stateString}"
+                                    android:textColor="@color/colorAccent"
+                                    android:textSize="15sp"
+                                    tools:text="待处理" />
+
+                            </LinearLayout>
+
+                            <View
+                                android:layout_width="1dp"
+                                android:layout_height="match_parent"
+                                android:layout_marginTop="5dp"
+                                android:layout_marginBottom="5dp"
+                                android:background="@color/colorGray" />
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:orientation="vertical">
+
+                                <TextView
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:gravity="center"
+                                    android:padding="5dp"
+                                    android:text="@{data.processingTitle}"
+                                    android:textSize="18sp"
+                                    tools:text="等待处理已耗时" />
+
+                                <TextView
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:gravity="center"
+                                    android:padding="5dp"
+                                    android:text="@{data.processingTime}"
+                                    android:textColor="@color/colorAccent"
+                                    android:textSize="15sp"
+                                    tools:text="1小时" />
+
+                            </LinearLayout>
+                        </LinearLayout>
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingStart="20dp"
+                android:paddingTop="10dp"
+                android:paddingEnd="20dp"
+                android:paddingBottom="10dp">
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColorHint="@color/colorPrimary">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        enable="@{modifyMode}"
+                        textWatcher="@{nameTextWatcher}"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:enabled="false"
+                        android:hint="@string/Name"
+                        android:maxLength="50"
+                        android:text="@{data.name}"
+                        android:textIsSelectable="true"
+                        android:textSize="20sp" />
+
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingStart="5dp"
+                    android:paddingEnd="5dp"
+                    android:text="@string/Grade"
+                    android:textColor="@color/colorPrimary"
+                    android:textSize="12sp" />
+
+                <Spinner
+                    currentItem="@{data.grade}"
+                    enable="@{modifyMode}"
+                    entries="@{data.grades}"
+                    onItemSelectedListener="@{onGradeSelectListener}"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:entries="@array/spinner_grade_entries"
+                    android:paddingTop="5dp"
+                    android:paddingBottom="5dp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingStart="5dp"
+                    android:paddingEnd="5dp"
+                    android:text="@string/College"
+                    android:textColor="@color/colorPrimary"
+                    android:textSize="12sp" />
+
+                <Spinner
+                    currentItem="@{data.college}"
+                    enable="@{modifyMode}"
+                    entries="@{data.colleges}"
+                    onItemSelectedListener="@{onCollegeSelectListener}"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:entries="@array/spinner_college_entries"
+                    android:paddingTop="5dp"
+                    android:paddingBottom="5dp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingStart="5dp"
+                    android:paddingEnd="5dp"
+                    android:text="@string/Location"
+                    android:textColor="@color/colorPrimary"
+                    android:textSize="12sp" />
+
+                <Spinner
+                    currentItem="@{data.local}"
+                    enable="@{modifyMode}"
+                    entries="@{data.locals}"
+                    onItemSelectedListener="@{onLocalSelectListener}"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:entries="@array/spinner_local_entries"
+                    android:paddingTop="5dp"
+                    android:paddingBottom="5dp" />
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentStart="true"
+                        android:layout_centerVertical="true"
+                        android:layout_toStartOf="@id/button_details_tel"
+                        android:textColorHint="@color/colorPrimary">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/tidt_details_tel"
+                            enable="@{modifyMode}"
+                            textWatcher="@{telTextWatcher}"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:enabled="false"
+                            android:hint="@string/Tel"
+                            android:inputType="number"
+                            android:maxLength="11"
+                            android:text="@{data.tel}"
+                            android:textIsSelectable="true"
+                            android:textSize="20sp" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <ImageButton
+                        android:id="@+id/button_details_tel"
+                        visibility="@{!modifyMode}"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentEnd="true"
+                        android:layout_centerVertical="true"
+                        android:background="?attr/selectableItemBackground"
+                        android:contentDescription="拨打电话"
+                        android:onClick="@{onClickListener}"
+                        android:src="@drawable/ic_call_white"
+                        android:tint="@color/colorAccent" />
+                </RelativeLayout>
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentStart="true"
+                        android:layout_centerVertical="true"
+                        android:layout_toStartOf="@id/button_details_qq"
+                        android:textColorHint="@color/colorPrimary">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/tidt_details_qq"
+                            enable="@{modifyMode}"
+                            textWatcher="@{qqTextWatcher}"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:enabled="false"
+                            android:hint="@string/qq"
+                            android:inputType="number"
+                            android:maxLength="10"
+                            android:text="@{data.qq}"
+                            android:textIsSelectable="true"
+                            android:textSize="20sp" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <ImageButton
+                        android:id="@+id/button_details_qq"
+                        visibility="@{!modifyMode}"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentEnd="true"
+                        android:layout_centerVertical="true"
+                        android:background="?attr/selectableItemBackground"
+                        android:contentDescription="进入QQ或Tim"
+                        android:onClick="@{onClickListener}"
+                        android:src="@drawable/ic_chat_white"
+                        android:tint="@color/colorAccent" />
+
+                </RelativeLayout>
+
+                <Button
+                    android:id="@+id/button_details_order"
+                    visibility="@{data.repairer.empty &amp; !modifyMode}"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/button_confirm"
+                    android:onClick="@{onClickListener}"
+                    android:text="@string/Order"
+                    android:textColor="@color/White" />
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </androidx.core.widget.NestedScrollView>
+
+</layout>

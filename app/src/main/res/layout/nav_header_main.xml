@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical">
@@ -16,7 +17,6 @@
         android:paddingBottom="@dimen/activity_horizontal_margin">
 
         <com.youth.xframe.widget.XStateImageView
-            android:id="@+id/imageView"
             android:layout_width="80dp"
             android:layout_height="80dp"
             android:contentDescription="@string/nav_header_desc"
@@ -27,7 +27,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:paddingTop="@dimen/nav_header_vertical_spacing"
-            android:text="@string/nav_header_title"
+            android:text="@string/app_name"
             android:textAppearance="@style/TextAppearance.AppCompat.Body1" />
 
         <TextView
@@ -40,8 +40,7 @@
             android:id="@+id/textView_main_host"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/nav_header_host"
-            android:textIsSelectable="true" />
+            android:text="@string/nav_header_host" />
     </LinearLayout>
 
     <TextView
@@ -53,7 +52,6 @@
         android:maxLines="8"
         android:padding="10dp"
         android:text="未处理"
-        android:textColor="@color/MainText"
         android:textStyle="bold" />
 
     <LinearLayout
@@ -70,7 +68,8 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:padding="15dp"
+                android:gravity="center"
+                android:padding="10dp"
                 android:text="@string/OrderByTime" />
 
             <RadioGroup
@@ -84,12 +83,14 @@
                     android:id="@+id/radioButton_asc"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_weight="1"
                     android:text="@string/TimeAsc" />
 
                 <RadioButton
                     android:id="@+id/radioButton_desc"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_weight="1"
                     android:text="@string/TimeDesc" />
 
             </RadioGroup>
@@ -103,8 +104,9 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:padding="15dp"
-                android:text="@string/Location" />
+                android:gravity="center"
+                android:padding="10dp"
+                android:text="@string/SelectByLocal" />
 
             <LinearLayout
                 android:id="@+id/linearLayout_main_north"
@@ -112,24 +114,34 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
 
-                <TextView
+                <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center"
-                    android:padding="10dp"
-                    android:text="北区"
-                    android:textColor="@color/MainText"
-                    android:textStyle="bold" />
+                    android:layout_height="wrap_content">
 
-                <TextView
-                    android:id="@+id/textView_main_select_all_north"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="?selectableItemBackground"
-                    android:gravity="end"
-                    android:padding="10dp"
-                    android:text="取消全选" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:padding="10dp"
+                        android:text="@string/LocalNorth"
+                        android:textStyle="bold"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
 
+                    <TextView
+                        android:id="@+id/textView_main_select_all_north"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="?selectableItemBackground"
+                        android:gravity="end"
+                        android:padding="10dp"
+                        android:text="@string/CancelSelectAll"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+                </androidx.constraintlayout.widget.ConstraintLayout>
 
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/recyclerView_main_north"
@@ -143,24 +155,35 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
 
-                <TextView
+                <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center"
-                    android:padding="10dp"
-                    android:text="南区"
-                    android:textColor="@color/MainText"
-                    android:textStyle="bold" />
+                    android:layout_height="wrap_content">
 
-                <TextView
-                    android:id="@+id/textView_main_select_all_south"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="?selectableItemBackground"
-                    android:gravity="end"
-                    android:padding="10dp"
-                    android:text="取消全选" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:padding="10dp"
+                        android:text="@string/LocalSouth"
+                        android:textStyle="bold"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
 
+                    <TextView
+                        android:id="@+id/textView_main_select_all_south"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="?selectableItemBackground"
+                        android:gravity="end|center_vertical"
+                        android:padding="10dp"
+                        android:text="@string/CancelSelectAll"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
 
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/recyclerView_main_south"

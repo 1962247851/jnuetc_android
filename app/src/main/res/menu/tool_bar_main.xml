@@ -17,9 +17,9 @@
         app:showAsAction="never" />
 
     <item
-        android:icon="@drawable/ic_search_black_24dp"
+        android:icon="@drawable/ic_search_white"
         app:actionViewClass="androidx.appcompat.widget.SearchView"
         android:id="@+id/menu_main_search"
-        android:title="搜索"
-        app:showAsAction="always"/>
+        android:title="@string/Search"
+        app:showAsAction="ifRoom"/>
 </menu>

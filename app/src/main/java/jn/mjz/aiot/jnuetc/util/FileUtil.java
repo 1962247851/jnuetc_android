@@ -1,42 +1,45 @@
 package jn.mjz.aiot.jnuetc.util;
 
 
+import android.content.ContentResolver;
+import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.ParcelFileDescriptor;
-import android.util.Log;
+import android.provider.MediaStore;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.gson.JsonObject;
 import com.youth.xframe.utils.http.HttpCallBack;
 
 import org.apache.poi.hssf.usermodel.HSSFCell;
 import org.apache.poi.hssf.usermodel.HSSFRow;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.greenrobot.greendao.annotation.NotNull;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-import jn.mjz.aiot.jnuetc.application.MyApplication;
+import jn.mjz.aiot.jnuetc.application.App;
 import jn.mjz.aiot.jnuetc.greendao.Dao.DataDao;
 import jn.mjz.aiot.jnuetc.greendao.entity.Data;
-import jn.mjz.aiot.jnuetc.viewmodel.MainViewModel;
-import okhttp3.Response;
 
+/**
+ * @author 19622
+ */
 public class FileUtil {
-    // Unique request code.
     public static final int WRITE_REQUEST_CODE = 43;
     public static final int READ_REQUEST_CODE = 44;
     public static final int PIC_PICTURE = 45;
-    private static final String TAG = "FileUtil";
+//    private static final String TAG = "FileUtil";
 
-    public static void ExportDatasToExcel(AppCompatActivity activity, Uri uri, IOnExportListener onExportListener) {
+    public static void exportDatasToExcel(AppCompatActivity activity, Uri uri, IOnExportListener onExportListener) {
         // 设置第一行名
         String[] title = {"报修序号", "报修时间", "状态", "报修人", "学院", "年级", "电话", "QQ", "园区", "南北区", "设备型号", "问题详情", "维修人", "接单时间", "维修时间", "对用户电脑水平评估", "服务内容", "故障描述及解决过程"};
         HSSFWorkbook workbook = new HSSFWorkbook();
@@ -51,7 +54,7 @@ public class FileUtil {
             cell = row.createCell(i);
             cell.setCellValue(title[i]);
         }
-        DataDao dataDao = MyApplication.getDaoSession().getDataDao();
+        DataDao dataDao = App.getDaoSession().getDataDao();
         List<Data> dataList = dataDao.loadAll();
 
         //写入数据
@@ -116,33 +119,40 @@ public class FileUtil {
         }
 
         try {
-            FileOutputStream fos = getFOSFromUri(activity, uri);
+            FileOutputStream fos = getFosFromUri(activity.getContentResolver(), uri, "rw");
             workbook.write(fos);
             fos.close();
-            onExportListener.OnSuccess();
+            onExportListener.onSuccess();
         } catch (IOException e) {
             e.printStackTrace();
-            onExportListener.OnError();
+            onExportListener.onError();
         }
     }
 
-    public static void UploadTipDp(String tipDpName, File tipDp, HttpCallBack<Boolean> callBack) {
-        Map<String, Object> params = new HashMap<>();
-        params.put("tipDpName", tipDpName);
-        params.put("sno", MainViewModel.user.getSno());
-        params.put("tipDp", tipDp);
-        Log.e(TAG, "UploadTipDp: "+tipDp.length() );
-        HttpUtil.post.uploadHaveResponse(GlobalUtil.URLS.FILE.UPLOAD_TIP_DP, params, new HttpUtil.HttpUtilCallBack() {
-            @Override
-            public void onResponse(Response response, Object result) {
-                Log.e(TAG, "onResponse: " + result);
-            }
+    public static void uploadTipDp(String fileName, File file, HttpCallBack<Boolean> callBack) {
+        if (file != null && file.length() != 0) {
+            HttpUtil.Post.uploadFile(GlobalUtil.Urls.File.UPLOAD, fileName, "/opt/dayDP/", file, new HttpUtil.HttpUtilCallBack<String>() {
+                @Override
+                public void onResponse(String result) {
+//                    Log.e(TAG, "uploadTipDp onResponse: " + result);
+                    JsonObject jsonObject = GsonUtil.getInstance().fromJson(result, JsonObject.class);
+                    int error = jsonObject.get("error").getAsInt();
+                    if (error == 1) {
+                        callBack.onSuccess(true);
+                    } else {
+                        callBack.onSuccess(false);
+                    }
+                }
 
-            @Override
-            public void onFailure(IOException e) {
-                Log.e(TAG, "onFailure: " + e.getMessage());
-            }
-        });
+                @Override
+                public void onFailure(String error) {
+                    callBack.onFailed(error);
+//                    Log.e(TAG, "uploadTipDp onFailure: " + e.getMessage());
+                }
+            });
+        } else {
+//            Log.e(TAG, "uploadTipDp: 文件不存在");
+        }
     }
 
     public static void createFile(AppCompatActivity activity, String mimeType, String fileName) {
@@ -179,27 +189,89 @@ public class FileUtil {
         activity.startActivityForResult(intent, READ_REQUEST_CODE);
     }
 
-    public static FileOutputStream getFOSFromUri(AppCompatActivity activity, Uri uri) {
+    /**
+     * @param contentResolver contentResolver
+     * @param uri             uri The URI whose file is to be opened.
+     * @param mode            mode Access mode for the file.  May be "r" for read-only access,
+     *                        "rw" for read and write access, or "rwt" for read and write access
+     *                        that truncates any existing file.
+     * @return fileOutputStream
+     */
+    public static FileOutputStream getFosFromUri(ContentResolver contentResolver, Uri uri, @NotNull String mode) {
         ParcelFileDescriptor pfd = null;
+        FileOutputStream fileOutputStream = null;
         try {
-            pfd = activity.getContentResolver().
-                    openFileDescriptor(uri, "w");
+            pfd = contentResolver.
+                    openFileDescriptor(uri, mode);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
-        return new FileOutputStream(pfd.getFileDescriptor());
+        if (pfd != null && pfd.getFileDescriptor() != null) {
+            fileOutputStream = new FileOutputStream(pfd.getFileDescriptor());
+        }
+        return fileOutputStream;
     }
 
-    //跳转相册
+    /**
+     * 跳转相册
+     *
+     * @param activity activity
+     */
     public static void toPicture(AppCompatActivity activity) {
-        Intent intent = new Intent(Intent.ACTION_PICK);  //跳转到 ACTION_IMAGE_CAPTURE
+        //跳转到 ACTION_IMAGE_CAPTURE
+        Intent intent = new Intent(Intent.ACTION_PICK);
         intent.setType("image/*");
         activity.startActivityForResult(intent, PIC_PICTURE);
     }
 
-    public interface IOnExportListener {
-        void OnSuccess();
+    public static File uriToFile(Uri uri, Context context) {
+        String path = null;
+        if ("file".equals(uri.getScheme())) {
+            path = uri.getEncodedPath();
+            if (path != null) {
+                path = Uri.decode(path);
+                ContentResolver cr = context.getContentResolver();
+                StringBuffer buff = new StringBuffer();
+                buff.append("(").append(MediaStore.Images.ImageColumns.DATA).append("=").append("'" + path + "'").append(")");
+                Cursor cur = cr.query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, new String[]{MediaStore.Images.ImageColumns._ID, MediaStore.Images.ImageColumns.DATA}, buff.toString(), null, null);
+                int index = 0;
+                int dataIdx = 0;
+                for (cur.moveToFirst(); !cur.isAfterLast(); cur.moveToNext()) {
+                    index = cur.getColumnIndex(MediaStore.Images.ImageColumns._ID);
+                    index = cur.getInt(index);
+                    dataIdx = cur.getColumnIndex(MediaStore.Images.ImageColumns.DATA);
+                    path = cur.getString(dataIdx);
+                }
+                cur.close();
+                if (index == 0) {
+                } else {
+                    Uri u = Uri.parse("content://media/external/images/media/" + index);
+                    System.out.println("temp uri is :" + u);
+                }
+            }
+            if (path != null) {
+                return new File(path);
+            }
+        } else if ("content".equals(uri.getScheme())) {
+            // 4.2.2以后
+            String[] proj = {MediaStore.Images.Media.DATA};
+            Cursor cursor = context.getContentResolver().query(uri, proj, null, null, null);
+            if (cursor.moveToFirst()) {
+                int columnIndex = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+                path = cursor.getString(columnIndex);
+            }
+            cursor.close();
 
-        void OnError();
+            return new File(path);
+        } else {
+            //Log.i(TAG, "Uri Scheme:" + uri.getScheme());
+        }
+        return null;
+    }
+
+    public interface IOnExportListener {
+        void onSuccess();
+
+        void onError();
     }
 }

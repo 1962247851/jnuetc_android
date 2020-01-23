@@ -16,10 +16,13 @@ import com.robinhood.ticker.TickerView;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
-import jn.mjz.aiot.jnuetc.greendao.entity.Time;
 import jn.mjz.aiot.jnuetc.R;
+import jn.mjz.aiot.jnuetc.greendao.entity.Time;
 import jn.mjz.aiot.jnuetc.util.DateUtil;
 
+/**
+ * @author 19622
+ */
 public class TimerFragment extends Fragment {
 
     public static final String TAG = "TimerFragment";

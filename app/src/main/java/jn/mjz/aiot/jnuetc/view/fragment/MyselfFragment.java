@@ -13,9 +13,9 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import com.google.android.material.card.MaterialCardView;
 import com.youth.xframe.widget.XToast;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -23,17 +23,17 @@ import java.util.Locale;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
+import jn.mjz.aiot.jnuetc.R;
 import jn.mjz.aiot.jnuetc.greendao.entity.Data;
 import jn.mjz.aiot.jnuetc.greendao.entity.User;
-import jn.mjz.aiot.jnuetc.R;
 import jn.mjz.aiot.jnuetc.util.GsonUtil;
 import jn.mjz.aiot.jnuetc.util.HttpUtil;
 import jn.mjz.aiot.jnuetc.view.activity.AdminActivity;
 import jn.mjz.aiot.jnuetc.view.activity.HistoryActivity;
 import jn.mjz.aiot.jnuetc.view.activity.MainActivity;
+import jn.mjz.aiot.jnuetc.view.activity.RankingActivity;
 import jn.mjz.aiot.jnuetc.view.activity.SettingsActivity;
 import jn.mjz.aiot.jnuetc.viewmodel.MainViewModel;
-import okhttp3.Response;
 
 /**
  * @author 19622
@@ -48,6 +48,10 @@ public class MyselfFragment extends Fragment implements View.OnClickListener {
     private static List<Data> dataList4 = new ArrayList<>();
     private List<Data> dataList5 = new ArrayList<>();
 
+    @BindView(R.id.mcv_myself_timer)
+    MaterialCardView materialCardView;
+    @BindView(R.id.tv_fragment_myself_ranking)
+    TextView textViewRanking;
     @BindView(R.id.tv_fragment_myself_processing)
     TextView textViewProcessing;
     @BindView(R.id.tv_fragment_myself_done)
@@ -66,23 +70,23 @@ public class MyselfFragment extends Fragment implements View.OnClickListener {
         mainViewModel = ViewModelProviders.of(getActivity()).get(MainViewModel.class);
         mainViewModel.getCurrentState().observe(this, integer -> {
             if (integer == 3) {
-                textViewAdmin.setVisibility(MainViewModel.user.getRoot() != 0 && MainViewModel.user.getRoot() != 1 ? View.VISIBLE : View.GONE);
+                textViewAdmin.setVisibility(MainViewModel.user.getRootLevel() != 0 && MainViewModel.user.getRootLevel() != 1 ? View.VISIBLE : View.GONE);
             }
         });
-        mainViewModel.queryAll(new HttpUtil.HttpUtilCallBack<List<Data>>() {
+        MainViewModel.queryAll(new HttpUtil.HttpUtilCallBack<List<Data>>() {
             @Override
-            public void onResponse(Response response, List<Data> result) {
+            public void onResponse(List<Data> result) {
                 mainViewModel.queryDataListAboutMyself(1);
                 mainViewModel.queryDataListAboutMyself(2);
                 mainViewModel.updateUserInfo(new HttpUtil.HttpUtilCallBack<User>() {
                     @Override
-                    public void onResponse(Response response, User result) {
-                        textViewAdmin.setVisibility(result.getRoot() != 0 && result.getRoot() != 1? View.VISIBLE : View.GONE);
+                    public void onResponse(User result) {
+                        textViewAdmin.setVisibility(result.getRootLevel() != 0 && result.getRootLevel() != 1 ? View.VISIBLE : View.GONE);
                         swipeRefreshLayout.setRefreshing(false);
                     }
 
                     @Override
-                    public void onFailure(IOException e) {
+                    public void onFailure(String error) {
                         swipeRefreshLayout.setRefreshing(false);
                     }
                 });
@@ -90,7 +94,7 @@ public class MyselfFragment extends Fragment implements View.OnClickListener {
             }
 
             @Override
-            public void onFailure(IOException e) {
+            public void onFailure(String error) {
                 swipeRefreshLayout.setRefreshing(false);
             }
         });
@@ -115,14 +119,19 @@ public class MyselfFragment extends Fragment implements View.OnClickListener {
         if (MainActivity.setting.getBoolean("show_reg_time", true)) {
             TimerFragment timerFragment = new TimerFragment("与你相识的第", MainViewModel.user.getRegDate());
             if (getChildFragmentManager().findFragmentByTag(TimerFragment.TAG) == null) {
-                getChildFragmentManager().beginTransaction().add(R.id.frameLayout_myself_timer, timerFragment).commit();
+                getChildFragmentManager().beginTransaction().add(R.id.frameLayout_myself_timer, timerFragment).commitAllowingStateLoss();
             }
+        } else {
+            materialCardView.setVisibility(View.GONE);
         }
     }
 
     @Override
     public void onClick(View view) {
         switch (view.getId()) {
+            case R.id.tv_fragment_myself_ranking:
+                startActivity(new Intent(getContext(), RankingActivity.class));
+                break;
             case R.id.tv_fragment_myself_admin:
                 Intent intent = new Intent(getContext(), AdminActivity.class);
                 startActivity(intent);
@@ -152,6 +161,7 @@ public class MyselfFragment extends Fragment implements View.OnClickListener {
                 Intent intent3 = new Intent(getContext(), SettingsActivity.class);
                 startActivity(intent3);
                 break;
+            default:
         }
     }
 
@@ -164,18 +174,22 @@ public class MyselfFragment extends Fragment implements View.OnClickListener {
             //反馈（有自己名字、没有自己名字）、转让,
             String dataListString = data.getStringExtra("dataList");
             if (dataListString != null && !dataListString.isEmpty()) {
-                List<Data> needDeleteOrUpdate = GsonUtil.parseJsonArray2ObejctList(dataListString, Data.class);
+                List<Data> needDeleteOrUpdate = GsonUtil.parseJsonArray2ObjectList(dataListString, Data.class);
                 for (Data data1 : needDeleteOrUpdate) {
                     for (Data data2 : dataList4) {
                         if (data2.getId().equals(data1.getId())) {
                             dataList4.remove(data2);
-                            if (data1.getState() == 2) {//反馈（有自己名字、没有自己名字）
-                                if (data1.getRepairer().contains(MainViewModel.user.getName())) {//反馈成功，有自己名字
+                            if (data1.getState() == 2) {
+                                //反馈（有自己名字、没有自己名字）
+                                if (data1.getRepairer().contains(MainViewModel.user.getUserName())) {
+                                    //反馈成功，有自己名字
                                     dataList5.add(0, data1);
-                                } else {//反馈成功，没有自己名字
+                                } else {
+                                    //反馈成功，没有自己名字
                                     SecondFragment.notifyDataList3Inserted(data1);
                                 }
-                            } else if (data1.getState() == 1) {//转让
+                            } else if (data1.getState() == 1) {
+                                //转让
                                 SecondFragment.notifyDataList2Inserted(data1);
                             }
                             break;
@@ -207,7 +221,7 @@ public class MyselfFragment extends Fragment implements View.OnClickListener {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         unbinder = ButterKnife.bind(this, view);
-        InitListener();
+        initListener();
     }
 
     @Override
@@ -217,7 +231,8 @@ public class MyselfFragment extends Fragment implements View.OnClickListener {
     }
 
 
-    private void InitListener() {
+    private void initListener() {
+        textViewRanking.setOnClickListener(this);
         textViewProcessing.setOnClickListener(this);
         textViewDone.setOnClickListener(this);
         textViewAdmin.setOnClickListener(this);
@@ -233,23 +248,23 @@ public class MyselfFragment extends Fragment implements View.OnClickListener {
     }
 
     private void updateData() {
-        mainViewModel.queryAll(new HttpUtil.HttpUtilCallBack<List<Data>>() {
+        MainViewModel.queryAll(new HttpUtil.HttpUtilCallBack<List<Data>>() {
             @Override
-            public void onResponse(Response response, List<Data> result) {
+            public void onResponse(List<Data> result) {
                 mainViewModel.queryDataListAboutMyself(1);
                 mainViewModel.queryDataListAboutMyself(2);
                 mainViewModel.updateUserInfo(new HttpUtil.HttpUtilCallBack<User>() {
                     @Override
-                    public void onResponse(Response response, User result) {
-                        textViewAdmin.setVisibility(result.getRoot() != 0 && result.getRoot() != 1? View.VISIBLE : View.GONE);
+                    public void onResponse(User result) {
+                        textViewAdmin.setVisibility(result.getRootLevel() != 0 && result.getRootLevel() != 1 ? View.VISIBLE : View.GONE);
                         swipeRefreshLayout.setRefreshing(false);
                         XToast.success("数据更新成功");
                     }
 
                     @Override
-                    public void onFailure(IOException e) {
-                        if (e == null) {
-                            iMyselfFragmentListener.OnUserInfoChanged();
+                    public void onFailure(String error) {
+                        if (error == null) {
+                            iMyselfFragmentListener.onUserInfoChanged();
                         }
                         XToast.error("数据更新失败");
                         swipeRefreshLayout.setRefreshing(false);
@@ -258,7 +273,7 @@ public class MyselfFragment extends Fragment implements View.OnClickListener {
             }
 
             @Override
-            public void onFailure(IOException e) {
+            public void onFailure(String error) {
                 XToast.error("数据更新失败");
                 swipeRefreshLayout.setRefreshing(false);
             }
@@ -271,6 +286,6 @@ public class MyselfFragment extends Fragment implements View.OnClickListener {
     }
 
     public interface IMyselfFragmentListener {
-        void OnUserInfoChanged();
+        void onUserInfoChanged();
     }
 }

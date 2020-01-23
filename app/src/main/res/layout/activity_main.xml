@@ -24,82 +24,80 @@
                     android:id="@+id/toolbar_main"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
-                    app:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar" />
+                    android:theme="@style/actionbar"
+                    app:subtitleTextAppearance="@style/subTitleAppearance" />
 
             </com.google.android.material.appbar.AppBarLayout>
 
             <RelativeLayout
-                android:layout_marginTop="?actionBarSize"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent">
+                android:layout_height="match_parent"
+                android:layout_marginTop="?actionBarSize">
 
                 <jn.mjz.aiot.jnuetc.view.custom.ScrollViewPager
                     android:id="@+id/scrollViewPager_main"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent" />
 
-                <me.sugarkawhi.bottomnavigationbar.BottomNavigationBar
-                    android:id="@+id/navigationBar_main"
+                <com.google.android.material.bottomnavigation.BottomNavigationView
+                    android:id="@+id/bottomNavigationView"
                     android:layout_width="match_parent"
-                    android:layout_height="?actionBarSize"
+                    android:layout_height="wrap_content"
                     android:layout_alignParentBottom="true"
-                    android:background="@color/XFrame_white"
+                    android:background="@color/WindowBackgroundColor"
                     android:elevation="8dp"
-                    app:bnb_anim="true"
-                    app:bnb_layoutId="@layout/bnb_item_badge"
-                    app:bnb_selectedColor="@color/colorPrimary"
-                    app:bnb_unSelectedColor="@color/SubText" />
+                    app:menu="@menu/bottom_navigation_main" />
+
 
                 <androidx.recyclerview.widget.RecyclerView
-                    android:elevation="10dp"
-                    android:background="@color/WindowBackgroundColor"
-                    android:visibility="gone"
                     android:id="@+id/recyclerView_main_search"
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"/>
+                    android:layout_height="match_parent"
+                    android:background="@color/WindowBackgroundColor"
+                    android:elevation="10dp"
+                    android:visibility="gone" />
 
             </RelativeLayout>
 
-            <RelativeLayout
-                android:id="@+id/relativeLayout_main_welcome"
-                android:elevation="10dp"
-                android:background="@color/WindowBackgroundColor"
+            <FrameLayout
+                android:id="@+id/frameLayout_main_welcome"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent">
-
-                <ProgressBar
-                    android:layout_centerInParent="true"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"/>
+                android:layout_height="match_parent"
+                android:elevation="10dp">
 
                 <ImageView
-                    android:focusable="true"
-                    android:clickable="true"
                     android:id="@+id/imageView_main_welcome"
-                    android:scaleType="centerCrop"
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"/>
+                    android:layout_height="match_parent"
+                    android:background="@android:color/black"
+                    android:clickable="true"
+                    android:contentDescription="@string/WelcomePhoto"
+                    android:focusable="true"
+                    android:scaleType="centerCrop" />
+
+                <ProgressBar
+                    android:id="@+id/progressBar_main_welcome"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center" />
 
                 <Button
-                    android:padding="5dp"
-                    android:layout_marginTop="34dp"
-                    android:layout_marginEnd="10dp"
-                    android:text="@string/Skip"
-                    android:layout_alignParentTop="true"
-                    android:textSize="18sp"
-                    android:layout_alignParentEnd="true"
                     android:id="@+id/button_main_skip"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"/>
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="top|end"
+                    android:layout_marginTop="34dp"
+                    android:layout_marginEnd="10dp"
+                    android:alpha="0.5"
+                    android:text="@string/Skip"
+                    android:textSize="15sp" />
 
-            </RelativeLayout>
+            </FrameLayout>
 
         </RelativeLayout>
 
         <LinearLayout
             android:layout_width="wrap_content"
-            android:background="@color/white"
             android:layout_height="match_parent"
             android:layout_gravity="start"
             android:orientation="vertical">
@@ -129,7 +127,7 @@
         android:layout_marginBottom="?actionBarSize"
         android:src="@drawable/ic_delete_forever_white"
         android:visibility="invisible"
-        app:layout_anchor="@id/navigationBar_main"
+        app:layout_anchor="@id/bottomNavigationView"
         app:layout_anchorGravity="end" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

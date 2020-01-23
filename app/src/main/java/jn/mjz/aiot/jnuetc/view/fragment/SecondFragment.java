@@ -13,14 +13,13 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProviders;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import androidx.viewpager.widget.ViewPager;
 
 import com.google.android.material.tabs.TabLayout;
-import com.scwang.smartrefresh.layout.SmartRefreshLayout;
 import com.youth.xframe.widget.XLoadingDialog;
 import com.youth.xframe.widget.XToast;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -30,23 +29,26 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
 import jn.mjz.aiot.jnuetc.R;
-import jn.mjz.aiot.jnuetc.application.MyApplication;
+import jn.mjz.aiot.jnuetc.application.App;
 import jn.mjz.aiot.jnuetc.greendao.Dao.DataDao;
 import jn.mjz.aiot.jnuetc.greendao.entity.Data;
 import jn.mjz.aiot.jnuetc.greendao.entity.User;
 import jn.mjz.aiot.jnuetc.util.GsonUtil;
 import jn.mjz.aiot.jnuetc.util.HttpUtil;
 import jn.mjz.aiot.jnuetc.view.activity.DetailsActivity;
-import jn.mjz.aiot.jnuetc.view.adapter.RecyclerView.TaskAdapter;
-import jn.mjz.aiot.jnuetc.view.adapter.ViewPager.SecondPagerAdapter;
+import jn.mjz.aiot.jnuetc.view.adapter.pager.SecondPagerAdapter;
+import jn.mjz.aiot.jnuetc.view.adapter.recycler.TaskAdapter;
 import jn.mjz.aiot.jnuetc.viewmodel.MainViewModel;
-import okhttp3.Response;
 
+/**
+ * @author 19622
+ */
 public class SecondFragment extends Fragment {
 
     private static final String TAG = "SecondFragment";
     private Unbinder unbinder;
     private int position = -1;
+    private boolean isAnimating = false;
 
     @BindView(R.id.tabLayout_fragment_second)
     TabLayout tabLayout;
@@ -54,8 +56,8 @@ public class SecondFragment extends Fragment {
     @BindView(R.id.viewPager_fragment_second)
     ViewPager viewPager;
 
-    @BindView(R.id.smartRefreshLayout_fragment_second)
-    SmartRefreshLayout smartRefreshLayout;
+    @BindView(R.id.srl_fragment_second)
+    SwipeRefreshLayout swipeRefreshLayout;
 
     private MainViewModel mainViewModel;
     private static SecondPagerAdapter pagerAdapter;
@@ -96,30 +98,30 @@ public class SecondFragment extends Fragment {
 
         TaskAdapter.ITaskListener iTaskListener2 = new TaskAdapter.ITaskListener() {
             @Override
-            public void OnItemClick(int position, Data data) {
+            public void onItemClick(int position, Data data) {
                 Intent intent = new Intent(getContext(), DetailsActivity.class);
-                intent.putExtra("data", data.toString());
+                intent.putExtra("id", data.getId());
                 intent.putExtra("position", position);
                 startActivityForResult(intent, 0);
             }
 
             @Override
-            public void OnStartSelect(int count) {
-                iSecondListener.OnStartSelect(count, dataLists2.size());
+            public void onStartSelect(int count) {
+                iSecondListener.onStartSelect(count, dataLists2.size());
             }
 
             @Override
-            public void OnSelect(int count) {
-                iSecondListener.OnSelect(count, dataLists2.size());
+            public void onSelect(int count) {
+                iSecondListener.onSelect(count, dataLists2.size());
             }
 
             @Override
-            public void OnConfirmSelect(SparseBooleanArray sparseBooleanArray) {
+            public void onConfirmSelect(SparseBooleanArray sparseBooleanArray) {
 
                 mainViewModel.updateUserInfo(new HttpUtil.HttpUtilCallBack<User>() {
                     @Override
-                    public void onResponse(Response response, User result) {
-                        if (result.getRoot() != 0 && result.getRoot() != 1) {
+                    public void onResponse(User result) {
+                        if (result.getRootLevel() != 0 && result.getRootLevel() != 1) {
 
                             List<Integer> ids = new ArrayList<>();
                             List<Data> needToDelete = new ArrayList<>();
@@ -129,7 +131,7 @@ public class SecondFragment extends Fragment {
                                 if (sparseBooleanArray.get(key)) {
                                     String id = dataLists2.get(key).getId().toString();
                                     ids.add(Integer.valueOf(id));
-                                    needToDelete.add(MyApplication.getDaoSession().getDataDao().queryBuilder().where(DataDao.Properties.Id.eq(id)).build().unique());
+                                    needToDelete.add(App.getDaoSession().getDataDao().queryBuilder().where(DataDao.Properties.Id.eq(id)).build().unique());
                                 }
                             }
 
@@ -153,24 +155,20 @@ public class SecondFragment extends Fragment {
 
                                 mainViewModel.deleteMany(ids, new HttpUtil.HttpUtilCallBack<Boolean>() {
                                     @Override
-                                    public void onResponse(Response response12, Boolean result12) {
-
-                                        taskAdapter2.clearSelect();
-                                        taskAdapter2.cancelSelect();
-                                        iSecondListener.OnCancelSelect();
-
-                                        mainViewModel.dataDao.deleteInTx(needToDelete);
-
-                                        mainViewModel.queryDataListBySetting(null);
-
-                                        dialog.dismiss();
-                                        XToast.success("删除成功");
+                                    public void onResponse(Boolean result12) {
                                         XLoadingDialog.with(getContext()).cancel();
-
+                                        if (result12) {
+                                            taskAdapter2.clearSelect();
+                                            taskAdapter2.cancelSelect();
+                                            iSecondListener.onCancelSelect();
+                                            mainViewModel.queryDataListBySetting(null);
+                                            dialog.dismiss();
+                                            XToast.success("删除成功");
+                                        }
                                     }
 
                                     @Override
-                                    public void onFailure(IOException e) {
+                                    public void onFailure(String error) {
                                         XLoadingDialog.with(getContext()).cancel();
                                         XToast.error("删除失败");
                                         dialog.cancel();
@@ -188,7 +186,7 @@ public class SecondFragment extends Fragment {
                     }
 
                     @Override
-                    public void onFailure(IOException e) {
+                    public void onFailure(String error) {
 
                     }
                 });
@@ -197,43 +195,43 @@ public class SecondFragment extends Fragment {
             }
 
             @Override
-            public void OnCancelSelect() {
-                iSecondListener.OnCancelSelect();
-//                Log.e(TAG, "OnCancelSelect: ");
+            public void onCancelSelect() {
+                iSecondListener.onCancelSelect();
+//                Log.e(TAG, "onCancelSelect: ");
             }
 
 
             @Override
-            public void OnConfirmClick(int position, Data data) {
+            public void onConfirmClick(int position, Data data) {
             }
         };
         TaskAdapter.ITaskListener iTaskListener3 = new TaskAdapter.ITaskListener() {
             @Override
-            public void OnItemClick(int position, Data data) {
+            public void onItemClick(int position, Data data) {
                 Intent intent = new Intent(getContext(), DetailsActivity.class);
-                intent.putExtra("data", data.toString());
+                intent.putExtra("id", data.getId());
                 intent.putExtra("position", position);
                 startActivityForResult(intent, 1);
             }
 
             @Override
-            public void OnStartSelect(int count) {
-                iSecondListener.OnStartSelect(count, dataLists3.size());
-//                Log.e(TAG, "OnStartSelect: " + count);
+            public void onStartSelect(int count) {
+                iSecondListener.onStartSelect(count, dataLists3.size());
+//                Log.e(TAG, "onStartSelect: " + count);
             }
 
             @Override
-            public void OnSelect(int count) {
-                iSecondListener.OnSelect(count, dataLists3.size());
-//                Log.e(TAG, "OnSelect: " + count);
+            public void onSelect(int count) {
+                iSecondListener.onSelect(count, dataLists3.size());
+//                Log.e(TAG, "onSelect: " + count);
             }
 
             @Override
-            public void OnConfirmSelect(SparseBooleanArray sparseBooleanArray) {
+            public void onConfirmSelect(SparseBooleanArray sparseBooleanArray) {
                 mainViewModel.updateUserInfo(new HttpUtil.HttpUtilCallBack<User>() {
                     @Override
-                    public void onResponse(Response response, User result) {
-                        if (result.getRoot() != 0 && result.getRoot() != 1) {
+                    public void onResponse(User result) {
+                        if (result.getRootLevel() != 0 && result.getRootLevel() != 1) {
 
                             List<Integer> ids = new ArrayList<>();
                             List<Data> needToDelete = new ArrayList<>();
@@ -243,7 +241,7 @@ public class SecondFragment extends Fragment {
                                 if (sparseBooleanArray.get(key)) {
                                     String id = dataLists3.get(key).getId().toString();
                                     ids.add(Integer.valueOf(id));
-                                    needToDelete.add(MyApplication.getDaoSession().getDataDao().queryBuilder().where(DataDao.Properties.Id.eq(id)).build().unique());
+                                    needToDelete.add(App.getDaoSession().getDataDao().queryBuilder().where(DataDao.Properties.Id.eq(id)).build().unique());
                                 }
                             }
 
@@ -267,24 +265,22 @@ public class SecondFragment extends Fragment {
 
                                 mainViewModel.deleteMany(ids, new HttpUtil.HttpUtilCallBack<Boolean>() {
                                     @Override
-                                    public void onResponse(Response response1, Boolean result1) {
-
-                                        taskAdapter3.clearSelect();
-                                        taskAdapter3.cancelSelect();
-                                        iSecondListener.OnCancelSelect();
-
-                                        mainViewModel.dataDao.deleteInTx(needToDelete);
-
-                                        mainViewModel.queryDataListBySetting(null);
-
-                                        dialog.dismiss();
-                                        XToast.success("删除成功");
+                                    public void onResponse(Boolean result1) {
                                         XLoadingDialog.with(getContext()).cancel();
+                                        if (result1) {
+                                            taskAdapter3.clearSelect();
+                                            taskAdapter3.cancelSelect();
+                                            iSecondListener.onCancelSelect();
+                                            mainViewModel.queryDataListBySetting(null);
+                                            dialog.dismiss();
+                                            XToast.success("删除成功");
+                                        }
+
 
                                     }
 
                                     @Override
-                                    public void onFailure(IOException e) {
+                                    public void onFailure(String error) {
                                         XLoadingDialog.with(getContext()).cancel();
                                         XToast.error("删除失败");
                                         dialog.cancel();
@@ -301,7 +297,7 @@ public class SecondFragment extends Fragment {
                     }
 
                     @Override
-                    public void onFailure(IOException e) {
+                    public void onFailure(String error) {
 
                     }
                 });
@@ -310,19 +306,19 @@ public class SecondFragment extends Fragment {
             }
 
             @Override
-            public void OnCancelSelect() {
-                iSecondListener.OnCancelSelect();
-//                Log.e(TAG, "OnCancelSelect: ");
+            public void onCancelSelect() {
+                iSecondListener.onCancelSelect();
+//                Log.e(TAG, "onCancelSelect: ");
             }
 
             @Override
-            public void OnConfirmClick(int position, Data data) {
+            public void onConfirmClick(int position, Data data) {
             }
         };
 
         mainViewModel.getCurrentState().observe(this, integer -> {
-            taskAdapter2.setEnableSelect(MainViewModel.user.getRoot() != 0 && MainViewModel.user.getRoot() != 1);
-            taskAdapter3.setEnableSelect(MainViewModel.user.getRoot() != 0 && MainViewModel.user.getRoot() != 1);
+            taskAdapter2.setEnableSelect(MainViewModel.user.getRootLevel() != 0 && MainViewModel.user.getRootLevel() != 1);
+            taskAdapter3.setEnableSelect(MainViewModel.user.getRootLevel() != 0 && MainViewModel.user.getRootLevel() != 1);
             if (integer == 1) {
                 if (pagerAdapter.isSelectMode3()) {
                     pagerAdapter.cancelSelect3();
@@ -363,10 +359,7 @@ public class SecondFragment extends Fragment {
         });
         tabLayout.setupWithViewPager(viewPager);
 
-        smartRefreshLayout.finishLoadMoreWithNoMoreData();
-        smartRefreshLayout.setOnRefreshListener(refreshLayout -> {
-            updateData();
-        });
+        swipeRefreshLayout.setOnRefreshListener(this::updateData);
 
         mainViewModel.getDrawerOpen().observe(getActivity(), aBoolean -> {
             if (aBoolean) {
@@ -390,7 +383,6 @@ public class SecondFragment extends Fragment {
                 dataLists2.clear();
                 dataLists2.addAll(data);
                 taskAdapter2.notifyItemRangeInserted(0, data.size());
-                pagerAdapter.IsNoData2();
                 TabLayout.Tab tabAt = tabLayout.getTabAt(0);
                 if (tabAt != null) {
                     tabAt.setText(taskAdapter2.getItemCount() != 0 ? String.format(Locale.getDefault(), "处理中（%d）", data.size()) : "处理中");
@@ -407,7 +399,6 @@ public class SecondFragment extends Fragment {
                 dataLists3.clear();
                 dataLists3.addAll(data);
                 taskAdapter3.notifyItemRangeInserted(0, data.size());
-                pagerAdapter.IsNoData3();
                 TabLayout.Tab tabAt = tabLayout.getTabAt(1);
                 if (tabAt != null) {
                     tabAt.setText(taskAdapter3.getItemCount() != 0 ? String.format(Locale.getDefault(), "已维修（%d）", data.size()) : "已维修");
@@ -417,32 +408,30 @@ public class SecondFragment extends Fragment {
     }
 
     private void updateData() {
-        mainViewModel.queryAll(new HttpUtil.HttpUtilCallBack<List<Data>>() {
+        MainViewModel.queryAll(new HttpUtil.HttpUtilCallBack<List<Data>>() {
             @Override
-            public void onResponse(Response response, List<Data> result) {
-
+            public void onResponse(List<Data> result) {
+                swipeRefreshLayout.setRefreshing(false);
                 if (result != null) {
                     XToast.success("数据更新成功");
-                    smartRefreshLayout.finishRefreshWithNoMoreData();
                     mainViewModel.queryDataListBySetting(null);
                     if (getCurrentPosition() == 0) {
                         taskAdapter2.clearSelect();
                         taskAdapter2.cancelSelect();
-                        iSecondListener.OnCancelSelect();
+                        iSecondListener.onCancelSelect();
                     } else {
                         taskAdapter3.clearSelect();
                         taskAdapter3.cancelSelect();
-                        iSecondListener.OnCancelSelect();
+                        iSecondListener.onCancelSelect();
                     }
                 } else {
                     XToast.error("数据更新失败");
-                    smartRefreshLayout.finishRefresh(0, false, true);
                 }
             }
 
             @Override
-            public void onFailure(IOException e) {
-                smartRefreshLayout.finishRefresh(0, false, true);
+            public void onFailure(String error) {
+                swipeRefreshLayout.setRefreshing(false);
                 XToast.error("数据更新失败");
             }
         });
@@ -463,7 +452,6 @@ public class SecondFragment extends Fragment {
         pagerAdapter.insertSelect2();
         taskAdapter2.notifyItemInserted(0);
         pagerAdapter.scroll2ToPosition(0);
-        pagerAdapter.IsNoData2();
     }
 
     public static void notifyDataList3Inserted(Data data) {
@@ -471,22 +459,38 @@ public class SecondFragment extends Fragment {
         pagerAdapter.insertSelect3();
         taskAdapter3.notifyItemInserted(0);
         pagerAdapter.scroll3ToPosition(0);
-        pagerAdapter.IsNoData3();
     }
 
     public void autoRefresh() {
-        smartRefreshLayout.autoRefresh(0, 200, (float) 1.2, false);
+        swipeRefreshLayout.setRefreshing(true);
+        updateData();
     }
 
     public interface ISecondListener {
-        void OnStartSelect(int count, int total);
+        /**
+         * 开始多选
+         *
+         * @param count 选择的数量
+         * @param total 总共的数量
+         */
+        void onStartSelect(int count, int total);
 
-        void OnSelect(int count, int total);
+        /**
+         * 正在多选
+         *
+         * @param count 选择的数量
+         * @param total 总共的数量
+         */
+        void onSelect(int count, int total);
 
-        void OnCancelSelect();
+
+        /**
+         * 取消多选
+         */
+        void onCancelSelect();
     }
 
-    public void OnConfirmSelect() {
+    public void onConfirmSelect() {
         if (getCurrentPosition() == 0) {
             taskAdapter2.finishSelect();
         } else {

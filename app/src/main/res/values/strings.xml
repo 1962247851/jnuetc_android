@@ -1,8 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">JNUETC</string>
-    <string name="Location">宿舍园区</string>
-    <string name="Id">报修序号</string>
-    <string name="Date">报修日期</string>
+    <string name="Location">园区</string>
+    <string name="Date">报修时间</string>
     <string name="State">状态</string>
     <string name="Name">报修人</string>
     <string name="Tel">电话</string>
@@ -12,7 +12,7 @@
     <string name="College">学院</string>
     <string name="Grade">年级</string>
     <string name="Repairer">维修人</string>
-    <string name="Mark">对用户电脑水平评估</string>
+    <string name="Mark">用户电脑水平评估</string>
     <string name="Service">服务内容</string>
     <string name="RepairMessage">故障描述及解决过程</string>
     <string name="Confirm">接单</string>
@@ -25,23 +25,40 @@
     <string name="TimeDesc">降序</string>
     <string name="navigation_drawer_open">打开筛选器</string>
     <string name="navigation_drawer_close">关闭筛选器</string>
-    <string name="nav_header_title">JNUETC</string>
     <string name="nav_header_subtitle">线上交流群459121889（点击进群）</string>
-    <string name="nav_header_desc">Navigation header</string>
+    <string name="nav_header_desc">社团图标</string>
     <string name="Sno">学号</string>
     <string name="Password">密码</string>
     <string name="Login">登录</string>
     <string name="ForgetPassword">忘记密码</string>
-    <string name="RepairData">维修时间</string>
+    <string name="RepairData">反馈时间</string>
     <string name="ModifyPassword">修改密码</string>
-    <string name="NoData">暂无数据</string>
     <string name="MakeOver">转让</string>
-    <string name="Submit">提交</string>
     <string name="Order">接单</string>
     <string name="title_activity_settings">设置</string>
-    <string name="Modify">修改</string>
-    <string name="nav_header_host">报修入口https://www.jiangnan-dzjsb.club（点击打开并复制）</string>
+    <string name="Modify">修改报修单信息</string>
+    <string name="Finish">完成修改</string>
+    <string name="nav_header_host">报修入口https://www.jiangnan-dzjsb.club:444（点击打开并复制）</string>
     <string name="Skip">跳过</string>
-    <string name="Photo">故障图片</string>
-
+    <string name="NewData">未处理</string>
+    <string name="Finished">已处理</string>
+    <string name="AboutMySelf">我的</string>
+    <string name="NoData">暂无报修单</string>
+    <string name="NoDataChangeLog">暂无日志</string>
+    <string name="RepairRankingAndStatistic">维修排行及统计</string>
+    <string name="Refresh">刷新</string>
+    <string name="DataDetails">报修单详情</string>
+    <string name="Admin">控制台</string>
+    <string name="InputRepairMessage">提交维修反馈</string>
+    <string name="LocalNorth">北区</string>
+    <string name="LocalSouth">南区</string>
+    <string name="github">github：</string>
+    <string name="githubAddress">https://github.com/1962247851/JNUETC</string>
+    <string name="Search">搜索</string>
+    <string name="SuggestionAndFeedback">建议与反馈</string>
+    <string name="HistoryLog">历史更新日志</string>
+    <string name="CancelSelectAll">取消全选</string>
+    <string name="SelectByLocal">按园区筛选</string>
+    <string name="WelcomePhoto">欢迎图片</string>
+    <string name="Settings">设置</string>
 </resources>

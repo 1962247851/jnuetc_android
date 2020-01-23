@@ -1,13 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/mcv_item"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginStart="10dp"
-    android:layout_marginTop="15dp"
+    android:layout_marginTop="8dp"
     android:layout_marginEnd="10dp"
-    android:layout_marginBottom="5dp"
+    android:layout_marginBottom="8dp"
     app:cardCornerRadius="7dp">
 
     <LinearLayout
@@ -25,10 +26,12 @@
             android:paddingEnd="15dp"
             android:paddingBottom="5dp">
 
+
             <TextView
                 android:id="@+id/tv_item_state"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_alignParentTop="true"
                 android:layout_alignParentEnd="true"
                 android:layout_marginTop="5dp"
                 android:gravity="end"
@@ -42,21 +45,25 @@
                 android:id="@+id/tv_item_location_and_id"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:paddingStart="@dimen/textViewPaddingStart"
                 android:paddingTop="5dp"
+                android:paddingEnd="@dimen/textViewPaddingEnd"
                 android:paddingBottom="5dp"
-                android:text="@string/LocationAndId"
-                android:textColor="@color/MainText"
+                android:textAppearance="@style/MainTextAppearance"
                 android:textSize="20sp"
-                android:textStyle="bold" />
+                android:textStyle="bold"
+                tools:text="@string/LocationAndId" />
 
             <TextView
                 android:id="@+id/tv_item_date_and_name"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_below="@id/tv_item_location_and_id"
+                android:paddingStart="@dimen/textViewPaddingStart"
                 android:paddingTop="5dp"
+                android:paddingEnd="@dimen/textViewPaddingEnd"
                 android:paddingBottom="5dp"
-                android:text="@string/DateAndName" />
+                tools:text="@string/DateAndName" />
 
 
             <TextView
@@ -66,23 +73,25 @@
                 android:layout_below="@id/tv_item_date_and_name"
                 android:ellipsize="end"
                 android:maxLines="3"
+                android:paddingStart="@dimen/textViewPaddingStart"
                 android:paddingTop="5dp"
+                android:paddingEnd="@dimen/textViewPaddingEnd"
                 android:paddingBottom="5dp"
-                android:text="@string/Model" />
+                tools:text="@string/Model" />
 
             <com.lcodecore.extextview.ExpandTextView
                 android:id="@+id/etv_item_message"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_below="@id/tv_item_model"
+                android:background="?selectableItemBackground"
+                android:paddingStart="@dimen/textViewPaddingStart"
                 android:paddingTop="5dp"
+                android:paddingEnd="@dimen/textViewPaddingEnd"
                 android:paddingBottom="5dp"
-                android:text="@string/Message"
-                app:animAlphaStart="1"
                 app:arrowAlign="bottom"
-                app:arrowPadding="8dp"
-                app:arrowPosition="below"
-                app:maxCollapsedLines="3" />
+                app:maxCollapsedLines="3"
+                tools:text="故障详情故障详情故障详情故障详情故障详情故障详情故障详情故障详情故障详情故障详情故障详情故障详情故障详情故障详情故障详情故障详情故障详情故障详情故障详情故障详情故障详情故障详情故障详情故障详情故障详情故障详情故障详情故障详情故障详情故障详情故障详情故障详情故障详情故障详情故障详情故障详情故障详情故障详情" />
 
 
             <TextView
@@ -102,6 +111,5 @@
 
         </RelativeLayout>
     </LinearLayout>
-
 
 </com.google.android.material.card.MaterialCardView>

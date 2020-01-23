@@ -8,10 +8,15 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.preference.PreferenceFragmentCompat;
 
+import com.youth.xframe.XFrame;
 import com.youth.xframe.utils.statusbar.XStatusBar;
 
 import jn.mjz.aiot.jnuetc.R;
+import jn.mjz.aiot.jnuetc.application.App;
 
+/**
+ * @author 19622
+ */
 public class SettingsActivity extends AppCompatActivity {
 
     public static String sharedPreferencesName = "settings";
@@ -26,8 +31,9 @@ public class SettingsActivity extends AppCompatActivity {
                 .commit();
         Toolbar toolbar = findViewById(R.id.toolbar_settings);
         setSupportActionBar(toolbar);
-        XStatusBar.setColorNoTranslucent(this, getResources().getColor(R.color.colorPrimary));
+        XStatusBar.setColorNoTranslucent(this, XFrame.getColor(R.color.colorPrimary));
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        App.initToolbar(toolbar, this);
     }
 
     public static class SettingsFragment extends PreferenceFragmentCompat {

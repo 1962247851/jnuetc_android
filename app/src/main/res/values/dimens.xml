@@ -5,5 +5,11 @@
     <dimen name="activity_horizontal_margin">16dp</dimen>
     <dimen name="activity_vertical_margin">32dp</dimen>
     <dimen name="nav_header_vertical_spacing">8dp</dimen>
-    <dimen name="nav_header_height">176dp</dimen>
+
+    <dimen name="textViewHeight">30dp</dimen>
+    <dimen name="textViewPaddingTop">5dp</dimen>
+    <dimen name="textViewPaddingBottom">5dp</dimen>
+    <dimen name="textViewPaddingStart">5dp</dimen>
+    <dimen name="textViewPaddingEnd">5dp</dimen>
+    <dimen name="textSize">20sp</dimen>
 </resources>

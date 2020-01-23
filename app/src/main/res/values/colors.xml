@@ -1,18 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="colorPrimary">#008FFB</color>
-    <color name="colorPrimaryDark">#801DA1F3</color>
+    <color name="colorPrimaryDark">#1976D2</color>
     <color name="colorAccent">#FFB033</color>
-    <color name="colorBlack">#000000</color>
+
+    <color name="leftSelectableTextColor">@android:color/primary_text_light</color>
+    <color name="WindowBackgroundColor">#FAFAFA</color>
+    <color name="colorUnSelect">#666666</color>
     <color name="colorGray">#666666</color>
 
-
-    <color name="WindowBackgroundColor">#FAFAFA</color>
-    <color name="MainText">@color/colorBlack</color>
+    <color name="MainText">@android:color/black</color>
     <color name="SubText">@color/colorGray</color>
-    <color name="Yellow">#ffff00</color>
+
     <color name="Green">#00ff00</color>
-    <color name="Blue">#0000ff</color>
-    <color name="white">#ffffff</color>
+    <color name="White">#ffffff</color>
+    <color name="Yellow">#ffff00</color>
+
+    <color name="LightYellow">#F9CDAD</color>
+    <color name="Orange">#FFA500</color>
+    <color name="DarkBlue">#304FFE</color>
+
+    <color name="ChartColor1">@color/colorPrimary</color>
+    <color name="ChartColor2">#50AA20</color>
+    <color name="ChartColor3">#80D8FF</color>
+    <color name="ChartColor4">#FF9E80</color>
+    <color name="ChartColor5">#10AAAA</color>
+    <color name="ChartColor6">#7C4DFF</color>
+    <color name="ChartColor7">#00FF7F</color>
+    <color name="ChartColor8">#EA80FC</color>
+    <color name="ChartColor9">#FFA500</color>
+    <color name="ChartColor10">#F9CDAD</color>
+    <color name="ChartColor11">#D0ADF9</color>
+    <color name="ChartColor12">#3D5AFE</color>
+    <color name="ChartColor13">#D6F9AD</color>
+    <color name="ChartColor14">#E5ADF9</color>
+    <color name="ChartColor15">#E96E94</color>
+    <color name="ChartColor16">#C6FF00</color>
 
 </resources>

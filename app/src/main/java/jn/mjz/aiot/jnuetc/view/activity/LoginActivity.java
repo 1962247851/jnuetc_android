@@ -1,10 +1,7 @@
 package jn.mjz.aiot.jnuetc.view.activity;
 
-import android.Manifest;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -13,28 +10,31 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.LinearLayout;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.gson.JsonObject;
 import com.rengwuxian.materialedittext.MaterialEditText;
-import com.youth.xframe.utils.permission.XPermission;
+import com.youth.xframe.utils.http.HttpCallBack;
+import com.youth.xframe.utils.http.XHttp;
+import com.youth.xframe.utils.statusbar.XStatusBar;
 import com.youth.xframe.widget.XLoadingDialog;
 import com.youth.xframe.widget.XToast;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import jn.mjz.aiot.jnuetc.greendao.entity.User;
 import jn.mjz.aiot.jnuetc.R;
+import jn.mjz.aiot.jnuetc.greendao.entity.Data;
+import jn.mjz.aiot.jnuetc.greendao.entity.User;
 import jn.mjz.aiot.jnuetc.util.GlobalUtil;
 import jn.mjz.aiot.jnuetc.util.GsonUtil;
-import jn.mjz.aiot.jnuetc.util.HttpUtil;
 import jn.mjz.aiot.jnuetc.util.SharedPreferencesUtil;
 import jn.mjz.aiot.jnuetc.util.UpdateUtil;
 import jn.mjz.aiot.jnuetc.viewmodel.MainViewModel;
-import okhttp3.Response;
 
+/**
+ * @author 19622
+ */
 public class LoginActivity extends AppCompatActivity {
 
     private static final String TAG = "LoginActivity=====";
@@ -51,19 +51,14 @@ public class LoginActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            XPermission.requestPermissions(this, 111, new String[]{Manifest.permission.CALL_PHONE, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.READ_PHONE_NUMBERS, Manifest.permission.READ_PHONE_STATE}, null);
-        } else {
-            XPermission.requestPermissions(this, 111, new String[]{Manifest.permission.CALL_PHONE, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.READ_PHONE_STATE}, null);
-        }
         setContentView(R.layout.activity_login);
-        sharedPreferences = SharedPreferencesUtil.getSharedPreferences(GlobalUtil.KEYS.LOGIN_ACTIVITY.FILE_NAME);
-        String userJson = sharedPreferences.getString(GlobalUtil.KEYS.LOGIN_ACTIVITY.USER_JSON_STRING, "needLogin");
+        sharedPreferences = SharedPreferencesUtil.getSharedPreferences(GlobalUtil.Keys.LoginActivity.FILE_NAME);
+        String userJson = sharedPreferences.getString(GlobalUtil.Keys.LoginActivity.USER_JSON_STRING, "needLogin");
         if (!"needLogin".equals(userJson)) {
             MainViewModel.user = GsonUtil.getInstance().fromJson(userJson, User.class);
         }
-        InitView();
-        UpdateUtil.checkForUpdate(true, this, linearLayout, new UpdateUtil.IUpdateErrorListener() {
+        initView();
+        UpdateUtil.checkForUpdate(true, this, new UpdateUtil.IServerAvailableListener() {
             @Override
             public void onServerInvalid() {
 
@@ -71,7 +66,7 @@ public class LoginActivity extends AppCompatActivity {
 
             @Override
             public void onServerValid() {
-                InitListener();
+                initListener();
                 //退出到这个界面不用自动登录
                 boolean logout = getIntent().getBooleanExtra("logout", false);
                 if (!logout) {
@@ -108,7 +103,7 @@ public class LoginActivity extends AppCompatActivity {
 //        }
     }
 
-    private void InitListener() {
+    private void initListener() {
         MyOnClick myOnClick = new MyOnClick();
 
         buttonLogin.setOnClickListener(myOnClick);
@@ -165,7 +160,7 @@ public class LoginActivity extends AppCompatActivity {
         });
     }
 
-    private void InitView() {
+    private void initView() {
 
         materialEditTextNumber = findViewById(R.id.materialEditText_login_number);
         materialEditTextPassword = findViewById(R.id.materialEditText_login_password);
@@ -175,8 +170,8 @@ public class LoginActivity extends AppCompatActivity {
         buttonForgetPassword = findViewById(R.id.button_login_forget);
         linearLayout = findViewById(R.id.linearLayout_login_logo_welcome);
 
-        rememberPassword = sharedPreferences.getBoolean(GlobalUtil.KEYS.LOGIN_ACTIVITY.REMEMBER_PASSWORD, false);
-        autoLogin = sharedPreferences.getBoolean(GlobalUtil.KEYS.LOGIN_ACTIVITY.AUTO_LOGIN, true);
+        rememberPassword = sharedPreferences.getBoolean(GlobalUtil.Keys.LoginActivity.REMEMBER_PASSWORD, false);
+        autoLogin = sharedPreferences.getBoolean(GlobalUtil.Keys.LoginActivity.AUTO_LOGIN, true);
 
         checkBoxRememberPassword.setChecked(rememberPassword);
         checkBoxAutoLogin.setChecked(autoLogin);
@@ -188,6 +183,7 @@ public class LoginActivity extends AppCompatActivity {
             isNumberAvailable = true;
             isPasswordAvailable = true;
         }
+        XStatusBar.setTranslucent(this);
     }
 
     private class MyOnClick implements View.OnClickListener {
@@ -207,58 +203,51 @@ public class LoginActivity extends AppCompatActivity {
                     }
                     break;
                 case R.id.button_login_forget:
-                    String url = "mqqwpa://im/chat?chat_type=wpa&uin=1962247851";
-                    try {
-                        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
-                    } catch (Exception e) {
-                        XToast.error("未安装手Q或安装的版本不支持");
-                    }
+                    Data.openQq("1962247851");
                     break;
+                default:
             }
         }
     }
 
     private void login(boolean firstOpen) {
         XLoadingDialog.with(this).setCanceled(false).setMessage("账号验证中，请稍等").show();
-
-        Map<String, Object> params = new HashMap<>();
+        Map<String, Object> params = new HashMap<>(2);
         params.put("sno", firstOpen ? number : MainViewModel.user.getSno());
         params.put("password", firstOpen ? password : MainViewModel.user.getPassword());
-        HttpUtil.post.haveResponse(GlobalUtil.URLS.QUERY.LOGIN, params, new HttpUtil.HttpUtilCallBack<String>() {
+        XHttp.obtain().post(GlobalUtil.Urls.User.LOGIN, params, new HttpCallBack<JsonObject>() {
             @Override
-            public void onResponse(Response response, String result) {
-                MainViewModel.user = GsonUtil.getInstance().fromJson(result, User.class);
-                XLoadingDialog.with(LoginActivity.this).dismiss();
-                String state = response.headers().get("state");
-                if (state != null && state.equals("OK")) {
-                    XToast.success(firstOpen ? "登录成功" : String.format("欢迎回来 %s", MainViewModel.user.getName()));
+            public void onSuccess(JsonObject jsonObject) {
+                XLoadingDialog.with(LoginActivity.this).cancel();
+                int error = jsonObject.get("error").getAsInt();
+                if (error == 1) {
+                    MainViewModel.user = GsonUtil.getInstance().fromJson(jsonObject.get("body").getAsString(), User.class);
+                    XToast.success(firstOpen ? "登录成功" : String.format("欢迎回来 %s", MainViewModel.user.getUserName()));
                     SharedPreferences.Editor editor = sharedPreferences.edit();
-                    editor.putBoolean(GlobalUtil.KEYS.LOGIN_ACTIVITY.AUTO_LOGIN, checkBoxAutoLogin.isChecked());
-                    editor.putBoolean(GlobalUtil.KEYS.LOGIN_ACTIVITY.REMEMBER_PASSWORD, checkBoxRememberPassword.isChecked());
+                    editor.putBoolean(GlobalUtil.Keys.LoginActivity.AUTO_LOGIN, checkBoxAutoLogin.isChecked());
+                    editor.putBoolean(GlobalUtil.Keys.LoginActivity.REMEMBER_PASSWORD, checkBoxRememberPassword.isChecked());
                     if (checkBoxAutoLogin.isChecked()) {
-                        editor.putString(GlobalUtil.KEYS.LOGIN_ACTIVITY.USER_JSON_STRING, result);
+                        editor.putString(GlobalUtil.Keys.LoginActivity.USER_JSON_STRING, MainViewModel.user.toString());
                     }
                     editor.apply();
                     Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                     startActivity(intent);
                     finish();
-                } else {
-                    XToast.error("登录失败");
+                } else if (error == 0) {
                     linearLayout.setVisibility(View.GONE);
+                    XToast.error(jsonObject.get("msg").getAsString());
+                } else if (error == -1) {
+                    linearLayout.setVisibility(View.GONE);
+                    XToast.error(jsonObject.get("msg").getAsString());
                 }
             }
 
             @Override
-            public void onFailure(IOException e) {
+            public void onFailed(String error) {
                 XToast.error("登录失败");
                 linearLayout.setVisibility(View.GONE);
-                XLoadingDialog.with(LoginActivity.this).dismiss();
+                XLoadingDialog.with(LoginActivity.this).cancel();
             }
         });
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        XPermission.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 }

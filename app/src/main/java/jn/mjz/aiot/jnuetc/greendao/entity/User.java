@@ -2,16 +2,19 @@ package jn.mjz.aiot.jnuetc.greendao.entity;
 
 import jn.mjz.aiot.jnuetc.util.GsonUtil;
 
+/**
+ * @author 19622
+ */
 public class User {
-    private int id;
+    private Long id;
     private String openId;
-    private String name;
-    private short sex;
+    private String formId;
+    private String userName;
+    private Integer sex;
     private String sno;
     private String password;
-    private short root;
-    private int group;
-    private int count;
+    private Integer rootLevel;
+    private Integer whichGroup;
     private long regDate;
 
     @Override
@@ -22,12 +25,11 @@ public class User {
     public User() {
     }
 
-
-    public int getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
@@ -39,19 +41,27 @@ public class User {
         this.openId = openId;
     }
 
-    public String getName() {
-        return name;
+    public String getFormId() {
+        return formId;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setFormId(String formId) {
+        this.formId = formId;
     }
 
-    public short getSex() {
+    public String getUserName() {
+        return userName;
+    }
+
+    public void setUserName(String userName) {
+        this.userName = userName;
+    }
+
+    public Integer getSex() {
         return sex;
     }
 
-    public void setSex(short sex) {
+    public void setSex(Integer sex) {
         this.sex = sex;
     }
 
@@ -71,28 +81,28 @@ public class User {
         this.password = password;
     }
 
-    public short getRoot() {
-        return root;
+    public Integer getRootLevel() {
+        return rootLevel;
     }
 
-    public void setRoot(short root) {
-        this.root = root;
+    public void setRootLevel(Integer rootLevel) {
+        this.rootLevel = rootLevel;
     }
 
-    public int getGroup() {
-        return group;
+    /**
+     * 根据{@link #getRole()} 返回园区
+     * @return 所有园区/北区/南区
+     */
+    public String getGroupStringIfNotAll() {
+        return haveWholeSchoolAccess() ? "所有园区" : getWhichGroup() == 0 ? "北区" : "南区";
     }
 
-    public void setGroup(int group) {
-        this.group = group;
+    public Integer getWhichGroup() {
+        return whichGroup;
     }
 
-    public int getCount() {
-        return count;
-    }
-
-    public void setCount(int count) {
-        this.count = count;
+    public void setWhichGroup(Integer whichGroup) {
+        this.whichGroup = whichGroup;
     }
 
     public long getRegDate() {
@@ -109,7 +119,7 @@ public class User {
      * @return 用户角色
      */
     private UserRoles getRole() {
-        switch (getRoot()) {
+        switch (getRootLevel()) {
             case 1:
                 return UserRoles.WHOLE_SCHOOL;
             case 2:
@@ -141,7 +151,7 @@ public class User {
     }
 
     /**
-     * root == 2 || root == 3
+     * rootLevel == 2 || rootLevel == 3
      *
      * @return 判断是否有删单权限，即管理员才有删单权限
      */
@@ -150,7 +160,7 @@ public class User {
     }
 
     /**
-     * root == 2 || root == 3
+     * rootLevel == 2 || rootLevel == 3
      *
      * @return 判断是否有管理员权限
      */
@@ -187,6 +197,7 @@ public class User {
      * @return 是否有关系
      */
     public boolean haveRelationWithData(Data data) {
-        return data.getRepairer().contains(getName());
+        return data.getRepairer().contains(getUserName());
     }
+
 }

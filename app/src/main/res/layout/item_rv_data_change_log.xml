@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="5dp"
+    android:theme="@style/Theme.AppCompat.DayNight.DarkActionBar"
+    app:cardCornerRadius="0dp">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingBottom="10dp">
+
+        <com.lcodecore.extextview.ExpandTextView
+            android:id="@+id/textView_item_change_log_content"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="?attr/selectableItemBackground"
+            android:paddingStart="15dp"
+            android:paddingTop="10dp"
+            android:paddingEnd="15dp"
+            android:paddingBottom="10dp"
+            android:textSize="15sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:maxCollapsedLines="4"
+            tools:text="更改内容更改内容更改内容更改内容更改内容更改内容更改内容更改内容更改内容更改内容更改内容更改内容更改内容更改内容更改内容更改内容更改内容更改内容更改内容更改内容更改内容更改内容更改内容更改内容更改内容更改内容更改内容更改内容更改内容更改内容更改内容更改内容更改内容更改内容更改内容更改内容更改内容更改内容更改内容更改内容更改内容更改内容更改内容更改内容更改内容更改内容更改内容更改内容更改内容更改内容更改内容更改内容更改内容更改内容更改内容更改内容更改内容更改内容更改内容更改内容更改内容更改内容更改内容更改内容更改内容更改内容更改内容更改内容更改内容更改内容更改内容更改内容更改内容更改内容更改内容更改内容更改内容更改内容更改内容更改内容更改内容更改内容" />
+
+        <TextView
+            android:id="@+id/textView_item_change_log_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="15dp"
+            app:layout_constraintBottom_toBottomOf="@+id/textView_item_change_log_name"
+            app:layout_constraintEnd_toStartOf="@id/linearLayout_feedback_name"
+            app:layout_constraintTop_toTopOf="@id/textView_item_change_log_name"
+            tools:text="2020/1/20 09:42:00" />
+
+        <TextView
+            android:id="@+id/linearLayout_feedback_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="来自："
+            app:layout_constraintBottom_toBottomOf="@id/textView_item_change_log_name"
+            app:layout_constraintEnd_toStartOf="@id/textView_item_change_log_name"
+            app:layout_constraintTop_toTopOf="@id/textView_item_change_log_name" />
+
+        <TextView
+            android:id="@+id/textView_item_change_log_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:layout_marginEnd="20dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/textView_item_change_log_content"
+            tools:text="姓名" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</androidx.cardview.widget.CardView>

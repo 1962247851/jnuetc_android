@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".view.activity.RankingActivity">
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <com.google.android.material.appbar.CollapsingToolbarLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="50dp"
+            android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+            app:layout_scrollFlags="scroll|snap|enterAlwaysCollapsed|enterAlways">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <androidx.appcompat.widget.Toolbar
+                    android:id="@+id/toolbar_ranking"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:theme="@style/actionbar"
+                    app:menu="@menu/tool_bar_ranking"
+                    app:subtitleTextAppearance="@style/subTitleAppearance"
+                    app:title="@string/RepairRankingAndStatistic" />
+
+                <com.google.android.material.tabs.TabLayout
+                    android:id="@+id/tabLayout_ranking"
+                    android:layout_width="match_parent"
+                    android:layout_height="50dp"
+                    app:layout_collapseMode="pin"
+                    app:tabGravity="fill"
+                    app:tabMaxWidth="0dp"
+                    app:tabMode="fixed" />
+            </LinearLayout>
+        </com.google.android.material.appbar.CollapsingToolbarLayout>
+
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <jn.mjz.aiot.jnuetc.view.custom.ThemedSwipeRefreshLayout
+        android:id="@+id/srl_ranking"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior">
+
+        <jn.mjz.aiot.jnuetc.view.custom.ScrollViewPager
+            android:id="@+id/viewPager_ranking"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+    </jn.mjz.aiot.jnuetc.view.custom.ThemedSwipeRefreshLayout>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

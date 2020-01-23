@@ -1,15 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.swiperefreshlayout.widget.SwipeRefreshLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<jn.mjz.aiot.jnuetc.view.custom.ThemedSwipeRefreshLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/srl_myself"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:orientation="vertical">
 
         <com.google.android.material.card.MaterialCardView
+            android:id="@+id/mcv_myself_timer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_margin="10dp">
@@ -21,12 +22,22 @@
 
         </com.google.android.material.card.MaterialCardView>
 
-
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:padding="10dp">
+
+            <TextView
+                android:id="@+id/tv_fragment_myself_ranking"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?selectableItemBackground"
+                android:drawableEnd="@drawable/ic_arrow_right_gray"
+                android:gravity="start|center_vertical"
+                android:padding="5dp"
+                android:text="@string/RepairRankingAndStatistic"
+                android:textSize="20sp" />
 
             <TextView
                 android:id="@+id/tv_fragment_myself_processing"
@@ -58,7 +69,7 @@
                 android:drawableEnd="@drawable/ic_arrow_right_gray"
                 android:gravity="start|center_vertical"
                 android:padding="5dp"
-                android:text="控制台"
+                android:text="@string/Admin"
                 android:textSize="20sp"
                 android:visibility="gone" />
 
@@ -70,10 +81,10 @@
                 android:drawableEnd="@drawable/ic_arrow_right_gray"
                 android:gravity="start|center_vertical"
                 android:padding="5dp"
-                android:text="设置"
+                android:text="@string/Settings"
                 android:textSize="20sp" />
 
         </LinearLayout>
 
     </LinearLayout>
-</androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+</jn.mjz.aiot.jnuetc.view.custom.ThemedSwipeRefreshLayout>

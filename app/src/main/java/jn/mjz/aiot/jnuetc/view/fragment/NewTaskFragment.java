@@ -2,7 +2,6 @@ package jn.mjz.aiot.jnuetc.view.fragment;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,15 +12,13 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProviders;
-import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
-import com.scwang.smartrefresh.layout.SmartRefreshLayout;
 import com.youth.xframe.utils.XAppUtils;
 import com.youth.xframe.widget.XLoadingDialog;
 import com.youth.xframe.widget.XToast;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,22 +26,25 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
 import jn.mjz.aiot.jnuetc.R;
-import jn.mjz.aiot.jnuetc.application.MyApplication;
+import jn.mjz.aiot.jnuetc.application.App;
 import jn.mjz.aiot.jnuetc.greendao.Dao.DataDao;
 import jn.mjz.aiot.jnuetc.greendao.entity.Data;
 import jn.mjz.aiot.jnuetc.greendao.entity.User;
 import jn.mjz.aiot.jnuetc.util.GsonUtil;
 import jn.mjz.aiot.jnuetc.util.HttpUtil;
 import jn.mjz.aiot.jnuetc.view.activity.DetailsActivity;
-import jn.mjz.aiot.jnuetc.view.adapter.RecyclerView.TaskAdapter;
+import jn.mjz.aiot.jnuetc.view.adapter.recycler.TaskAdapter;
+import jn.mjz.aiot.jnuetc.view.adapter.recycler.WrapContentLinearLayoutManager;
 import jn.mjz.aiot.jnuetc.viewmodel.MainViewModel;
-import okhttp3.Response;
 
+/**
+ * @author 19622
+ */
 public class NewTaskFragment extends Fragment {
 
     private static final String TAG = "NewTaskFragment";
     @BindView(R.id.srl_fragment_new_task)
-    SmartRefreshLayout smartRefreshLayout;
+    SwipeRefreshLayout swipeRefreshLayout;
     @BindView(R.id.rv_fragment_new_task)
     RecyclerView recyclerView;
 
@@ -54,7 +54,9 @@ public class NewTaskFragment extends Fragment {
     private MainViewModel mainViewModel;
     private Unbinder unbinder;
     private TaskAdapter taskAdapter;
-    //配合adapter需要一个容器存放当前的数据，livedata更新时改变容器里的内容
+    /**
+     * 配合adapter需要一个容器存放当前的数据，livedata更新时改变容器里的内容
+     */
     private List<Data> dataLis1 = new ArrayList<>();
     private int position = -1;
 
@@ -67,7 +69,7 @@ public class NewTaskFragment extends Fragment {
             if (taskAdapter.isSelectMode()) {
                 taskAdapter.cancelSelect();
             }
-            taskAdapter.setEnableSelect(MainViewModel.user.getRoot() != 0 && MainViewModel.user.getRoot() != 1);
+            taskAdapter.setEnableSelect(MainViewModel.user.getRootLevel() != 0 && MainViewModel.user.getRootLevel() != 1);
         });
 
         mainViewModel.getDrawerOpen().observe(getActivity(), aBoolean -> {
@@ -94,18 +96,17 @@ public class NewTaskFragment extends Fragment {
             }
         });
 
-        smartRefreshLayout.finishLoadMoreWithNoMoreData();
         mainViewModel.queryDataListBySetting(0);
         mainViewModel.queryDataListBySetting(1);
         mainViewModel.queryDataListBySetting(2);
         autoRefresh();
-        smartRefreshLayout.setOnRefreshListener(refreshLayout -> updateData());
+        swipeRefreshLayout.setOnRefreshListener(this::updateData);
     }
 
     private void updateData() {
-        mainViewModel.queryAll(new HttpUtil.HttpUtilCallBack<List<Data>>() {
+        MainViewModel.queryAll(new HttpUtil.HttpUtilCallBack<List<Data>>() {
             @Override
-            public void onResponse(Response response, List<Data> result) {
+            public void onResponse(List<Data> result) {
                 if (result != null) {
                     XToast.success("数据更新成功");
                     if (firstOpen) {
@@ -123,24 +124,25 @@ public class NewTaskFragment extends Fragment {
                     }
                     taskAdapter.clearSelect();
                     taskAdapter.cancelSelect();
-                    iNewTaskListener.OnCancelSelect();
-                    smartRefreshLayout.finishRefreshWithNoMoreData();
+                    iNewTaskListener.onCancelSelect();
+                    swipeRefreshLayout.setRefreshing(false);
                 } else {
                     XToast.error("数据更新失败");
-                    smartRefreshLayout.finishRefresh(0, false, true);
+                    swipeRefreshLayout.setRefreshing(false);
                 }
             }
 
             @Override
-            public void onFailure(IOException e) {
-                smartRefreshLayout.finishRefresh(0, false, true);
+            public void onFailure(String error) {
+                swipeRefreshLayout.setRefreshing(false);
                 XToast.error("数据更新失败");
             }
         });
     }
 
     public void autoRefresh() {
-        smartRefreshLayout.autoRefresh(0, 200, (float) 1.2, false);
+        swipeRefreshLayout.setRefreshing(true);
+        updateData();
     }
 
     @Override
@@ -148,7 +150,6 @@ public class NewTaskFragment extends Fragment {
         super.onDestroy();
         unbinder.unbind();
     }
-
 
     public NewTaskFragment() {
     }
@@ -168,30 +169,30 @@ public class NewTaskFragment extends Fragment {
         unbinder = ButterKnife.bind(this, view);
         taskAdapter = new TaskAdapter(MainViewModel.user.haveDeleteAccess(), dataLis1, getContext(), new TaskAdapter.ITaskListener() {
             @Override
-            public void OnItemClick(int position, Data data) {
+            public void onItemClick(int position, Data data) {
                 Intent intent = new Intent(getContext(), DetailsActivity.class);
-                intent.putExtra("data", data.toString());
+                intent.putExtra("id", data.getId());
                 intent.putExtra("position", position);
                 startActivityForResult(intent, 0);
             }
 
             @Override
-            public void OnStartSelect(int count) {
-                iNewTaskListener.OnStartSelect(count, dataLis1.size());
+            public void onStartSelect(int count) {
+                iNewTaskListener.onStartSelect(count, dataLis1.size());
             }
 
             @Override
-            public void OnSelect(int count) {
-                iNewTaskListener.OnSelect(count, dataLis1.size());
+            public void onSelect(int count) {
+                iNewTaskListener.onSelect(count, dataLis1.size());
             }
 
             @Override
-            public void OnConfirmSelect(SparseBooleanArray sparseBooleanArray) {
+            public void onConfirmSelect(SparseBooleanArray sparseBooleanArray) {
                 mainViewModel.updateUserInfo(new HttpUtil.HttpUtilCallBack<User>() {
                     @Override
-                    public void onResponse(Response response, User result) {
+                    public void onResponse(User result) {
                         //判断是否具有删单权限
-                        if (result.getRoot() != 0 && result.getRoot() != 1) {
+                        if (result.getRootLevel() != 0 && result.getRootLevel() != 1) {
 
                             List<Integer> ids = new ArrayList<>();
                             List<Data> needToDelete = new ArrayList<>();
@@ -200,7 +201,7 @@ public class NewTaskFragment extends Fragment {
                                 int key = sparseBooleanArray.keyAt(i);
                                 if (sparseBooleanArray.get(key)) {
                                     ids.add(Integer.valueOf(dataLis1.get(key).getId().toString()));
-                                    needToDelete.add(MyApplication.getDaoSession().getDataDao().queryBuilder().where(DataDao.Properties.Id.eq(dataLis1.get(key).getId())).build().unique());
+                                    needToDelete.add(App.getDaoSession().getDataDao().queryBuilder().where(DataDao.Properties.Id.eq(dataLis1.get(key).getId())).build().unique());
                                 }
                             }
 
@@ -222,24 +223,20 @@ public class NewTaskFragment extends Fragment {
 
                                 mainViewModel.deleteMany(ids, new HttpUtil.HttpUtilCallBack<Boolean>() {
                                     @Override
-                                    public void onResponse(Response response12, Boolean result1) {
-
-                                        taskAdapter.clearSelect();
-                                        taskAdapter.cancelSelect();
-                                        iNewTaskListener.OnCancelSelect();
-
-                                        mainViewModel.dataDao.deleteInTx(needToDelete);
-
-                                        mainViewModel.queryDataListBySetting(null);
-
-                                        dialog.dismiss();
-                                        XToast.success("删除成功");
+                                    public void onResponse(Boolean result) {
                                         XLoadingDialog.with(getContext()).cancel();
-
+                                        if (result) {
+                                            taskAdapter.clearSelect();
+                                            taskAdapter.cancelSelect();
+                                            iNewTaskListener.onCancelSelect();
+                                            mainViewModel.queryDataListBySetting(null);
+                                            dialog.dismiss();
+                                            XToast.success("删除成功");
+                                        }
                                     }
 
                                     @Override
-                                    public void onFailure(IOException e) {
+                                    public void onFailure(String error) {
                                         XLoadingDialog.with(getContext()).cancel();
                                         XToast.error("删除失败");
                                         dialog.cancel();
@@ -258,27 +255,26 @@ public class NewTaskFragment extends Fragment {
                     }
 
                     @Override
-                    public void onFailure(IOException e) {
+                    public void onFailure(String error) {
 
                     }
                 });
-
-
             }
 
             @Override
-            public void OnCancelSelect() {
-                iNewTaskListener.OnCancelSelect();
+            public void onCancelSelect() {
+                iNewTaskListener.onCancelSelect();
             }
 
             @Override
-            public void OnConfirmClick(int position1, Data data) {
+            public void onConfirmClick(int position1, Data data) {
                 XLoadingDialog.with(getContext()).setMessage("请求处理中，请稍后").setCanceled(false).show();
-                mainViewModel.queryById(String.valueOf(data.getId()), new HttpUtil.HttpUtilCallBack<Data>() {
+                MainViewModel.queryById(String.valueOf(data.getId()), new HttpUtil.HttpUtilCallBack<Data>() {
                     @Override
-                    public void onResponse(Response response, Data result) {
+                    public void onResponse(Data result) {
                         XLoadingDialog.with(getContext()).cancel();
                         if (result.getState() == 0) {
+                            String dataBackUpString = result.toString();
                             String[] items = {"接单成功后自动复制QQ号并且打开QQ"};
                             boolean[] booleans = {true};
                             AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
@@ -289,14 +285,15 @@ public class NewTaskFragment extends Fragment {
                                     .setNegativeButton("取消", (dialogInterface, i) -> XLoadingDialog.with(getContext()).cancel())
                                     .setPositiveButton("接单", (dialogInterface, i) -> {
                                         XLoadingDialog.with(getContext()).setMessage("请求处理中，请稍后").setCanceled(false).show();
-                                        result.setRepairer(MainViewModel.user.getName());
+                                        result.setOrderDate(System.currentTimeMillis());
+                                        result.setRepairer(MainViewModel.user.getUserName());
                                         result.setState((short) 1);
-                                        mainViewModel.feedback(result, new HttpUtil.HttpUtilCallBack<Data>() {
+                                        mainViewModel.modify(result, dataBackUpString, new HttpUtil.HttpUtilCallBack<Data>() {
                                             @Override
-                                            public void onResponse(Response response1, Data o) {
+                                            public void onResponse(Data o) {
                                                 XToast.success("接单成功");
 
-                                                mainViewModel.dataDao.update(o);
+                                                App.getDaoSession().getDataDao().update(o);
 
                                                 mainViewModel.queryDataListAboutMyself(1);
 
@@ -319,9 +316,9 @@ public class NewTaskFragment extends Fragment {
                                             }
 
                                             @Override
-                                            public void onFailure(IOException e) {
+                                            public void onFailure(String error) {
                                                 XLoadingDialog.with(getContext()).cancel();
-                                                XToast.error("接单失败");
+                                                XToast.error(error == null ? "接单失败" : error);
                                             }
                                         });
                                     })
@@ -338,14 +335,14 @@ public class NewTaskFragment extends Fragment {
                     }
 
                     @Override
-                    public void onFailure(IOException e) {
-                        XToast.error("请求失败，请重试");
+                    public void onFailure(String error) {
+                        XToast.error(error == null ? "请求失败，请重试" : error);
                         XLoadingDialog.with(getContext()).cancel();
                     }
                 });
             }
         });
-        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+        recyclerView.setLayoutManager(new WrapContentLinearLayoutManager(getContext()));
         recyclerView.setAdapter(taskAdapter);
     }
 
@@ -369,7 +366,7 @@ public class NewTaskFragment extends Fragment {
                     boolean success = data.getBooleanExtra("order", false);
                     if (success) {
                         Data data1 = GsonUtil.getInstance().fromJson(data.getStringExtra("data"), Data.class);
-                        mainViewModel.dataDao.update(data1);
+                        App.getDaoSession().getDataDao().update(data1);
                         mainViewModel.queryDataListAboutMyself(1);
                         position = data.getIntExtra("position", -1);
                         dataLis1.remove(position);
@@ -382,14 +379,14 @@ public class NewTaskFragment extends Fragment {
     }
 
     public interface INewTaskListener {
-        void OnStartSelect(int count, int total);
+        void onStartSelect(int count, int total);
 
-        void OnSelect(int count, int total);
+        void onSelect(int count, int total);
 
-        void OnCancelSelect();
+        void onCancelSelect();
     }
 
-    public void OnConfirmSelect() {
+    public void onConfirmSelect() {
         taskAdapter.finishSelect();
     }
 

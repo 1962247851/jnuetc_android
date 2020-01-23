@@ -10,24 +10,28 @@ import androidx.annotation.Nullable;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
+import com.google.gson.JsonObject;
 import com.xiaomi.mipush.sdk.MiPushClient;
 import com.youth.xframe.XFrame;
+import com.youth.xframe.utils.http.HttpCallBack;
+import com.youth.xframe.utils.http.XHttp;
+import com.youth.xframe.utils.log.XLog;
+import com.youth.xframe.widget.XToast;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import jn.mjz.aiot.jnuetc.application.MyApplication;
+import jn.mjz.aiot.jnuetc.application.App;
 import jn.mjz.aiot.jnuetc.greendao.Dao.DataDao;
 import jn.mjz.aiot.jnuetc.greendao.entity.Data;
+import jn.mjz.aiot.jnuetc.greendao.entity.MingJu;
 import jn.mjz.aiot.jnuetc.greendao.entity.User;
 import jn.mjz.aiot.jnuetc.util.GlobalUtil;
 import jn.mjz.aiot.jnuetc.util.GsonUtil;
 import jn.mjz.aiot.jnuetc.util.HttpUtil;
 import jn.mjz.aiot.jnuetc.util.SharedPreferencesUtil;
-import okhttp3.Response;
 
 /**
  * @author 19622
@@ -35,19 +39,36 @@ import okhttp3.Response;
 public class MainViewModel extends ViewModel {
 
     private static final String TAG = "MainViewModel";
-    public DataDao dataDao = MyApplication.getDaoSession().getDataDao();
+    public static DataDao dataDao = App.getDaoSession().getDataDao();
     public static User user = null;
-    private SharedPreferences sharedPreferences = SharedPreferencesUtil.getSharedPreferences(GlobalUtil.KEYS.NEW.FILE_NAME_DRAWER);
 
-    public MutableLiveData<Boolean> drawerOpen;
-    //保存当前所在的界面，变化时会刷新sharePreferences
+    public static User getUser() {
+        if (user == null) {
+            String userJson = SharedPreferencesUtil.getSharedPreferences(GlobalUtil.Keys.LoginActivity.FILE_NAME).getString(GlobalUtil.Keys.LoginActivity.USER_JSON_STRING, "needLogin");
+            if (!"needLogin".equals(userJson)) {
+                user = GsonUtil.getInstance().fromJson(userJson, User.class);
+            }
+        }
+        return user;
+    }
+
+    private SharedPreferences sharedPreferences = SharedPreferencesUtil.getSharedPreferences(GlobalUtil.Keys.New.FILE_NAME_DRAWER);
+
+    private MutableLiveData<Boolean> drawerOpen;
+    /**
+     * 保存当前所在的界面，变化时会刷新sharePreferences
+     */
     private MutableLiveData<Integer> currentState;
-    //暂时存放筛选配置的变量，用于从本地数据库筛选数据,会跟随currentState变化
+    /**
+     * 暂时存放筛选配置的变量，用于从本地数据库筛选数据,会跟随currentState变化
+     */
     private MutableLiveData<Map<String, Boolean>> selectedLocalsN;
     private MutableLiveData<Map<String, Boolean>> selectedLocalsS;
     private MutableLiveData<Boolean> timeOrder;
 
-    //暂时存放筛选结果的Data列表，并在变化时通知adapter刷新数据
+    /**
+     * 暂时存放筛选结果的Data列表，并在变化时通知adapter刷新数据
+     */
     private MutableLiveData<List<Data>> dataList1;
     private MutableLiveData<List<Data>> dataList2;
     private MutableLiveData<List<Data>> dataList3;
@@ -60,26 +81,24 @@ public class MainViewModel extends ViewModel {
      * @param callBack 回调
      */
     public void updateUserInfo(HttpUtil.HttpUtilCallBack<User> callBack) {
-        Map<String, Object> params = new HashMap<>();
+        Map<String, Object> params = new HashMap<>(2);
         params.put("sno", user.getSno());
         params.put("password", user.getPassword());
-        HttpUtil.post.haveResponse(GlobalUtil.URLS.QUERY.LOGIN, params, new HttpUtil.HttpUtilCallBack<String>() {
+        XHttp.obtain().post(GlobalUtil.Urls.User.LOGIN, params, new HttpCallBack<JsonObject>() {
             @Override
-            public void onResponse(Response response, String result) {
-                String state = response.headers().get("state");
-                if (GlobalUtil.STATE_OK.equals(state)) {
-                    SharedPreferences.Editor editor = SharedPreferencesUtil.getSharedPreferences(GlobalUtil.KEYS.LOGIN_ACTIVITY.FILE_NAME).edit();
-                    editor.putString(GlobalUtil.KEYS.LOGIN_ACTIVITY.USER_JSON_STRING, result);
+            public void onSuccess(JsonObject jsonObject) {
+                int error = jsonObject.get("error").getAsInt();
+                if (error == 1) {
+                    SharedPreferences.Editor editor = SharedPreferencesUtil.getSharedPreferences(GlobalUtil.Keys.LoginActivity.FILE_NAME).edit();
+                    editor.putString(GlobalUtil.Keys.LoginActivity.USER_JSON_STRING, jsonObject.get("body").getAsString());
                     editor.apply();
-                    User user = GsonUtil.getInstance().fromJson(result, User.class);
-
-                    editor = SharedPreferencesUtil.getSharedPreferences(GlobalUtil.KEYS.NEW.FILE_NAME_DRAWER).edit();
-
+                    User user = GsonUtil.getInstance().fromJson(jsonObject.get("body").getAsString(), User.class);
+                    editor = SharedPreferencesUtil.getSharedPreferences(GlobalUtil.Keys.New.FILE_NAME_DRAWER).edit();
                     if (!MainViewModel.user.haveWholeSchoolAccess()) {
                         //升级为管理员
                         if (user.haveWholeSchoolAccess()) {
                             //原来是北区，把所有南区全选
-                            if (MainViewModel.user.getGroup() == 0) {
+                            if (MainViewModel.user.getWhichGroup() == 0) {
                                 MiPushClient.subscribe(XFrame.getContext(), "1", null);
                                 MiPushClient.subscribe(XFrame.getContext(), "1", null);
                                 MiPushClient.subscribe(XFrame.getContext(), "1", null);
@@ -100,14 +119,14 @@ public class MainViewModel extends ViewModel {
 
                                 queryAll(new HttpUtil.HttpUtilCallBack<List<Data>>() {
                                     @Override
-                                    public void onResponse(Response response, List<Data> result) {
+                                    public void onResponse(List<Data> result) {
                                         loadAllSettings(0);
                                         queryDataListBySetting(0);
                                         loadAllSettings(null);
                                     }
 
                                     @Override
-                                    public void onFailure(IOException e) {
+                                    public void onFailure(String message) {
 
                                     }
                                 });
@@ -117,7 +136,7 @@ public class MainViewModel extends ViewModel {
                         //降级
                         if (!user.haveWholeSchoolAccess()) {
                             //原来是北区，把所有南区取消选中
-                            if (MainViewModel.user.getGroup() == 0) {
+                            if (MainViewModel.user.getWhichGroup() == 0) {
                                 MiPushClient.unsubscribe(XFrame.getContext(), "1", null);
                                 MiPushClient.unsubscribe(XFrame.getContext(), "1", null);
                                 MiPushClient.unsubscribe(XFrame.getContext(), "1", null);
@@ -150,51 +169,45 @@ public class MainViewModel extends ViewModel {
                         }
                     }
                     MainViewModel.user = user;
-                    callBack.onResponse(response, user);
+                    callBack.onResponse(user);
                 } else {
-                    SharedPreferences sharedPreferences = SharedPreferencesUtil.getSharedPreferences(GlobalUtil.KEYS.LOGIN_ACTIVITY.FILE_NAME);
+                    SharedPreferences sharedPreferences = SharedPreferencesUtil.getSharedPreferences(GlobalUtil.Keys.LoginActivity.FILE_NAME);
                     SharedPreferences.Editor editor = sharedPreferences.edit();
-                    editor.putString(GlobalUtil.KEYS.LOGIN_ACTIVITY.USER_JSON_STRING, "needLogin");
-                    editor.putBoolean(GlobalUtil.KEYS.LOGIN_ACTIVITY.REMEMBER_PASSWORD, false);
+                    editor.putString(GlobalUtil.Keys.LoginActivity.USER_JSON_STRING, "needLogin");
+                    editor.putBoolean(GlobalUtil.Keys.LoginActivity.REMEMBER_PASSWORD, false);
                     editor.apply();
                     callBack.onFailure(null);
                 }
             }
 
             @Override
-            public void onFailure(IOException e) {
-                callBack.onFailure(e);
+            public void onFailed(String error) {
+                callBack.onFailure(error);
             }
         });
     }
 
     /**
-     * 查询所有用户（转让用）
+     * 查询所有用户名字，不排除自己的名字
      *
      * @param callBack 回调
      */
-    public void queryAllUser(HttpUtil.HttpUtilCallBack<List<String>> callBack) {
-        HttpUtil.post.haveResponse(GlobalUtil.URLS.QUERY.ALL_USER, null, new HttpUtil.HttpUtilCallBack<String>() {
-
+    public static void queryAllUser(HttpUtil.HttpUtilCallBack<List<String>> callBack) {
+        XHttp.obtain().post(GlobalUtil.Urls.User.QUERY_ALL, null, new HttpCallBack<JsonObject>() {
             @Override
-            public void onResponse(Response response, String result) {
-                if (result != null) {
-                    List<User> resultList = GsonUtil.parseJsonArray2ObejctList(result, User.class);
-                    List<String> userNames = new ArrayList<>();
-                    for (int i = 0; i < resultList.size(); i++) {
-                        userNames.add(resultList.get(i).getName());
-                    }
-                    callBack.onResponse(response, userNames);
-                } else {
-                    callBack.onFailure(null);
+            public void onSuccess(JsonObject jsonObject) {
+                List<User> resultList = GsonUtil.parseJsonArray2ObjectList(jsonObject.get("body").getAsString(), User.class);
+                List<String> userNames = new ArrayList<>();
+                for (int i = 0; i < resultList.size(); i++) {
+                    userNames.add(resultList.get(i).getUserName());
                 }
+                callBack.onResponse(userNames);
             }
 
             @Override
-            public void onFailure(IOException e) {
-                callBack.onFailure(e);
+            public void onFailed(String error) {
+                callBack.onFailure(error);
             }
-
         });
     }
 
@@ -203,33 +216,34 @@ public class MainViewModel extends ViewModel {
      *
      * @param callBack 回调
      */
-    public void queryAll(HttpUtil.HttpUtilCallBack<List<Data>> callBack) {
-        HttpUtil.post.haveResponse(GlobalUtil.URLS.QUERY.ALL, null, new HttpUtil.HttpUtilCallBack<String>() {
-
+    public static void queryAll(HttpUtil.HttpUtilCallBack<List<Data>> callBack) {
+        XHttp.obtain().post(GlobalUtil.Urls.Data.QUERY_ALL, null, new HttpCallBack<JsonObject>() {
             @Override
-            public void onResponse(Response response, String result) {
-                if (result != null) {
-                    List<Data> resultList = GsonUtil.parseJsonArray2ObejctList(result, Data.class);
+            public void onSuccess(JsonObject jsonObject) {
+                if (jsonObject.get("error").getAsInt() == 1) {
+
+                    XLog.json(jsonObject.get("body").getAsString());
+
+                    List<Data> resultList = GsonUtil.parseJsonArray2ObjectList(jsonObject.get("body").getAsString(), Data.class);
                     dataDao.deleteAll();
                     dataDao.insertInTx(resultList);
-                    if (user.getRoot() == 0) {
+                    if (user.getRootLevel() == 0) {
                         List<Data> needToDelete = dataDao.queryBuilder().where(
-                                DataDao.Properties.District.notEq(user.getGroup()),
+                                DataDao.Properties.District.notEq(user.getWhichGroup()),
                                 DataDao.Properties.State.eq(0)
                         ).build().list();
                         dataDao.deleteInTx(needToDelete);
                     }
-                    callBack.onResponse(response, resultList);
+                    callBack.onResponse(resultList);
                 } else {
                     callBack.onFailure(null);
                 }
             }
 
             @Override
-            public void onFailure(IOException e) {
-                callBack.onFailure(e);
+            public void onFailed(String error) {
+                callBack.onFailure(error);
             }
-
         });
     }
 
@@ -239,143 +253,81 @@ public class MainViewModel extends ViewModel {
      * @param id       id值
      * @param callBack 回调
      */
-    public void queryById(String id, HttpUtil.HttpUtilCallBack<Data> callBack) {
-        Map<String, Object> params = new HashMap<>();
+    public static void queryById(String id, HttpUtil.HttpUtilCallBack<Data> callBack) {
+        Map<String, Object> params = new HashMap<>(1);
         params.put("id", id);
-        HttpUtil.post.haveResponse(GlobalUtil.URLS.QUERY.BY_ID, params, new HttpUtil.HttpUtilCallBack<String>() {
+        XHttp.obtain().post(GlobalUtil.Urls.Data.QUERY_BY_ID, params, new HttpCallBack<JsonObject>() {
             @Override
-            public void onResponse(Response response, @Nullable String result) {
-                String s = response.headers().get("state");
-                if (GlobalUtil.STATE_OK.equals(s) && result != null && !"{}".equals(result)) {
-                    callBack.onResponse(response, GsonUtil.getInstance().fromJson(result, Data.class));
-                } else {
-                    callBack.onFailure(null);
+            public void onSuccess(JsonObject jsonObject) {
+                int error = jsonObject.get("error").getAsInt();
+                if (error == 1) {
+                    callBack.onResponse(GsonUtil.getInstance().fromJson(jsonObject.get("body").getAsString(), Data.class));
+                } else if (error == 0) {
+                    callBack.onFailure(jsonObject.get("body").getAsString());
                 }
             }
 
             @Override
-            public void onFailure(IOException e) {
-                callBack.onFailure(e);
-            }
-
-        });
-    }
-
-    /**
-     * 反馈或者接单或者转让
-     *
-     * @param data     报修单
-     * @param callBack 回调,会返回更新后的data
-     */
-    public void feedback(Data data, HttpUtil.HttpUtilCallBack<Data> callBack) {
-        Map<String, Object> params = new HashMap<>();
-        params.put("data", data);
-        HttpUtil.post.haveResponse(GlobalUtil.URLS.UPDATE.FEEDBACK, params, new HttpUtil.HttpUtilCallBack<String>() {
-            @Override
-            public void onResponse(Response response, String result) {
-                String s = response.header("state");
-                if (GlobalUtil.STATE_OK.equals(s) && result != null && !result.equals("{}")) {
-                    Data data1 = GsonUtil.getInstance().fromJson(result, Data.class);
-                    dataDao.update(data1);
-                    callBack.onResponse(response, data1);
-                } else {
-                    callBack.onFailure(null);
-                }
-            }
-
-            @Override
-            public void onFailure(IOException e) {
-                callBack.onFailure(e);
+            public void onFailed(String error) {
+                callBack.onFailure(error);
             }
         });
-
     }
 
     /**
      * 修改报修单的所有信息
      *
-     * @param data     报修单
+     * @param newData  修改后的报修单
+     * @param oldData  修改前的报修单
      * @param callBack 回调,会返回更新后的data
      */
-    public void modify(Data data, HttpUtil.HttpUtilCallBack<Data> callBack) {
-        Map<String, Object> params = new HashMap<>();
-        params.put("data", data);
-        params.put("name", user.getName());
-        HttpUtil.post.haveResponse(GlobalUtil.URLS.UPDATE.MODIFY, params, new HttpUtil.HttpUtilCallBack<String>() {
+    public void modify(Data newData, String oldData, HttpUtil.HttpUtilCallBack<Data> callBack) {
+        Map<String, Object> params = new HashMap<>(3);
+        params.put("dataJson", newData);
+        params.put("oldDataJson", oldData);
+        params.put("name", user.getUserName());
+        XHttp.obtain().post(GlobalUtil.Urls.Data.UPDATE, params, new HttpCallBack<JsonObject>() {
             @Override
-            public void onResponse(Response response, @Nullable String result) {
-                String s = response.header("state");
-                if ("OK".equals(s) && result != null && !"{}".equals(result)) {
-                    Data data1 = GsonUtil.getInstance().fromJson(result, Data.class);
+            public void onSuccess(JsonObject jsonObject) {
+                int error = jsonObject.get("error").getAsInt();
+                if (error == 1) {
+                    Data data1 = GsonUtil.getInstance().fromJson(jsonObject.get("body").getAsString(), Data.class);
                     dataDao.update(data1);
-                    callBack.onResponse(response, data1);
-                } else {
-                    callBack.onFailure(null);
+                    callBack.onResponse(data1);
+                } else if (error == 0) {
+                    callBack.onFailure(jsonObject.get("msg").getAsString());
                 }
             }
 
             @Override
-            public void onFailure(IOException e) {
-                callBack.onFailure(e);
+            public void onFailed(String error) {
+                callBack.onFailure(error);
             }
         });
-
     }
 
     /**
      * 手动创建一个新的报修单
+     * todo 修改requestParam
      *
      * @param data     报修单
      * @param callBack 回调,返回插入后的data
      */
+    @Deprecated
     public void insert(Data data, HttpUtil.HttpUtilCallBack<Data> callBack) {
-        Map<String, Object> params = new HashMap<>();
+        Map<String, Object> params = new HashMap<>(1);
         params.put("data", data);
-        HttpUtil.post.haveResponse(GlobalUtil.URLS.INSERT.INSERT, params, new HttpUtil.HttpUtilCallBack<String>() {
+        XHttp.obtain().post(GlobalUtil.Urls.Data.INSERT, params, new HttpCallBack<JsonObject>() {
             @Override
-            public void onResponse(Response response, @Nullable String result) {
-                String s = response.header("state");
-                if (s != null && s.equals("OK") && result != null && !result.equals("{}")) {
-                    callBack.onResponse(response, GsonUtil.getInstance().fromJson(result, Data.class));
-                } else {
-                    callBack.onFailure(null);
-                }
+            public void onSuccess(JsonObject jsonObject) {
+
             }
 
             @Override
-            public void onFailure(IOException e) {
-                callBack.onFailure(e);
+            public void onFailed(String error) {
+
             }
         });
-
-    }
-
-    /**
-     * 删除报修单
-     *
-     * @param id       id
-     * @param callBack 回调,返回操作是否成功
-     */
-    public void delete(String id, HttpUtil.HttpUtilCallBack<Boolean> callBack) {
-        Map<String, Object> params = new HashMap<>();
-        params.put("id", id);
-        HttpUtil.post.haveResponse(GlobalUtil.URLS.DELETE.DELETE, params, new HttpUtil.HttpUtilCallBack<String>() {
-            @Override
-            public void onResponse(Response response, @Nullable String result) {
-                String s = response.header("state");
-                if (s != null && s.equals("OK")) {
-                    callBack.onResponse(response, true);
-                } else {
-                    callBack.onResponse(response, false);
-                }
-            }
-
-            @Override
-            public void onFailure(IOException e) {
-                callBack.onFailure(e);
-            }
-        });
-
     }
 
     /**
@@ -385,31 +337,31 @@ public class MainViewModel extends ViewModel {
      * @param callBack 回调
      */
     public void deleteMany(List<Integer> ids, HttpUtil.HttpUtilCallBack<Boolean> callBack) {
-        Map<String, Object> params = new HashMap<>();
-        params.put("ids", GsonUtil.getInstance().toJson(ids));
-        params.put("name", user.getName());
-        HttpUtil.post.haveResponse(GlobalUtil.URLS.DELETE.DELETE_MANY, params, new HttpUtil.HttpUtilCallBack<String>() {
+        Map<String, Object> params = new HashMap<>(2);
+        params.put("idListJson", GsonUtil.getInstance().toJson(ids));
+        params.put("userJson", MainViewModel.user.toString());
+        XHttp.obtain().post(GlobalUtil.Urls.Data.DELETE_BY_ID_LIST, params, new HttpCallBack<JsonObject>() {
             @Override
-            public void onResponse(Response response, @Nullable String result) {
-                String s = response.header("state");
-                if ("OK".equals(s)) {
+            public void onSuccess(JsonObject jsonObject) {
+                int error = jsonObject.get("error").getAsInt();
+                if (error == 1) {
                     List<Long> longs = new ArrayList<>();
                     for (Integer integer : ids) {
                         longs.add(Long.valueOf(integer));
                     }
                     dataDao.deleteByKeyInTx(longs);
-                    callBack.onResponse(response, true);
+                    callBack.onResponse(true);
                 } else {
-                    callBack.onResponse(response, false);
+                    callBack.onResponse(false);
+                    XToast.error(jsonObject.get("msg").getAsString());
                 }
             }
 
             @Override
-            public void onFailure(IOException e) {
-                callBack.onFailure(e);
+            public void onFailed(String error) {
+                callBack.onFailure(error);
             }
         });
-
     }
 
     /**
@@ -418,25 +370,22 @@ public class MainViewModel extends ViewModel {
      * @param callBack 回调,返回状态
      */
     public void checkServerState(HttpUtil.HttpUtilCallBack<Boolean> callBack) {
-        Map<String, Object> params = new HashMap<>();
-        params.put("type", "service");
-        HttpUtil.post.haveResponse(GlobalUtil.URLS.QUERY.CHECK_STATE, params, new HttpUtil.HttpUtilCallBack<String>() {
+        Map<String, Object> params = new HashMap<>(1);
+        params.put("type", "repair");
+        XHttp.obtain().post(GlobalUtil.Urls.State.CHECK_SERVICE, params, new HttpCallBack<JsonObject>() {
             @Override
-            public void onResponse(Response response, @Nullable String result) {
-                String s = response.header("state");
-                if (s != null && s.equals("1")) {
-                    callBack.onResponse(response, true);
-                } else {
-                    callBack.onResponse(response, false);
+            public void onSuccess(JsonObject jsonObject) {
+                int error = jsonObject.get("error").getAsInt();
+                if (error == 1) {
+                    callBack.onResponse(jsonObject.get("body").getAsBoolean());
                 }
             }
 
             @Override
-            public void onFailure(IOException e) {
-                callBack.onFailure(e);
+            public void onFailed(String error) {
+                callBack.onFailure(error);
             }
         });
-
     }
 
     /**
@@ -444,26 +393,47 @@ public class MainViewModel extends ViewModel {
      *
      * @param callBack 回调,返回状态
      */
-    public void checkDayDPState(HttpUtil.HttpUtilCallBack<Boolean> callBack) {
-        Map<String, Object> params = new HashMap<>();
+    public void checkDayDayPhotoState(HttpUtil.HttpUtilCallBack<Boolean> callBack) {
+        Map<String, Object> params = new HashMap<>(1);
         params.put("type", "dayDP");
-        HttpUtil.post.haveResponse(GlobalUtil.URLS.QUERY.CHECK_STATE, params, new HttpUtil.HttpUtilCallBack<String>() {
+        XHttp.obtain().post(GlobalUtil.Urls.State.CHECK_SERVICE, params, new HttpCallBack<JsonObject>() {
             @Override
-            public void onResponse(Response response, @Nullable String result) {
-                String s = response.header("state");
-                if (s != null && s.equals("1")) {
-                    callBack.onResponse(response, true);
-                } else {
-                    callBack.onResponse(response, false);
+            public void onSuccess(JsonObject jsonObject) {
+                int error = jsonObject.get("error").getAsInt();
+                if (error == 1) {
+                    callBack.onResponse(jsonObject.get("body").getAsBoolean());
                 }
             }
 
             @Override
-            public void onFailure(IOException e) {
-                callBack.onFailure(e);
+            public void onFailed(String error) {
+                callBack.onFailure(error);
             }
         });
+    }
 
+    /**
+     * 查询注册服务状态
+     *
+     * @param callBack 回调,返回状态
+     */
+    public void checkRegisterState(HttpUtil.HttpUtilCallBack<Boolean> callBack) {
+        Map<String, Object> params = new HashMap<>(1);
+        params.put("type", "register");
+        XHttp.obtain().post(GlobalUtil.Urls.State.CHECK_SERVICE, params, new HttpCallBack<JsonObject>() {
+            @Override
+            public void onSuccess(JsonObject jsonObject) {
+                int error = jsonObject.get("error").getAsInt();
+                if (error == 1) {
+                    callBack.onResponse(jsonObject.get("body").getAsBoolean());
+                }
+            }
+
+            @Override
+            public void onFailed(String error) {
+                callBack.onFailure(error);
+            }
+        });
     }
 
     /**
@@ -472,25 +442,25 @@ public class MainViewModel extends ViewModel {
      * @param callBack 回调,返回操作是否成功
      */
     public void openService(HttpUtil.HttpUtilCallBack<Boolean> callBack) {
-        Map<String, Object> params = new HashMap<>();
-        params.put("type", "service");
-        HttpUtil.post.haveResponse(GlobalUtil.URLS.UPDATE.START_SERVICE, params, new HttpUtil.HttpUtilCallBack<String>() {
+        Map<String, Object> params = new HashMap<>(2);
+        params.put("type", "repair");
+        params.put("available", true);
+        XHttp.obtain().post(GlobalUtil.Urls.State.CHANGE_SERVICE, params, new HttpCallBack<JsonObject>() {
             @Override
-            public void onResponse(Response response, @Nullable String result) {
-                String s = response.header("state");
-                if (s != null && s.equals("OK")) {
-                    callBack.onResponse(response, true);
+            public void onSuccess(JsonObject jsonObject) {
+                int error = jsonObject.get("error").getAsInt();
+                if (error == 1) {
+                    callBack.onResponse(true);
                 } else {
-                    callBack.onResponse(response, false);
+                    callBack.onResponse(false);
                 }
             }
 
             @Override
-            public void onFailure(IOException e) {
-                callBack.onFailure(e);
+            public void onFailed(String error) {
+                callBack.onFailure(error);
             }
         });
-
     }
 
     /**
@@ -499,25 +469,25 @@ public class MainViewModel extends ViewModel {
      * @param callBack 回调,返回操作是否成功
      */
     public void closeService(HttpUtil.HttpUtilCallBack<Boolean> callBack) {
-        Map<String, Object> params = new HashMap<>();
-        params.put("type", "service");
-        HttpUtil.post.haveResponse(GlobalUtil.URLS.UPDATE.CLOSE_SERVICE, params, new HttpUtil.HttpUtilCallBack<String>() {
+        Map<String, Object> params = new HashMap<>(2);
+        params.put("type", "repair");
+        params.put("available", false);
+        XHttp.obtain().post(GlobalUtil.Urls.State.CHANGE_SERVICE, params, new HttpCallBack<JsonObject>() {
             @Override
-            public void onResponse(Response response, @Nullable String result) {
-                String s = response.header("state");
-                if (s != null && s.equals("OK")) {
-                    callBack.onResponse(response, true);
+            public void onSuccess(JsonObject jsonObject) {
+                int error = jsonObject.get("error").getAsInt();
+                if (error == 1) {
+                    callBack.onResponse(true);
                 } else {
-                    callBack.onResponse(response, false);
+                    callBack.onResponse(false);
                 }
             }
 
             @Override
-            public void onFailure(IOException e) {
-                callBack.onFailure(e);
+            public void onFailed(String error) {
+                callBack.onFailure(error);
             }
         });
-
     }
 
     /**
@@ -525,26 +495,26 @@ public class MainViewModel extends ViewModel {
      *
      * @param callBack 回调,返回操作是否成功
      */
-    public void openDayDPService(HttpUtil.HttpUtilCallBack<Boolean> callBack) {
-        Map<String, Object> params = new HashMap<>();
+    public void openDayDayPhotoService(HttpUtil.HttpUtilCallBack<Boolean> callBack) {
+        Map<String, Object> params = new HashMap<>(2);
         params.put("type", "dayDP");
-        HttpUtil.post.haveResponse(GlobalUtil.URLS.UPDATE.START_DAY_DP_SERVICE, params, new HttpUtil.HttpUtilCallBack<String>() {
+        params.put("available", true);
+        XHttp.obtain().post(GlobalUtil.Urls.State.CHANGE_SERVICE, params, new HttpCallBack<JsonObject>() {
             @Override
-            public void onResponse(Response response, @Nullable String result) {
-                String s = response.header("state");
-                if (s != null && s.equals("OK")) {
-                    callBack.onResponse(response, true);
+            public void onSuccess(JsonObject jsonObject) {
+                int error = jsonObject.get("error").getAsInt();
+                if (error == 1) {
+                    callBack.onResponse(true);
                 } else {
-                    callBack.onResponse(response, false);
+                    callBack.onResponse(false);
                 }
             }
 
             @Override
-            public void onFailure(IOException e) {
-                callBack.onFailure(e);
+            public void onFailed(String error) {
+                callBack.onFailure(error);
             }
         });
-
     }
 
     /**
@@ -552,28 +522,81 @@ public class MainViewModel extends ViewModel {
      *
      * @param callBack 回调,返回操作是否成功
      */
-    public void closeDayDPService(HttpUtil.HttpUtilCallBack<Boolean> callBack) {
-        Map<String, Object> params = new HashMap<>();
+    public void closeDayDayPhotoService(HttpUtil.HttpUtilCallBack<Boolean> callBack) {
+        Map<String, Object> params = new HashMap<>(2);
         params.put("type", "dayDP");
-        HttpUtil.post.haveResponse(GlobalUtil.URLS.UPDATE.CLOSE_DAY_DP_SERVICE, params, new HttpUtil.HttpUtilCallBack<String>() {
+        params.put("available", false);
+        XHttp.obtain().post(GlobalUtil.Urls.State.CHANGE_SERVICE, params, new HttpCallBack<JsonObject>() {
             @Override
-            public void onResponse(Response response, @Nullable String result) {
-                String s = response.header("state");
-                if ("OK".equals(s)) {
-                    callBack.onResponse(response, true);
+            public void onSuccess(JsonObject jsonObject) {
+                int error = jsonObject.get("error").getAsInt();
+                if (error == 1) {
+                    callBack.onResponse(true);
                 } else {
-                    callBack.onResponse(response, false);
+                    callBack.onResponse(false);
                 }
             }
 
             @Override
-            public void onFailure(IOException e) {
-                callBack.onFailure(e);
+            public void onFailed(String error) {
+                callBack.onFailure(error);
             }
         });
-
     }
 
+    /**
+     * 开启注册服务
+     *
+     * @param callBack 回调,返回操作是否成功
+     */
+    public void openRegisterService(HttpUtil.HttpUtilCallBack<Boolean> callBack) {
+        Map<String, Object> params = new HashMap<>(2);
+        params.put("type", "register");
+        params.put("available", true);
+        XHttp.obtain().post(GlobalUtil.Urls.State.CHANGE_SERVICE, params, new HttpCallBack<JsonObject>() {
+            @Override
+            public void onSuccess(JsonObject jsonObject) {
+                int error = jsonObject.get("error").getAsInt();
+                if (error == 1) {
+                    callBack.onResponse(true);
+                } else {
+                    callBack.onResponse(false);
+                }
+            }
+
+            @Override
+            public void onFailed(String error) {
+                callBack.onFailure(error);
+            }
+        });
+    }
+
+    /**
+     * 关闭注册服务
+     *
+     * @param callBack 回调,返回操作是否成功
+     */
+    public void closeRegisterService(HttpUtil.HttpUtilCallBack<Boolean> callBack) {
+        Map<String, Object> params = new HashMap<>(2);
+        params.put("type", "register");
+        params.put("available", false);
+        XHttp.obtain().post(GlobalUtil.Urls.State.CHANGE_SERVICE, params, new HttpCallBack<JsonObject>() {
+            @Override
+            public void onSuccess(JsonObject jsonObject) {
+                int error = jsonObject.get("error").getAsInt();
+                if (error == 1) {
+                    callBack.onResponse(true);
+                } else {
+                    callBack.onResponse(false);
+                }
+            }
+
+            @Override
+            public void onFailed(String error) {
+                callBack.onFailure(error);
+            }
+        });
+    }
 
     /**
      * 根据当前所在的界面拿对应的SharedPreference
@@ -584,13 +607,13 @@ public class MainViewModel extends ViewModel {
         int current = getCurrentState().getValue() == null ? 0 : getCurrentState().getValue();
         switch (current) {
             case 0:
-                sharedPreferences = SharedPreferencesUtil.getSharedPreferences(GlobalUtil.KEYS.NEW.FILE_NAME_DRAWER);
+                sharedPreferences = SharedPreferencesUtil.getSharedPreferences(GlobalUtil.Keys.New.FILE_NAME_DRAWER);
                 break;
             case 1:
-                sharedPreferences = SharedPreferencesUtil.getSharedPreferences(GlobalUtil.KEYS.PROCESSING.FILE_NAME_DRAWER);
+                sharedPreferences = SharedPreferencesUtil.getSharedPreferences(GlobalUtil.Keys.Processing.FILE_NAME_DRAWER);
                 break;
             case 2:
-                sharedPreferences = SharedPreferencesUtil.getSharedPreferences(GlobalUtil.KEYS.DONE.FILE_NAME_DRAWER);
+                sharedPreferences = SharedPreferencesUtil.getSharedPreferences(GlobalUtil.Keys.Done.FILE_NAME_DRAWER);
                 break;
         }
         return sharedPreferences;
@@ -638,13 +661,13 @@ public class MainViewModel extends ViewModel {
         state = state == null ? getCurrentState().getValue() : state;
         switch (state) {
             case 0:
-                sharedPreferences = SharedPreferencesUtil.getSharedPreferences(GlobalUtil.KEYS.NEW.FILE_NAME_DRAWER);
+                sharedPreferences = SharedPreferencesUtil.getSharedPreferences(GlobalUtil.Keys.New.FILE_NAME_DRAWER);
                 break;
             case 1:
-                sharedPreferences = SharedPreferencesUtil.getSharedPreferences(GlobalUtil.KEYS.PROCESSING.FILE_NAME_DRAWER);
+                sharedPreferences = SharedPreferencesUtil.getSharedPreferences(GlobalUtil.Keys.Processing.FILE_NAME_DRAWER);
                 break;
             case 2:
-                sharedPreferences = SharedPreferencesUtil.getSharedPreferences(GlobalUtil.KEYS.DONE.FILE_NAME_DRAWER);
+                sharedPreferences = SharedPreferencesUtil.getSharedPreferences(GlobalUtil.Keys.Done.FILE_NAME_DRAWER);
                 break;
         }
 
@@ -654,9 +677,9 @@ public class MainViewModel extends ViewModel {
 
             for (int i = 0; i < 8; i++) {
                 String localN = GlobalUtil.TITLES_N[i];
-                mapN.put(localN, sharedPreferences.getBoolean(localN, state != 0 || user.getRoot() != 0 || user.getGroup() == 0));
+                mapN.put(localN, sharedPreferences.getBoolean(localN, state != 0 || user.getRootLevel() != 0 || user.getWhichGroup() == 0));
                 String localS = GlobalUtil.TITLES_S[i];
-                mapS.put(localS, sharedPreferences.getBoolean(localS, state != 0 || user.getRoot() != 0 || user.getGroup() == 1));
+                mapS.put(localS, sharedPreferences.getBoolean(localS, state != 0 || user.getRootLevel() != 0 || user.getWhichGroup() == 1));
             }
 
         }
@@ -732,7 +755,8 @@ public class MainViewModel extends ViewModel {
                     .list();
             List<Data> dataList = new ArrayList<>(selectedDatas);
             for (Data d : selectedDatas) {
-                if (d.getRepairer().contains(user.getName())) {//不需要的
+                //不需要的
+                if (d.getRepairer().contains(user.getUserName())) {
                     dataList.remove(d);
                 }
             }
@@ -742,7 +766,7 @@ public class MainViewModel extends ViewModel {
             selectedDatas = dataDao.queryBuilder()
                     .where(DataDao.Properties.Local.in(selectedLocals)
                             , DataDao.Properties.State.eq(1)
-                            , DataDao.Properties.Repairer.notEq(user.getName()))
+                            , DataDao.Properties.Repairer.notEq(user.getUserName()))
                     .orderCustom(DataDao.Properties.Date, getTimeOrder().getValue() != null && getTimeOrder().getValue() ? "asc" : "desc")
                     .build()
                     .list();
@@ -779,18 +803,46 @@ public class MainViewModel extends ViewModel {
         if (state == 1) {
             dataList = dataDao.queryBuilder().where(
                     DataDao.Properties.State.eq(1)
-                    , DataDao.Properties.Repairer.like("%" + user.getName() + "%"))
+                    , DataDao.Properties.Repairer.like("%" + user.getUserName() + "%"))
                     .orderAsc(DataDao.Properties.Date)
                     .build().list();
             getDataList4().setValue(dataList);
         } else if (state == 2) {
             dataList = dataDao.queryBuilder().where(
                     DataDao.Properties.State.eq(2)
-                    , DataDao.Properties.Repairer.like("%" + user.getName() + "%"))
+                    , DataDao.Properties.Repairer.like("%" + user.getUserName() + "%"))
                     .orderDesc(DataDao.Properties.RepairDate)
                     .build().list();
             getDataList5().setValue(dataList);
         }
+    }
+
+    /**
+     * 获取名句
+     *
+     * @param callBack 回调
+     */
+    public static void getMingJu(HttpUtil.HttpUtilCallBack<MingJu> callBack) {
+        HashMap<String, Object> params = new HashMap<>(2);
+        String topic = SharedPreferencesUtil.getSettingPreferences().getString("ming_ju_topic", "人生");
+        params.put("topic", topic);
+        params.put("type", "");
+        XHttp.obtain().post(GlobalUtil.Urls.MingJu.GET_MING_JU, params, new HttpCallBack<JsonObject>() {
+            @Override
+            public void onSuccess(JsonObject jsonObject) {
+                int error = jsonObject.get("error").getAsInt();
+                if (error == 1) {
+                    callBack.onResponse(GsonUtil.getInstance().fromJson(jsonObject.get("body").getAsString(), MingJu.class));
+                } else {
+                    callBack.onFailure(jsonObject.get("msg").getAsString());
+                }
+            }
+
+            @Override
+            public void onFailed(String error) {
+                callBack.onFailure(error);
+            }
+        });
     }
 
     public static void copyToClipboard(Context context, String text) {
@@ -811,7 +863,7 @@ public class MainViewModel extends ViewModel {
             selectedLocalsN = new MutableLiveData<>();
             Map<String, Boolean> map = new HashMap<>();
             for (String s : GlobalUtil.TITLES_N) {
-                map.put(s, user.getRoot() != 0 || user.getGroup() == 0);
+                map.put(s, user.getRootLevel() != 0 || user.getWhichGroup() == 0);
             }
             selectedLocalsN.setValue(map);
         }
@@ -823,7 +875,7 @@ public class MainViewModel extends ViewModel {
             selectedLocalsS = new MutableLiveData<>();
             Map<String, Boolean> map = new HashMap<>();
             for (String s : GlobalUtil.TITLES_S) {
-                map.put(s, user.getRoot() != 0 || user.getGroup() == 1);
+                map.put(s, user.getRootLevel() != 0 || user.getWhichGroup() == 1);
             }
             selectedLocalsS.setValue(map);
 

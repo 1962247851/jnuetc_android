@@ -7,34 +7,45 @@
     android:orientation="vertical"
     tools:context=".view.activity.AboutActivity">
 
-
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        android:background="@color/white">
+        android:layout_weight="1">
 
         <androidx.appcompat.widget.Toolbar
             android:id="@+id/toolbar_about"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/colorPrimary"
-            app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
-            app:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
-            app:title="关于" />
+            android:theme="@style/actionbar"
+            app:subtitleTextAppearance="@style/subTitleAppearance"
+            app:title="@string/About" />
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="@color/WindowBackgroundColor"
-            android:gravity="center">
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="140dp"
+            android:layout_height="140dp"
+            android:layout_gravity="center"
+            android:layout_marginTop="40dp"
+            app:cardCornerRadius="70dp">
 
             <ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:padding="80dp"
-                app:srcCompat="@drawable/logo" />
-        </LinearLayout>
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@android:color/white"
+                android:padding="5dp"
+                android:src="@drawable/logo" />
+        </com.google.android.material.card.MaterialCardView>
+
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:textColor="@android:color/white"
+            android:paddingTop="5dp"
+            android:paddingBottom="5dp"
+            android:text="@string/app_name"
+            android:textSize="25sp"
+            android:textStyle="bold" />
 
     </com.google.android.material.appbar.AppBarLayout>
 
@@ -42,20 +53,7 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:orientation="vertical"
-        android:paddingTop="20dp"
-        android:paddingBottom="20dp">
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:paddingTop="10dp"
-            android:paddingBottom="10dp"
-            android:text="@string/app_name"
-            android:textColor="@color/MainText"
-            android:textSize="25sp"
-            android:textStyle="bold" />
+        android:orientation="vertical">
 
         <TextView
             android:id="@+id/textView_about_version"
@@ -78,16 +76,15 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="github：" />
+                android:text="@string/github" />
 
             <TextView
                 android:id="@+id/textView_about_github"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:background="?selectableItemBackground"
-                android:text="https://github.com/1962247851/JNUETC"
+                android:text="@string/githubAddress"
                 android:textColor="@color/colorPrimary" />
         </LinearLayout>
-
     </LinearLayout>
 </LinearLayout>

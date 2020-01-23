@@ -3,12 +3,18 @@ package jn.mjz.aiot.jnuetc.util;
 import androidx.annotation.Nullable;
 
 import java.sql.Timestamp;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
+import java.util.Locale;
 
 import jn.mjz.aiot.jnuetc.greendao.entity.Time;
 
+/**
+ * @author 19622
+ */
 public class DateUtil {
 
     private Date date;
@@ -17,30 +23,6 @@ public class DateUtil {
 
     public DateUtil(long paramLong) {
         this.date = new Date(paramLong);
-    }
-
-    public DateUtil(String s) {
-        try {
-            this.date = this.sdf.parse(s);
-            return;
-        } catch (ParseException paramString) {
-            paramString.printStackTrace();
-            return;
-        }
-    }
-
-    public DateUtil(Timestamp timestamp) {
-        try {
-            this.date = timestamp;
-            return;
-        } catch (Exception paramTimestamp) {
-            paramTimestamp.printStackTrace();
-            return;
-        }
-    }
-
-    public DateUtil(Date paramDate) {
-        this.date = paramDate;
     }
 
     public static String getCurrentDate() {
@@ -109,7 +91,6 @@ public class DateUtil {
         return this.date.getTime();
     }
 
-
     public Date toDate() {
         return this.date;
     }
@@ -130,24 +111,23 @@ public class DateUtil {
         return new Timestamp(this.date.getTime());
     }
 
-
     public static Time diffTime(Long timestampStart, Long timestampEnd) {
-        double diff = timestampEnd - timestampStart; //时间差的毫秒数
-
+        //时间差的毫秒数
+        double diff = timestampEnd - timestampStart;
         //计算出相差天数
         int days = (int) Math.floor(diff / (24 * 3600 * 1000));
-
         //计算出小时数
-        double leave1 = (diff % (24 * 3600 * 1000)); //计算天数后剩余的毫秒数
+        double leave1 = (diff % (24 * 3600 * 1000));
+        //计算天数后剩余的毫秒数
         int hours = (int) Math.floor(leave1 / (3600 * 1000));
         //计算相差分钟数
-        double leave2 = leave1 % (3600 * 1000); //计算小时数后剩余的毫秒数
+        double leave2 = leave1 % (3600 * 1000);
+        //计算小时数后剩余的毫秒数
         int minutes = (int) Math.floor(leave2 / (60 * 1000));
-
         //计算相差秒数
-        double leave3 = leave2 % (60 * 1000); //计算分钟数后剩余的毫秒数
+        double leave3 = leave2 % (60 * 1000);
+        //计算分钟数后剩余的毫秒数
         int seconds = (int) Math.round(leave3 / 1000);
-
         String returnStr = seconds + "秒";
         if (minutes > 0) {
             returnStr = minutes + "分" + returnStr;
@@ -164,6 +144,40 @@ public class DateUtil {
         time.setMinute(minutes);
         time.setSecond(seconds);
         return time;
+    }
 
+    /**
+     * 获取指定日期所在的一周(周一到周日)
+     *
+     * @param date date
+     * @return ["2020-01-13",
+     * "2020-01-14",
+     * "2020-01-15",
+     * "2020-01-16",
+     * "2020-01-17",
+     * "2020-01-18",
+     * "2020-01-19" ]
+     */
+    public static List<String> getDateToWeek(Date date) {
+        List<String> dateWeekList = new ArrayList<>();
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd", Locale.getDefault());
+        String time;
+        //count 用来存取与当天日期的相差数
+        int count;
+        for (int i = 1; i < 8; i++) {
+            //新建日历
+            Calendar cal = Calendar.getInstance();
+            //在日历中找到当前日期
+            cal.setTime(date);
+            //当前日期是本周第几天，默认按照中国习惯星期一为一周的第一天(末尾的+1的由来)
+            count = -cal.get(Calendar.DAY_OF_WEEK) + 1;
+            //循环。当天与本周周一到周日相差的天数
+            cal.add(Calendar.DATE, count + i);
+            //转化格式
+            time = sdf.format(cal.getTime());
+            //存入list
+            dateWeekList.add(time);
+        }
+        return dateWeekList;
     }
 }
