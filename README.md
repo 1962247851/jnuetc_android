@@ -1,3 +1,6 @@
+# jnuetc_android
+江南大学团通社电子技术部线上报修系统_安卓App
+
 # 项目已被弃用
 [该项目已使用Kotlin重构](https://github.com/1962247851/jnuetc_kotlin)
 
