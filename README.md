@@ -1,7 +1,5 @@
-# JNUETC
-线上报修，后台接单
-
-**已使用Kotlin重构：https://github.com/1962247851/jnuetc_kotlin**
+# 项目已被弃用
+[该项目已使用Kotlin重构](https://github.com/1962247851/jnuetc_kotlin)
 
 # 相关项目
 1. 后端：https://github.com/1962247851/jnuetc
